@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
+import 'dart:async' show StreamSubscription;
 
 import 'package:flutter_authgear/authgear.dart';
 
@@ -20,6 +20,8 @@ class _MyAppState extends State<MyApp> {
   final Authgear _authgear =
       Authgear(endpoint: "http://192.168.1.235:3100", clientID: "portal");
 
+  StreamSubscription<SessionStateChangeEvent>? _sub;
+
   @override
   void initState() {
     super.initState();
@@ -27,7 +29,17 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> _configure() async {
+    _sub = _authgear.onSessionStateChange.listen((e) {
+      print("reason: ${e.reason}");
+      print("sessionState: ${e.instance.sessionState}");
+    });
     await _authgear.configure();
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
   }
 
   @override

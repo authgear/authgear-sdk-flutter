@@ -1,6 +1,8 @@
 import 'dart:math' show Random;
 import 'dart:async' show StreamController;
 import 'dart:convert' show jsonEncode, utf8;
+import 'package:flutter_authgear/authgear.dart';
+
 import 'storage.dart';
 import 'client.dart';
 import 'type.dart';
@@ -18,6 +20,8 @@ class SessionStateChangeEvent {
 
 final _rng = Random.secure();
 
+const _expiresInPercentage = 0.9;
+
 Future<String> _getXDeviceInfo() async {
   final deviceInfo = await native.getDeviceInfo();
   final deviceInfoJSON = jsonEncode(deviceInfo);
@@ -33,13 +37,15 @@ class Authgear {
   final String endpoint;
   final String name;
   final bool shareSessionWithSystemBrowser;
-  final TokenStorage tokenStorage;
+  final TokenStorage _tokenStorage;
   final APIClient _client;
 
   SessionState _sessionStateRaw = SessionState.unknown;
   SessionState get sessionState => _sessionStateRaw;
-  final StreamController _sessionStateStreamController =
-      StreamController.broadcast();
+  final StreamController<SessionStateChangeEvent>
+      _sessionStateStreamController = StreamController.broadcast();
+  Stream<SessionStateChangeEvent> get onSessionStateChange =>
+      _sessionStateStreamController.stream;
 
   String? _accessToken;
   String? get accessToken => _accessToken;
@@ -55,11 +61,11 @@ class Authgear {
     this.name = "default",
     this.shareSessionWithSystemBrowser = false,
     TokenStorage? tokenStorage,
-  })  : tokenStorage = tokenStorage ?? TransientTokenStorage(),
+  })  : _tokenStorage = tokenStorage ?? TransientTokenStorage(),
         _client = APIClient(endpoint: endpoint);
 
   Future<void> configure() async {
-    _refreshToken = await tokenStorage.getRefreshToken(name);
+    _refreshToken = await _tokenStorage.getRefreshToken(name);
     final sessionState = _refreshToken == null
         ? SessionState.noSession
         : SessionState.authenticated;
@@ -153,8 +159,33 @@ class Authgear {
     final tokenResponse = await _client.sendTokenRequest(tokenRequest);
     final accessToken = tokenResponse.accessToken!;
     final userInfo = await _client.getUserInfo(accessToken);
-    // TODO: persist refresh token
+    await _persistTokenResponse(
+        tokenResponse, SessionStateChangeReason.authenticated);
     // TODO: disable biometric
     return AuthenticateResult(userInfo: userInfo, state: state);
+  }
+
+  Future<void> _persistTokenResponse(
+      OIDCTokenResponse tokenResponse, SessionStateChangeReason reason) async {
+    final idToken = tokenResponse.idToken;
+    if (idToken != null) {
+      _idToken = idToken;
+    }
+
+    final accessToken = tokenResponse.accessToken!;
+    _accessToken = accessToken;
+
+    final refreshToken = tokenResponse.refreshToken;
+    if (refreshToken != null) {
+      _refreshToken = refreshToken;
+      await _tokenStorage.setRefreshToken(name, refreshToken);
+    }
+
+    final expiresIn = tokenResponse.expiresIn!;
+    _expireAt = DateTime.now()
+        .toUtc()
+        .add(Duration(seconds: (expiresIn * _expiresInPercentage).toInt()));
+
+    _setSessionState(SessionState.authenticated, reason);
   }
 }

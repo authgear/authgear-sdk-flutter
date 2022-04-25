@@ -1,17 +1,13 @@
 import 'dart:math' show Random;
-import 'dart:convert' show utf8, base64Url;
+import 'dart:convert' show utf8;
 import 'package:crypto/crypto.dart' show sha256;
 import 'package:hex/hex.dart' show HEX;
-
-String _base64UrlEncode(List<int> bytes) {
-  final padded = base64Url.encode(bytes);
-  return padded.replaceAll(RegExp("="), "");
-}
+import 'base64.dart';
 
 String _computeCodeChallenge(String codeVerifier) {
   final data = utf8.encode(codeVerifier);
   final digest = sha256.convert(data);
-  return _base64UrlEncode(digest.bytes);
+  return base64UrlEncode(digest.bytes);
 }
 
 class CodeVerifier {

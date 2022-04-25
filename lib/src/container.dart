@@ -120,6 +120,29 @@ class Authgear {
         xDeviceInfo: xDeviceInfo);
   }
 
+  Future<void> logout({bool force = false}) async {
+    final refreshToken = await _tokenStorage.getRefreshToken(name);
+    if (refreshToken != null) {
+      try {
+        await _client.revoke(refreshToken);
+      } on Exception {
+        if (!force) {
+          rethrow;
+        }
+      }
+    }
+    await _clearSession(SessionStateChangeReason.logout);
+  }
+
+  Future<void> _clearSession(SessionStateChangeReason reason) async {
+    await _tokenStorage.delRefreshToken(name);
+    _idToken = null;
+    _accessToken = null;
+    _refreshToken = null;
+    _expireAt = null;
+    _setSessionState(SessionState.noSession, reason);
+  }
+
   Future<AuthenticateResult> _finishAuthentication({
     required Uri url,
     required String redirectURI,

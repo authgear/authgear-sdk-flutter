@@ -216,6 +216,15 @@ class APIClient {
     return _decodeOIDCResponse(httpResponse, UserInfo.fromJSON);
   }
 
+  Future<void> revoke(String refreshToken) async {
+    final config = await fetchOIDCConfiguration();
+    final url = Uri.parse(config.revocationEndpoint);
+    final body = {
+      "token": refreshToken,
+    };
+    await _client.post(url, body: body);
+  }
+
   T _decodeOIDCResponse<T>(Response resp, T Function(dynamic) f) {
     final json = jsonDecode(utf8.decode(resp.bodyBytes));
     String? error = json["error"];

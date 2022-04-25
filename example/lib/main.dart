@@ -32,6 +32,7 @@ class _MyAppState extends State<MyApp> {
     _sub = _authgear.onSessionStateChange.listen((e) {
       print("reason: ${e.reason}");
       print("sessionState: ${e.instance.sessionState}");
+      setState(() {});
     });
     await _authgear.configure();
   }
@@ -50,21 +51,36 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Plugin example app'),
         ),
         body: Center(
-          child: TextButton(
-            onPressed: _onPress,
-            child: const Text("Authenticate"),
-          ),
-        ),
+            child: Column(
+          children: [
+            TextButton(
+              onPressed: _authgear.sessionState == SessionState.noSession
+                  ? _onPressAuthenticate
+                  : null,
+              child: const Text("Authenticate"),
+            ),
+            TextButton(
+              onPressed: _authgear.sessionState == SessionState.authenticated
+                  ? _onPressLogout
+                  : null,
+              child: const Text("Logout"),
+            ),
+          ],
+        )),
       ),
     );
   }
 
-  Future<void> _onPress() async {
+  Future<void> _onPressAuthenticate() async {
     try {
       final result = await _authgear.authenticate(redirectURI: redirectURI);
       print("result: ${result.userInfo.sub}");
     } catch (e) {
       print("error: $e");
     }
+  }
+
+  Future<void> _onPressLogout() async {
+    await _authgear.logout();
   }
 }

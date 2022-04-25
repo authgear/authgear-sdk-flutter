@@ -151,9 +151,10 @@ class Authgear {
       xDeviceInfo: xDeviceInfo,
     );
     final tokenResponse = await _client.sendTokenRequest(tokenRequest);
-    // TODO: call userinfo
+    final accessToken = tokenResponse.accessToken!;
+    final userInfo = await _client.getUserInfo(accessToken);
     // TODO: persist refresh token
     // TODO: disable biometric
-    throw Exception("TODO");
+    return AuthenticateResult(userInfo: userInfo, state: state);
   }
 }

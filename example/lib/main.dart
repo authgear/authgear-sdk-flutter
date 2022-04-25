@@ -49,8 +49,8 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> _onPress() async {
     try {
-      final result = _authgear.authenticate(redirectURI: redirectURI);
-      print("result: $result");
+      final result = await _authgear.authenticate(redirectURI: redirectURI);
+      print("result: ${result.userInfo.sub}");
     } catch (e) {
       print("error: $e");
     }

@@ -42,13 +42,11 @@ enum AuthenticationPage {
 
 class UserInfo {
   final String sub;
-  final String iss;
   final bool isAnonymous;
   final bool isVerified;
 
   UserInfo.fromJSON(dynamic json)
       : sub = json["sub"],
-        iss = json["iss"],
         isAnonymous = json["https://authgear.com/claims/user/is_anonymous"],
         isVerified = json["https://authgear.com/claims/user/is_verified"];
 }
@@ -57,7 +55,7 @@ class AuthenticateResult {
   final UserInfo userInfo;
   final String? state;
 
-  AuthenticateResult._({required this.userInfo, required this.state});
+  AuthenticateResult({required this.userInfo, required this.state});
 }
 
 class OIDCConfiguration {

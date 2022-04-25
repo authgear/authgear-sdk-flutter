@@ -206,6 +206,16 @@ class APIClient {
     return _decodeOIDCResponse(httpResponse, OIDCTokenResponse.fromJSON);
   }
 
+  Future<UserInfo> getUserInfo(String accessToken) async {
+    final config = await fetchOIDCConfiguration();
+    final url = Uri.parse(config.userinfoEndpoint);
+    final headers = {
+      "authorization": "Bearer $accessToken",
+    };
+    final httpResponse = await _client.get(url, headers: headers);
+    return _decodeOIDCResponse(httpResponse, UserInfo.fromJSON);
+  }
+
   T _decodeOIDCResponse<T>(Response resp, T Function(dynamic) f) {
     final json = jsonDecode(utf8.decode(resp.bodyBytes));
     String? error = json["error"];

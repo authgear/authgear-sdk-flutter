@@ -2,12 +2,13 @@ import 'dart:io' show Platform;
 import 'dart:convert' show utf8, jsonDecode;
 import 'package:http/http.dart' show Client;
 import 'type.dart';
-import 'code_verifier.dart';
 
 class OIDCAuthenticationRequest {
+  final String clientID;
   final String redirectURI;
   final String responseType;
   final List<String> scope;
+  final String? codeChallenge;
   final String? state;
   final List<PromptOption>? prompt;
   final String? loginHint;
@@ -18,9 +19,11 @@ class OIDCAuthenticationRequest {
   final bool? suppressIDPSessionCookie;
 
   OIDCAuthenticationRequest({
+    required this.clientID,
     required this.redirectURI,
     required this.responseType,
     required this.scope,
+    this.codeChallenge,
     this.state,
     this.prompt,
     this.loginHint,
@@ -31,8 +34,7 @@ class OIDCAuthenticationRequest {
     this.suppressIDPSessionCookie,
   });
 
-  Map<String, String> toQueryParameters(
-      {required String clientID, required CodeVerifier? codeVerifier}) {
+  Map<String, String> toQueryParameters() {
     final q = {
       "response_type": responseType,
       "client_id": clientID,
@@ -47,9 +49,10 @@ class OIDCAuthenticationRequest {
       q["x_platform"] = "android";
     }
 
-    if (codeVerifier != null) {
+    final codeChallenge = this.codeChallenge;
+    if (codeChallenge != null) {
       q["code_challenge_method"] = "S256";
-      q["code_challenge"] = codeVerifier.codeChallenge;
+      q["code_challenge"] = codeChallenge;
     }
 
     final state = this.state;

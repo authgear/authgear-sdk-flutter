@@ -69,7 +69,9 @@ class Authgear {
     List<String>? uiLocales,
     AuthenticationPage? page,
   }) async {
+    final codeVerifier = CodeVerifier(_rng);
     final oidcRequest = OIDCAuthenticationRequest(
+      clientID: clientID,
       redirectURI: redirectURI,
       responseType: "code",
       scope: [
@@ -77,6 +79,7 @@ class Authgear {
         "offline_access",
         "https://authgear.com/scopes/full-access",
       ],
+      codeChallenge: codeVerifier.codeChallenge,
       state: state,
       prompt: prompt,
       loginHint: loginHint,
@@ -85,12 +88,8 @@ class Authgear {
       suppressIDPSessionCookie: !shareSessionWithSystemBrowser,
     );
     final config = await _client.fetchOIDCConfiguration();
-    final codeVerifier = CodeVerifier(_rng);
-    final authenticationURL = Uri.parse(config.authorizationEndpoint).replace(
-        queryParameters: oidcRequest.toQueryParameters(
-      clientID: clientID,
-      codeVerifier: codeVerifier,
-    ));
+    final authenticationURL = Uri.parse(config.authorizationEndpoint)
+        .replace(queryParameters: oidcRequest.toQueryParameters());
     final resultURL = await native.authenticate(
       url: authenticationURL.toString(),
       redirectURI: redirectURI,

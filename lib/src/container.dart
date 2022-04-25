@@ -1,9 +1,12 @@
 import 'dart:math' show Random;
 import 'dart:async' show StreamController;
+import 'dart:convert' show jsonEncode, utf8;
 import 'storage.dart';
 import 'client.dart';
 import 'type.dart';
 import 'code_verifier.dart';
+import 'exception.dart';
+import 'base64.dart';
 import 'native.dart' as native;
 
 class SessionStateChangeEvent {
@@ -14,6 +17,14 @@ class SessionStateChangeEvent {
 }
 
 final _rng = Random.secure();
+
+Future<String> _getXDeviceInfo() async {
+  final deviceInfo = await native.getDeviceInfo();
+  final deviceInfoJSON = jsonEncode(deviceInfo);
+  final deviceInfoJSONBytes = utf8.encode(deviceInfoJSON);
+  final xDeviceInfo = base64UrlEncode(deviceInfoJSONBytes);
+  return xDeviceInfo;
+}
 
 // It seems that dart's convention of iOS' delegate is individual property of write-only function
 // See https://api.dart.dev/stable/2.16.2/dart-io/HttpClient/authenticate.html
@@ -95,7 +106,54 @@ class Authgear {
       redirectURI: redirectURI,
       preferEphemeral: !shareSessionWithSystemBrowser,
     );
-    // TODO: code exchange
-    throw Exception(resultURL);
+    final xDeviceInfo = await _getXDeviceInfo();
+    return await _finishAuthentication(
+        url: Uri.parse(resultURL),
+        redirectURI: redirectURI,
+        codeVerifier: codeVerifier,
+        xDeviceInfo: xDeviceInfo);
+  }
+
+  Future<AuthenticateResult> _finishAuthentication({
+    required Uri url,
+    required String redirectURI,
+    required CodeVerifier codeVerifier,
+    required String xDeviceInfo,
+  }) async {
+    final queryParameters = url.queryParameters;
+    final error = queryParameters["error"];
+    final state = queryParameters["state"];
+    if (error != null) {
+      final errorDescription = queryParameters["error_description"];
+      final errorURI = queryParameters["error_uri"];
+      throw OAuthException(
+        error: error,
+        errorDescription: errorDescription,
+        errorURI: errorURI,
+        state: state,
+      );
+    }
+
+    final code = queryParameters["code"];
+    if (code == null) {
+      throw OAuthException(
+        error: "invalid_request",
+        errorDescription: "code is missing",
+      );
+    }
+
+    final tokenRequest = OIDCTokenRequest(
+      grantType: "authorization_code",
+      clientID: clientID,
+      code: code,
+      redirectURI: redirectURI,
+      codeVerifier: codeVerifier.value,
+      xDeviceInfo: xDeviceInfo,
+    );
+    final tokenResponse = await _client.sendTokenRequest(tokenRequest);
+    // TODO: call userinfo
+    // TODO: persist refresh token
+    // TODO: disable biometric
+    throw Exception("TODO");
   }
 }

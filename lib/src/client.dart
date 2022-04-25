@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 import 'dart:convert' show utf8, jsonDecode;
-import 'package:http/http.dart' show Client;
+import 'package:http/http.dart' show Client, Response;
+import 'exception.dart';
 import 'type.dart';
 
 class OIDCAuthenticationRequest {
@@ -99,6 +100,82 @@ class OIDCAuthenticationRequest {
   }
 }
 
+class OIDCTokenRequest {
+  final String grantType;
+  final String clientID;
+  final String? code;
+  final String? redirectURI;
+  final String? codeVerifier;
+  final String? refreshToken;
+  final String? jwt;
+  final String? xDeviceInfo;
+
+  OIDCTokenRequest({
+    required this.grantType,
+    required this.clientID,
+    this.code,
+    this.redirectURI,
+    this.codeVerifier,
+    this.refreshToken,
+    this.jwt,
+    this.xDeviceInfo,
+  });
+
+  Map<String, String> toQueryParameters() {
+    final q = {
+      "client_id": clientID,
+      "grant_type": grantType,
+    };
+
+    final code = this.code;
+    if (code != null) {
+      q["code"] = code;
+    }
+
+    final redirectURI = this.redirectURI;
+    if (redirectURI != null) {
+      q["redirect_uri"] = redirectURI;
+    }
+
+    final codeVerifier = this.codeVerifier;
+    if (codeVerifier != null) {
+      q["code_verifier"] = codeVerifier;
+    }
+
+    final refreshToken = this.refreshToken;
+    if (refreshToken != null) {
+      q["refresh_token"] = refreshToken;
+    }
+
+    final jwt = this.jwt;
+    if (jwt != null) {
+      q["jwt"] = jwt;
+    }
+
+    final xDeviceInfo = this.xDeviceInfo;
+    if (xDeviceInfo != null) {
+      q["x_device_info"] = xDeviceInfo;
+    }
+
+    return q;
+  }
+}
+
+class OIDCTokenResponse {
+  final String? idToken;
+  final String? tokenType;
+  final String? accessToken;
+  final int? expiresIn;
+  final String? refreshToken;
+
+  OIDCTokenResponse.fromJSON(dynamic json)
+      : idToken = json["id_token"],
+        tokenType = json["token_type"],
+        accessToken = json["access_token"],
+        expiresIn = json["expires_in"]?.toInt(),
+        refreshToken = json["refresh_token"];
+}
+
 class APIClient {
   final String endpoint;
   final Client _client;
@@ -119,5 +196,27 @@ class APIClient {
     final newConfig = OIDCConfiguration.fromJSON(json);
     _config = newConfig;
     return newConfig;
+  }
+
+  Future<OIDCTokenResponse> sendTokenRequest(OIDCTokenRequest request) async {
+    final config = await fetchOIDCConfiguration();
+    final url = Uri.parse(config.tokenEndpoint);
+    final httpResponse =
+        await _client.post(url, body: request.toQueryParameters());
+    return _decodeOIDCResponse(httpResponse, OIDCTokenResponse.fromJSON);
+  }
+
+  T _decodeOIDCResponse<T>(Response resp, T Function(dynamic) f) {
+    final json = jsonDecode(utf8.decode(resp.bodyBytes));
+    String? error = json["error"];
+    if (error != null) {
+      throw OAuthException(
+        error: error,
+        errorDescription: json["error_description"],
+        errorURI: json["error_uri"],
+        state: json["state"],
+      );
+    }
+    return f(json);
   }
 }

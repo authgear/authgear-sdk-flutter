@@ -32,3 +32,34 @@ Future<Map> getDeviceInfo() async {
     throw _wrapException(e);
   }
 }
+
+Future<void> storageSetItem(String key, String value) async {
+  try {
+    await _channel.invokeMethod("storageSetItem", {
+      "key": key,
+      "value": value,
+    });
+  } on PlatformException catch (e) {
+    throw _wrapException(e);
+  }
+}
+
+Future<String?> storageGetItem(String key) async {
+  try {
+    return await _channel.invokeMethod("storageGetItem", {
+      "key": key,
+    });
+  } on PlatformException catch (e) {
+    throw _wrapException(e);
+  }
+}
+
+Future<void> storageDeleteItem(String key) async {
+  try {
+    await _channel.invokeMethod("storageDeleteItem", {
+      "key": key,
+    });
+  } on PlatformException catch (e) {
+    throw _wrapException(e);
+  }
+}

@@ -21,6 +21,19 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
       self.authenticate(url: url, redirectURI: redirectURI, preferEphemeral: preferEphemeral, result: result)
     case "getDeviceInfo":
       self.getDeviceInfo(result: result)
+    case "storageSetItem":
+      let arguments = call.arguments as! Dictionary<String, AnyObject>
+      let key = arguments["key"] as! String
+      let value = arguments["value"] as! String
+      self.storageSetItem(key: key, value: value, result: result)
+    case "storageGetItem":
+      let arguments = call.arguments as! Dictionary<String, AnyObject>
+      let key = arguments["key"] as! String
+      self.storageGetItem(key: key, result: result)
+    case "storageDeleteItem":
+      let arguments = call.arguments as! Dictionary<String, AnyObject>
+      let key = arguments["key"] as! String
+      self.storageDeleteItem(key: key, result: result)
     default:
       result(FlutterMethodNotImplemented)
     }
@@ -149,6 +162,78 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     result(root)
   }
 
+  private func storageSetItem(key: String, value: String, result: FlutterResult) {
+    let data = value.data(using: .utf8)!
+    let updateQuery: [String: Any] = [
+      kSecClass as String: kSecClassGenericPassword,
+      kSecAttrAccount as String: key,
+    ]
+    let update: [String: Any] = [
+      kSecValueData as String: data,
+    ]
+
+    let updateStatus = SecItemUpdate(updateQuery as CFDictionary, update as CFDictionary)
+    switch updateStatus {
+    case errSecSuccess:
+      result(nil)
+    default:
+      let addQuery: [String: Any] = [
+        kSecClass as String: kSecClassGenericPassword,
+        kSecAttrAccount as String: key,
+        kSecValueData as String: data,
+      ]
+
+      let addStatus = SecItemAdd(addQuery as CFDictionary, nil)
+      switch addStatus {
+      case errSecSuccess:
+        result(nil)
+      default:
+        result(FlutterError.osStatus(status: addStatus))
+      }
+    }
+  }
+
+  private func storageGetItem(key: String, result: FlutterResult) {
+    let query: [String: Any] = [
+      kSecClass as String: kSecClassGenericPassword,
+      kSecAttrAccount as String: key,
+      kSecMatchLimit as String: kSecMatchLimitOne,
+      kSecReturnData as String: true,
+    ]
+
+    var item: CFTypeRef?
+    let status = withUnsafeMutablePointer(to: &item) {
+      SecItemCopyMatching(query as CFDictionary, $0)
+    }
+
+    switch status {
+    case errSecSuccess:
+      let value = String(data: item as! Data, encoding: .utf8)
+      result(value)
+    case errSecItemNotFound:
+      result(nil)
+    default:
+      result(FlutterError.osStatus(status: status))
+    }
+  }
+
+  private func storageDeleteItem(key: String, result: FlutterResult) {
+    let query: [String: Any] = [
+      kSecClass as String: kSecClassGenericPassword,
+      kSecAttrAccount as String: key,
+    ]
+
+    let status = SecItemDelete(query as CFDictionary)
+    switch status {
+    case errSecSuccess:
+      result(nil)
+    case errSecItemNotFound:
+      result(nil)
+    default:
+      result(FlutterError.osStatus(status: status))
+    }
+  }
+
   @available(iOS 12.0, *)
   public func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
     UIApplication.shared.windows.filter { $0.isKeyWindow }.first!
@@ -175,6 +260,17 @@ fileprivate extension FlutterError {
 
   static var unsupported: FlutterError {
     return FlutterError(code: "UNSUPPORTED", message: "flutter_authgear supports iOS >= 12", details: nil)
+  }
+
+  static func osStatus(status: OSStatus) -> FlutterError {
+    let nsError = NSError(domain: NSOSStatusErrorDomain, code: Int(status), userInfo: nil)
+    var message = String(status)
+    if #available(iOS 11.3, *) {
+      if let s = SecCopyErrorMessageString(status, nil) {
+        message = s as String
+      }
+    }
+    return FlutterError(code: String(nsError.code), message: message, details: nil)
   }
 }
 

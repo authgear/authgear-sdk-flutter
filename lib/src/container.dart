@@ -61,7 +61,7 @@ class Authgear {
     this.name = "default",
     this.shareSessionWithSystemBrowser = false,
     TokenStorage? tokenStorage,
-  })  : _tokenStorage = tokenStorage ?? TransientTokenStorage(),
+  })  : _tokenStorage = tokenStorage ?? PersistentTokenStorage(),
         _client = APIClient(endpoint: endpoint);
 
   Future<void> configure() async {

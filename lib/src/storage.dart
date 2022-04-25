@@ -1,3 +1,5 @@
+import 'native.dart' as native;
+
 abstract class TokenStorage {
   Future<void> setRefreshToken(String namespace, String token);
   Future<String?> getRefreshToken(String namespace);
@@ -22,7 +24,7 @@ abstract class _StorageDriver {
 
 class _KeyMaker {
   String scopedKey(String key) {
-    return "authgear_${key}";
+    return "authgear_$key";
   }
 
   String keyRefreshToken(String namespace) {
@@ -57,9 +59,26 @@ class _MemoryStorageDriver implements _StorageDriver {
   }
 }
 
-class TransientTokenStorage implements TokenStorage {
-  final _StorageDriver _driver = _MemoryStorageDriver();
-  final _KeyMaker _keyMaker = _KeyMaker();
+class _PlatformStorageDriver implements _StorageDriver {
+  @override
+  Future<void> set(String key, String value) async {
+    await native.storageSetItem(key, value);
+  }
+
+  @override
+  Future<String?> get(String key) async {
+    return await native.storageGetItem(key);
+  }
+
+  @override
+  Future<void> del(String key) async {
+    await native.storageDeleteItem(key);
+  }
+}
+
+abstract class AbstractTokenStorage implements TokenStorage {
+  abstract final _StorageDriver _driver;
+  abstract final _KeyMaker _keyMaker;
 
   @override
   Future<void> setRefreshToken(String namespace, String token) async {
@@ -78,4 +97,26 @@ class TransientTokenStorage implements TokenStorage {
     final key = _keyMaker.keyRefreshToken(namespace);
     _driver.del(key);
   }
+}
+
+class TransientTokenStorage extends AbstractTokenStorage {
+  @override
+  final _StorageDriver _driver;
+  @override
+  final _KeyMaker _keyMaker;
+
+  TransientTokenStorage()
+      : _driver = _MemoryStorageDriver(),
+        _keyMaker = _KeyMaker();
+}
+
+class PersistentTokenStorage extends AbstractTokenStorage {
+  @override
+  final _StorageDriver _driver;
+  @override
+  final _KeyMaker _keyMaker;
+
+  PersistentTokenStorage()
+      : _driver = _PlatformStorageDriver(),
+        _keyMaker = _KeyMaker();
 }

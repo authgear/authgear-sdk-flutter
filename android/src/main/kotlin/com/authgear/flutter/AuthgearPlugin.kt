@@ -1,12 +1,17 @@
 package com.authgear.flutter
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageInfo
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.annotation.NonNull
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
+import androidx.security.crypto.MasterKeys
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -95,6 +100,19 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
       }
       "getDeviceInfo" -> {
         this.getDeviceInfo(result)
+      }
+      "storageSetItem" -> {
+        val key: String = call.argument("key")!!
+        val value: String = call.argument("value")!!
+        this.storageSetItem(key, value, result)
+      }
+      "storageGetItem" -> {
+        val key: String = call.argument("key")!!
+        this.storageGetItem(key, result)
+      }
+      "storageDeleteItem" -> {
+        val key: String = call.argument("key")!!
+        this.storageDeleteItem(key, result)
       }
       else -> result.notImplemented()
     }
@@ -214,6 +232,51 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
     )
 
     result.success(root)
+  }
+
+  private fun getSharePreferences(): SharedPreferences {
+    val context = pluginBinding?.applicationContext!!
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+      val masterKey = MasterKey.Builder(context).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build()
+      return EncryptedSharedPreferences.create(
+        context,
+        "authgear_encrypted_shared_preferences",
+        masterKey,
+        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+      )
+    }
+    return context.getSharedPreferences("authgear_shared_preferences", Context.MODE_PRIVATE)
+  }
+
+  private fun storageSetItem(key: String, value: String, result: Result) {
+    try {
+      val sharedPreferences = this.getSharePreferences()
+      sharedPreferences.edit().putString(key, value).commit()
+      result.success(null)
+    } catch (e: Exception) {
+      result.exception(e)
+    }
+  }
+
+  private fun storageGetItem(key: String, result: Result) {
+    try {
+      val sharedPreferences = this.getSharePreferences()
+      val value = sharedPreferences.getString(key, null)
+      result.success(value)
+    } catch (e: Exception) {
+      result.exception(e)
+    }
+  }
+
+  private fun storageDeleteItem(key: String, result: Result) {
+    try {
+      val sharedPreferences = this.getSharePreferences()
+      sharedPreferences.edit().remove(key).commit()
+      result.success(null)
+    } catch (e: Exception) {
+      result.exception(e)
+    }
   }
 }
 

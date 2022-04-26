@@ -1,7 +1,8 @@
+import 'dart:async' show StreamSubscription;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'dart:async' show StreamSubscription;
-
+import 'package:shared_preferences/shared_preferences.dart'
+    show SharedPreferences;
 import 'package:flutter_authgear/authgear.dart';
 
 void main() {
@@ -18,56 +19,200 @@ class MyApp extends StatefulWidget {
 
 const redirectURI = "com.authgear.exampleapp.flutter://host/path";
 
-class AuthenticateButton extends StatelessWidget {
-  final Authgear authgear;
-  final void Function(dynamic) onError;
+String _showError(dynamic e) {
+  return "$e";
+}
 
-  const AuthenticateButton(
-      {Key? key, required this.authgear, required this.onError})
-      : super(key: key);
+class TextFieldWithLabel extends StatelessWidget {
+  final String label;
+  final String hintText;
+  final TextEditingController controller;
+
+  const TextFieldWithLabel({
+    Key? key,
+    required this.label,
+    required this.hintText,
+    required this.controller,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return TextButton(
-      onPressed: authgear.sessionState == SessionState.noSession
-          ? _onPressAuthenticate
-          : null,
-      child: const Text("Authenticate"),
-    );
-  }
-
-  Future<void> _onPressAuthenticate() async {
-    try {
-      await authgear.authenticate(redirectURI: redirectURI);
-    } catch (e) {
-      onError(e);
-    }
+    return Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        child: Column(
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(label),
+            ),
+            TextField(
+              controller: controller,
+              decoration: InputDecoration(
+                hintText: hintText,
+              ),
+            ),
+          ],
+        ));
   }
 }
 
-class GetUserInfoButton extends StatelessWidget {
-  final Authgear authgear;
-  final void Function(dynamic) onError;
+class SessionStateButton extends StatelessWidget {
+  final SessionState sessionState;
+  final SessionState targetState;
+  final void Function()? onPressed;
+  final String label;
 
-  const GetUserInfoButton(
-      {Key? key, required this.authgear, required this.onError})
-      : super(key: key);
+  const SessionStateButton({
+    Key? key,
+    required this.sessionState,
+    required this.targetState,
+    required this.onPressed,
+    required this.label,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return TextButton(
-      onPressed: authgear.sessionState == SessionState.authenticated
-          ? () {
-              _onPressGetUserInfo(context);
-            }
-          : null,
-      child: const Text("Get UserInfo"),
+      onPressed: sessionState == targetState ? onPressed : null,
+      child: Text(label),
     );
+  }
+}
+
+class _MyAppState extends State<MyApp> {
+  Authgear _authgear = Authgear(endpoint: "", clientID: "");
+  late SharedPreferences sharedPreferences;
+
+  TextEditingController endpointController = TextEditingController();
+  TextEditingController clientIDController = TextEditingController();
+
+  StreamSubscription<SessionStateChangeEvent>? _sub;
+
+  bool loading = false;
+
+  bool get unconfigured {
+    return _authgear.endpoint != endpointController.text ||
+        _authgear.clientID != clientIDController.text;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    endpointController.addListener(() {
+      setState(() {});
+    });
+    clientIDController.addListener(() {
+      setState(() {});
+    });
+
+    void init() async {
+      sharedPreferences = await SharedPreferences.getInstance();
+      final endpoint = sharedPreferences.getString("authgear.endpoint");
+      final clientID = sharedPreferences.getString("authgear.clientID");
+      if (endpoint != null && clientID != null) {
+        endpointController.text = endpoint;
+        clientIDController.text = clientID;
+        await _onPressConfigure();
+      }
+    }
+
+    init();
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    endpointController.dispose();
+    clientIDController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Builder(
+        builder: (BuildContext context) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Plugin example app'),
+            ),
+            body: ListView(
+              children: [
+                TextFieldWithLabel(
+                  label: "Endpoint",
+                  hintText: "Enter Authegar endpoint",
+                  controller: endpointController,
+                ),
+                TextFieldWithLabel(
+                  label: "Client ID",
+                  hintText: "Enter client ID",
+                  controller: clientIDController,
+                ),
+                TextButton(
+                  onPressed: () {
+                    _onPressConfigure();
+                  },
+                  child: const Text("Configure"),
+                ),
+                SessionStateButton(
+                  sessionState: _authgear.sessionState,
+                  targetState: SessionState.noSession,
+                  label: "Authenticate",
+                  onPressed: unconfigured || loading
+                      ? null
+                      : () {
+                          _onPressAuthenticate(context);
+                        },
+                ),
+                SessionStateButton(
+                  sessionState: _authgear.sessionState,
+                  targetState: SessionState.authenticated,
+                  label: "Get UserInfo",
+                  onPressed: unconfigured || loading
+                      ? null
+                      : () {
+                          _onPressGetUserInfo(context);
+                        },
+                ),
+                SessionStateButton(
+                  sessionState: _authgear.sessionState,
+                  targetState: SessionState.authenticated,
+                  label: "Logout",
+                  onPressed: unconfigured || loading
+                      ? null
+                      : () {
+                          _onPressLogout(context);
+                        },
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _onPressAuthenticate(BuildContext context) async {
+    try {
+      setState(() {
+        loading = true;
+      });
+      await _authgear.authenticate(redirectURI: redirectURI);
+    } catch (e) {
+      onError(context, e);
+    } finally {
+      setState(() {
+        loading = false;
+      });
+    }
   }
 
   Future<void> _onPressGetUserInfo(BuildContext context) async {
     try {
-      final userInfo = await authgear.getUserInfo();
+      setState(() {
+        loading = true;
+      });
+      final userInfo = await _authgear.getUserInfo();
       await showDialog(
         context: context,
         barrierDismissible: false,
@@ -89,80 +234,71 @@ class GetUserInfoButton extends StatelessWidget {
         },
       );
     } catch (e) {
-      onError(e);
+      onError(context, e);
+    } finally {
+      setState(() {
+        loading = false;
+      });
     }
   }
-}
 
-class LogoutButton extends StatelessWidget {
-  final Authgear authgear;
-  final void Function(dynamic) onError;
-  const LogoutButton({Key? key, required this.authgear, required this.onError})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return TextButton(
-      onPressed: authgear.sessionState == SessionState.authenticated
-          ? _onPressLogout
-          : null,
-      child: const Text("Logout"),
-    );
+  Future<void> _onPressLogout(BuildContext context) async {
+    try {
+      setState(() {
+        loading = true;
+      });
+      await _authgear.logout();
+    } catch (e) {
+      onError(context, e);
+    } finally {
+      setState(() {
+        loading = false;
+      });
+    }
   }
 
-  Future<void> _onPressLogout() async {
-    await authgear.logout();
-  }
-}
+  Future<void> _onPressConfigure() async {
+    final endpoint = endpointController.text;
+    final clientID = clientIDController.text;
 
-class _MyAppState extends State<MyApp> {
-  final Authgear _authgear =
-      Authgear(endpoint: "http://192.168.1.123:3100", clientID: "portal");
-
-  StreamSubscription<SessionStateChangeEvent>? _sub;
-
-  @override
-  void initState() {
-    super.initState();
-    _configure();
-  }
-
-  Future<void> _configure() async {
-    _sub = _authgear.onSessionStateChange.listen((e) {
-      print("reason: ${e.reason}");
-      print("sessionState: ${e.instance.sessionState}");
-      setState(() {});
-    });
-    await _authgear.configure();
-  }
-
-  @override
-  void dispose() {
+    final authgear = Authgear(endpoint: endpoint, clientID: clientID);
     _sub?.cancel();
-    super.dispose();
+    await authgear.configure();
+    await sharedPreferences.setString(
+      "authgear.endpoint",
+      endpoint,
+    );
+    await sharedPreferences.setString(
+      "authgear.clientID",
+      clientID,
+    );
+
+    setState(() {
+      _authgear = authgear;
+      _sub = _authgear.onSessionStateChange.listen((e) {
+        setState(() {});
+      });
+    });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Builder(
-        builder: (BuildContext context) {
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Plugin example app'),
+  void onError(BuildContext context, dynamic e) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Error"),
+          content: Text(_showError(e)),
+          actions: [
+            TextButton(
+              child: const Text("OK"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
             ),
-            body: Center(
-                child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AuthenticateButton(authgear: _authgear, onError: (_e) {}),
-                GetUserInfoButton(authgear: _authgear, onError: (_e) {}),
-                LogoutButton(authgear: _authgear, onError: (_e) {}),
-              ],
-            )),
-          );
-        },
-      ),
+          ],
+        );
+      },
     );
   }
 }

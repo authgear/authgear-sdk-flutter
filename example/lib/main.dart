@@ -18,7 +18,7 @@ const redirectURI = "com.authgear.exampleapp.flutter://host/path";
 
 class _MyAppState extends State<MyApp> {
   final Authgear _authgear =
-      Authgear(endpoint: "http://192.168.1.235:3100", clientID: "portal");
+      Authgear(endpoint: "http://192.168.1.123:3100", clientID: "portal");
 
   StreamSubscription<SessionStateChangeEvent>? _sub;
 
@@ -46,27 +46,41 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Plugin example app'),
-        ),
-        body: Center(
-            child: Column(
-          children: [
-            TextButton(
-              onPressed: _authgear.sessionState == SessionState.noSession
-                  ? _onPressAuthenticate
-                  : null,
-              child: const Text("Authenticate"),
+      home: Builder(
+        builder: (BuildContext context) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Plugin example app'),
             ),
-            TextButton(
-              onPressed: _authgear.sessionState == SessionState.authenticated
-                  ? _onPressLogout
-                  : null,
-              child: const Text("Logout"),
-            ),
-          ],
-        )),
+            body: Center(
+                child: Column(
+              children: [
+                TextButton(
+                  onPressed: _authgear.sessionState == SessionState.noSession
+                      ? _onPressAuthenticate
+                      : null,
+                  child: const Text("Authenticate"),
+                ),
+                TextButton(
+                  onPressed:
+                      _authgear.sessionState == SessionState.authenticated
+                          ? () {
+                              _onPressGetUserInfo(context);
+                            }
+                          : null,
+                  child: const Text("Get UserInfo"),
+                ),
+                TextButton(
+                  onPressed:
+                      _authgear.sessionState == SessionState.authenticated
+                          ? _onPressLogout
+                          : null,
+                  child: const Text("Logout"),
+                ),
+              ],
+            )),
+          );
+        },
       ),
     );
   }
@@ -82,5 +96,29 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> _onPressLogout() async {
     await _authgear.logout();
+  }
+
+  Future<void> _onPressGetUserInfo(BuildContext context) async {
+    final userInfo = await _authgear.getUserInfo();
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("User Info"),
+          content: Text(
+            "sub: ${userInfo.sub}\nisAnonymous: ${userInfo.isAnonymous}\nisVerified: ${userInfo.isVerified}",
+          ),
+          actions: [
+            TextButton(
+              child: const Text("OK"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 }

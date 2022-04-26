@@ -1,7 +1,7 @@
 import 'dart:math' show Random;
 import 'dart:async' show StreamController;
 import 'dart:convert' show jsonEncode, utf8;
-import 'package:flutter_authgear/authgear.dart';
+import 'package:http/http.dart' show Client;
 
 import 'storage.dart';
 import 'client.dart';
@@ -32,13 +32,14 @@ Future<String> _getXDeviceInfo() async {
 
 // It seems that dart's convention of iOS' delegate is individual property of write-only function
 // See https://api.dart.dev/stable/2.16.2/dart-io/HttpClient/authenticate.html
-class Authgear {
+class Authgear implements AuthgearHttpClientDelegate {
   final String clientID;
   final String endpoint;
   final String name;
   final bool shareSessionWithSystemBrowser;
+
   final TokenStorage _tokenStorage;
-  final APIClient _client;
+  late final APIClient _apiClient;
 
   SessionState _sessionStateRaw = SessionState.unknown;
   SessionState get sessionState => _sessionStateRaw;
@@ -48,6 +49,7 @@ class Authgear {
       _sessionStateStreamController.stream;
 
   String? _accessToken;
+  @override
   String? get accessToken => _accessToken;
   String? _refreshToken;
   DateTime? _expireAt;
@@ -61,8 +63,15 @@ class Authgear {
     this.name = "default",
     this.shareSessionWithSystemBrowser = false,
     TokenStorage? tokenStorage,
-  })  : _tokenStorage = tokenStorage ?? PersistentTokenStorage(),
-        _client = APIClient(endpoint: endpoint);
+  }) : _tokenStorage = tokenStorage ?? PersistentTokenStorage() {
+    final plainHttpClient = Client();
+    final authgearHttpClient = AuthgearHttpClient(this, plainHttpClient);
+    _apiClient = APIClient(
+      endpoint: endpoint,
+      plainHttpClient: plainHttpClient,
+      authgearHttpClient: authgearHttpClient,
+    );
+  }
 
   Future<void> configure() async {
     _refreshToken = await _tokenStorage.getRefreshToken(name);
@@ -104,7 +113,7 @@ class Authgear {
       page: page,
       suppressIDPSessionCookie: !shareSessionWithSystemBrowser,
     );
-    final config = await _client.fetchOIDCConfiguration();
+    final config = await _apiClient.fetchOIDCConfiguration();
     final authenticationURL = Uri.parse(config.authorizationEndpoint)
         .replace(queryParameters: oidcRequest.toQueryParameters());
     final resultURL = await native.authenticate(
@@ -120,11 +129,15 @@ class Authgear {
         xDeviceInfo: xDeviceInfo);
   }
 
+  Future<UserInfo> getUserInfo() async {
+    return _apiClient.getUserInfo();
+  }
+
   Future<void> logout({bool force = false}) async {
     final refreshToken = await _tokenStorage.getRefreshToken(name);
     if (refreshToken != null) {
       try {
-        await _client.revoke(refreshToken);
+        await _apiClient.revoke(refreshToken);
       } on Exception {
         if (!force) {
           rethrow;
@@ -132,6 +145,57 @@ class Authgear {
       }
     }
     await _clearSession(SessionStateChangeReason.logout);
+  }
+
+  Client wrapHttpClient(Client inner) {
+    return AuthgearHttpClient(this, inner);
+  }
+
+  @override
+  bool get shouldRefreshAccessToken {
+    if (_refreshToken == null) {
+      return false;
+    }
+    if (_accessToken == null) {
+      return true;
+    }
+    final expireAt = _expireAt;
+    if (expireAt == null) {
+      return true;
+    }
+    final now = DateTime.now().toUtc();
+    if (expireAt.compareTo(now) < 0) {
+      return true;
+    }
+    return false;
+  }
+
+  @override
+  Future<void> refreshAccessToken() async {
+    final refreshToken = await _tokenStorage.getRefreshToken(name);
+    if (refreshToken == null) {
+      await _clearSession(SessionStateChangeReason.noToken);
+      return;
+    }
+
+    final xDeviceInfo = await _getXDeviceInfo();
+    final tokenRequest = OIDCTokenRequest(
+      grantType: "refresh_token",
+      clientID: clientID,
+      refreshToken: refreshToken,
+      xDeviceInfo: xDeviceInfo,
+    );
+    try {
+      final tokenResponse = await _apiClient.sendTokenRequest(tokenRequest);
+      await _persistTokenResponse(
+          tokenResponse, SessionStateChangeReason.foundToken);
+    } on OAuthException catch (e) {
+      if (e.error == "invalid_grant") {
+        await _clearSession(SessionStateChangeReason.invalid);
+        return;
+      }
+      rethrow;
+    }
   }
 
   Future<void> _clearSession(SessionStateChangeReason reason) async {
@@ -179,12 +243,11 @@ class Authgear {
       codeVerifier: codeVerifier.value,
       xDeviceInfo: xDeviceInfo,
     );
-    final tokenResponse = await _client.sendTokenRequest(tokenRequest);
-    final accessToken = tokenResponse.accessToken!;
-    final userInfo = await _client.getUserInfo(accessToken);
+    final tokenResponse = await _apiClient.sendTokenRequest(tokenRequest);
     await _persistTokenResponse(
         tokenResponse, SessionStateChangeReason.authenticated);
     // TODO: disable biometric
+    final userInfo = await _apiClient.getUserInfo();
     return AuthenticateResult(userInfo: userInfo, state: state);
   }
 

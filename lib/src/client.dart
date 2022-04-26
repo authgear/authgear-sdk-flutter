@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 import 'dart:convert' show utf8, jsonDecode;
-import 'package:http/http.dart' show Client, Response;
+import 'package:http/http.dart'
+    show Client, Response, BaseClient, BaseRequest, StreamedResponse;
 import 'exception.dart';
 import 'type.dart';
 
@@ -178,10 +179,16 @@ class OIDCTokenResponse {
 
 class APIClient {
   final String endpoint;
-  final Client _client;
+  final Client _plainHttpClient;
+  final AuthgearHttpClient _authgearHttpClient;
   OIDCConfiguration? _config;
 
-  APIClient({required this.endpoint}) : _client = Client();
+  APIClient({
+    required this.endpoint,
+    required Client plainHttpClient,
+    required AuthgearHttpClient authgearHttpClient,
+  })  : _plainHttpClient = plainHttpClient,
+        _authgearHttpClient = authgearHttpClient;
 
   Future<OIDCConfiguration> fetchOIDCConfiguration() async {
     final config = _config;
@@ -191,7 +198,7 @@ class APIClient {
 
     final url =
         Uri.parse(endpoint).replace(path: "/.well-known/openid-configuration");
-    final resp = await _client.get(url);
+    final resp = await _plainHttpClient.get(url);
     final json = jsonDecode(utf8.decode(resp.bodyBytes));
     final newConfig = OIDCConfiguration.fromJSON(json);
     _config = newConfig;
@@ -202,17 +209,14 @@ class APIClient {
     final config = await fetchOIDCConfiguration();
     final url = Uri.parse(config.tokenEndpoint);
     final httpResponse =
-        await _client.post(url, body: request.toQueryParameters());
+        await _plainHttpClient.post(url, body: request.toQueryParameters());
     return _decodeOIDCResponse(httpResponse, OIDCTokenResponse.fromJSON);
   }
 
-  Future<UserInfo> getUserInfo(String accessToken) async {
+  Future<UserInfo> getUserInfo() async {
     final config = await fetchOIDCConfiguration();
     final url = Uri.parse(config.userinfoEndpoint);
-    final headers = {
-      "authorization": "Bearer $accessToken",
-    };
-    final httpResponse = await _client.get(url, headers: headers);
+    final httpResponse = await _authgearHttpClient.get(url);
     return _decodeOIDCResponse(httpResponse, UserInfo.fromJSON);
   }
 
@@ -222,7 +226,7 @@ class APIClient {
     final body = {
       "token": refreshToken,
     };
-    await _client.post(url, body: body);
+    await _plainHttpClient.post(url, body: body);
   }
 
   T _decodeOIDCResponse<T>(Response resp, T Function(dynamic) f) {
@@ -237,5 +241,27 @@ class APIClient {
       );
     }
     return f(json);
+  }
+}
+
+class AuthgearHttpClient extends BaseClient {
+  final AuthgearHttpClientDelegate _delegate;
+  final Client _inner;
+
+  AuthgearHttpClient(this._delegate, this._inner);
+
+  @override
+  Future<StreamedResponse> send(BaseRequest request) async {
+    final delegate = _delegate;
+    final shouldRefresh = delegate.shouldRefreshAccessToken;
+    if (shouldRefresh) {
+      await delegate.refreshAccessToken();
+    }
+    final accessToken = delegate.accessToken;
+    if (accessToken != null) {
+      request.headers["authorization"] = "Bearer $accessToken";
+    }
+    final resp = await _inner.send(request);
+    return resp;
   }
 }

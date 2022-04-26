@@ -72,3 +72,9 @@ class OIDCConfiguration {
         revocationEndpoint = json["revocation_endpoint"],
         endSessionEndpoint = json["end_session_endpoint"];
 }
+
+abstract class AuthgearHttpClientDelegate {
+  String? get accessToken;
+  bool get shouldRefreshAccessToken;
+  Future<void> refreshAccessToken();
+}

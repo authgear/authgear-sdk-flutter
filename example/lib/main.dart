@@ -121,6 +121,7 @@ class _MyAppState extends State<MyApp> {
 
   bool loading = false;
   bool _useTransientTokenStorage = false;
+  bool _shareSessionWithSystemBrowser = false;
 
   bool get unconfigured {
     return _authgear.endpoint != endpointController.text ||
@@ -186,6 +187,15 @@ class _MyAppState extends State<MyApp> {
                   onChanged: (newValue) {
                     setState(() {
                       _useTransientTokenStorage = newValue;
+                    });
+                  },
+                ),
+                SwitchWithLabel(
+                  label: "Share Session With Device Browser",
+                  value: _shareSessionWithSystemBrowser,
+                  onChanged: (newValue) {
+                    setState(() {
+                      _shareSessionWithSystemBrowser = newValue;
                     });
                   },
                 ),
@@ -352,10 +362,11 @@ class _MyAppState extends State<MyApp> {
     final clientID = clientIDController.text;
 
     final authgear = Authgear(
-        endpoint: endpoint,
-        clientID: clientID,
-        tokenStorage:
-            _useTransientTokenStorage ? TransientTokenStorage() : null);
+      endpoint: endpoint,
+      clientID: clientID,
+      shareSessionWithSystemBrowser: _shareSessionWithSystemBrowser,
+      tokenStorage: _useTransientTokenStorage ? TransientTokenStorage() : null,
+    );
     _sub?.cancel();
     await authgear.configure();
     await sharedPreferences.setString(

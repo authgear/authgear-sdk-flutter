@@ -134,7 +134,7 @@ class Authgear implements AuthgearHttpClientDelegate {
   }
 
   Future<void> logout({bool force = false}) async {
-    final refreshToken = await _tokenStorage.getRefreshToken(name);
+    final refreshToken = _refreshToken;
     if (refreshToken != null) {
       try {
         await _apiClient.revoke(refreshToken);
@@ -172,7 +172,7 @@ class Authgear implements AuthgearHttpClientDelegate {
 
   @override
   Future<void> refreshAccessToken() async {
-    final refreshToken = await _tokenStorage.getRefreshToken(name);
+    final refreshToken = _refreshToken;
     if (refreshToken == null) {
       await _clearSession(SessionStateChangeReason.noToken);
       return;

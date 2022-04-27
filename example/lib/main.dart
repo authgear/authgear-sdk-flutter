@@ -56,6 +56,37 @@ class TextFieldWithLabel extends StatelessWidget {
   }
 }
 
+class SwitchWithLabel extends StatelessWidget {
+  final String label;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const SwitchWithLabel({
+    Key? key,
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(label),
+          ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class SessionStateButton extends StatelessWidget {
   final SessionState sessionState;
   final SessionState targetState;
@@ -89,6 +120,7 @@ class _MyAppState extends State<MyApp> {
   StreamSubscription<SessionStateChangeEvent>? _sub;
 
   bool loading = false;
+  bool _useTransientTokenStorage = false;
 
   bool get unconfigured {
     return _authgear.endpoint != endpointController.text ||
@@ -147,6 +179,15 @@ class _MyAppState extends State<MyApp> {
                   label: "Client ID",
                   hintText: "Enter client ID",
                   controller: clientIDController,
+                ),
+                SwitchWithLabel(
+                  label: "Use TransientTokenStorage",
+                  value: _useTransientTokenStorage,
+                  onChanged: (newValue) {
+                    setState(() {
+                      _useTransientTokenStorage = newValue;
+                    });
+                  },
                 ),
                 TextButton(
                   onPressed: () {
@@ -310,7 +351,11 @@ class _MyAppState extends State<MyApp> {
     final endpoint = endpointController.text;
     final clientID = clientIDController.text;
 
-    final authgear = Authgear(endpoint: endpoint, clientID: clientID);
+    final authgear = Authgear(
+        endpoint: endpoint,
+        clientID: clientID,
+        tokenStorage:
+            _useTransientTokenStorage ? TransientTokenStorage() : null);
     _sub?.cancel();
     await authgear.configure();
     await sharedPreferences.setString(

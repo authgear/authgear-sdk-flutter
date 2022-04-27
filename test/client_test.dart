@@ -35,6 +35,7 @@ void main() {
       redirectURI: "http://host/path",
       codeVerifier: "codeVerifier",
       refreshToken: "refreshToken",
+      accessToken: "accessToken",
       jwt: "jwt",
       xDeviceInfo: "xDeviceInfo",
     );
@@ -46,6 +47,7 @@ void main() {
       "redirect_uri": "http://host/path",
       "code_verifier": "codeVerifier",
       "refresh_token": "refreshToken",
+      "access_token": "accessToken",
       "jwt": "jwt",
       "x_device_info": "xDeviceInfo",
     });

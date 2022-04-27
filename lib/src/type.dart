@@ -74,6 +74,13 @@ class AuthenticateResult {
   AuthenticateResult({required this.userInfo, required this.state});
 }
 
+class ReauthenticateResult {
+  final UserInfo userInfo;
+  final String? state;
+
+  ReauthenticateResult({required this.userInfo, required this.state});
+}
+
 class OIDCConfiguration {
   final String authorizationEndpoint;
   final String tokenEndpoint;

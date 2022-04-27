@@ -167,6 +167,16 @@ class _MyAppState extends State<MyApp> {
                 SessionStateButton(
                   sessionState: _authgear.sessionState,
                   targetState: SessionState.authenticated,
+                  label: "Reauthenticate (web-only)",
+                  onPressed: unconfigured || loading
+                      ? null
+                      : () {
+                          _onPressReauthenticateWeb(context);
+                        },
+                ),
+                SessionStateButton(
+                  sessionState: _authgear.sessionState,
+                  targetState: SessionState.authenticated,
                   label: "Get UserInfo",
                   onPressed: unconfigured || loading
                       ? null
@@ -182,6 +192,16 @@ class _MyAppState extends State<MyApp> {
                       ? null
                       : () {
                           _onPressOpenSettings(context);
+                        },
+                ),
+                SessionStateButton(
+                  sessionState: _authgear.sessionState,
+                  targetState: SessionState.authenticated,
+                  label: "Show auth_time",
+                  onPressed: unconfigured || loading
+                      ? null
+                      : () {
+                          _onPressShowAuthTime(context);
                         },
                 ),
                 SessionStateButton(
@@ -208,6 +228,25 @@ class _MyAppState extends State<MyApp> {
         loading = true;
       });
       await _authgear.authenticate(redirectURI: redirectURI);
+    } catch (e) {
+      onError(context, e);
+    } finally {
+      setState(() {
+        loading = false;
+      });
+    }
+  }
+
+  Future<void> _onPressReauthenticateWeb(BuildContext context) async {
+    try {
+      setState(() {
+        loading = true;
+      });
+      await _authgear.refreshIDToken();
+      if (!_authgear.canReauthenticate) {
+        throw Exception("canReauthenticate returns false for the current user");
+      }
+      await _authgear.reauthenticate(redirectURI: redirectURI);
     } catch (e) {
       onError(context, e);
     } finally {
@@ -304,6 +343,27 @@ class _MyAppState extends State<MyApp> {
         loading = false;
       });
     }
+  }
+
+  Future<void> _onPressShowAuthTime(BuildContext context) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("auth_time"),
+          content: Text("${_authgear.authTime}"),
+          actions: [
+            TextButton(
+              child: const Text("OK"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void onError(BuildContext context, dynamic e) {

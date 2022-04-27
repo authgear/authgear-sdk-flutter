@@ -9,6 +9,7 @@ import 'type.dart';
 import 'code_verifier.dart';
 import 'exception.dart';
 import 'base64.dart';
+import 'id_token.dart';
 import 'native.dart' as native;
 
 class SessionStateChangeEvent {
@@ -56,6 +57,29 @@ class Authgear implements AuthgearHttpClientDelegate {
 
   String? _idToken;
   String? get idTokenHint => _idToken;
+  bool get canReauthenticate {
+    final idToken = _idToken;
+    if (idToken == null) {
+      return false;
+    }
+    final payload = decodeIDToken(idToken);
+    final can = payload["https://authgear.com/claims/user/can_reauthenticate"];
+    return can is bool && can == true;
+  }
+
+  DateTime? get authTime {
+    final idToken = _idToken;
+    if (idToken == null) {
+      return null;
+    }
+    final payload = decodeIDToken(idToken);
+    final authTimeValue = payload["auth_time"];
+    if (authTimeValue is num) {
+      return DateTime.fromMillisecondsSinceEpoch(authTimeValue.toInt() * 1000,
+          isUtc: true);
+    }
+    return null;
+  }
 
   Authgear({
     required this.clientID,
@@ -91,7 +115,6 @@ class Authgear implements AuthgearHttpClientDelegate {
     required String redirectURI,
     String? state,
     List<PromptOption>? prompt,
-    String? loginHint,
     List<String>? uiLocales,
     AuthenticationPage? page,
   }) async {
@@ -108,7 +131,6 @@ class Authgear implements AuthgearHttpClientDelegate {
       codeChallenge: codeVerifier.codeChallenge,
       state: state,
       prompt: prompt,
-      loginHint: loginHint,
       uiLocales: uiLocales,
       page: page,
       suppressIDPSessionCookie: !shareSessionWithSystemBrowser,
@@ -123,6 +145,44 @@ class Authgear implements AuthgearHttpClientDelegate {
     );
     final xDeviceInfo = await _getXDeviceInfo();
     return await _finishAuthentication(
+        url: Uri.parse(resultURL),
+        redirectURI: redirectURI,
+        codeVerifier: codeVerifier,
+        xDeviceInfo: xDeviceInfo);
+  }
+
+  Future<ReauthenticateResult> reauthenticate({
+    required String redirectURI,
+    int maxAge = 0,
+    String? state,
+    List<String>? uiLocales,
+  }) async {
+    final codeVerifier = CodeVerifier(_rng);
+    final oidcRequest = OIDCAuthenticationRequest(
+      clientID: clientID,
+      redirectURI: redirectURI,
+      responseType: "code",
+      scope: [
+        "openid",
+        "https://authgear.com/scopes/full-access",
+      ],
+      codeChallenge: codeVerifier.codeChallenge,
+      state: state,
+      uiLocales: uiLocales,
+      idTokenHint: idTokenHint,
+      maxAge: maxAge,
+      suppressIDPSessionCookie: !shareSessionWithSystemBrowser,
+    );
+    final config = await _apiClient.fetchOIDCConfiguration();
+    final authenticationURL = Uri.parse(config.authorizationEndpoint)
+        .replace(queryParameters: oidcRequest.toQueryParameters());
+    final resultURL = await native.authenticate(
+      url: authenticationURL.toString(),
+      redirectURI: redirectURI,
+      preferEphemeral: !shareSessionWithSystemBrowser,
+    );
+    final xDeviceInfo = await _getXDeviceInfo();
+    return await _finishReauthentication(
         url: Uri.parse(resultURL),
         redirectURI: redirectURI,
         codeVerifier: codeVerifier,
@@ -169,6 +229,25 @@ class Authgear implements AuthgearHttpClientDelegate {
   Future<void> open(SettingsPage page) async {
     final url = Uri.parse(endpoint).replace(path: page.path).toString();
     return openURL(url);
+  }
+
+  Future<void> refreshIDToken() async {
+    if (shouldRefreshAccessToken) {
+      await refreshAccessToken();
+    }
+
+    final tokenRequest = OIDCTokenRequest(
+      grantType: "urn:authgear:params:oauth:grant-type:id-token",
+      clientID: clientID,
+      accessToken: accessToken,
+    );
+
+    final tokenResponse = await _apiClient.sendTokenRequest(tokenRequest,
+        includeAccessToken: true);
+    final idToken = tokenResponse.idToken;
+    if (idToken != null) {
+      _idToken = idToken;
+    }
   }
 
   Future<void> logout({bool force = false}) async {
@@ -245,7 +324,7 @@ class Authgear implements AuthgearHttpClientDelegate {
     _setSessionState(SessionState.noSession, reason);
   }
 
-  Future<AuthenticateResult> _finishAuthentication({
+  Future<OIDCTokenResponse> _exchangeCode({
     required Uri url,
     required String redirectURI,
     required CodeVerifier codeVerifier,
@@ -282,11 +361,50 @@ class Authgear implements AuthgearHttpClientDelegate {
       xDeviceInfo: xDeviceInfo,
     );
     final tokenResponse = await _apiClient.sendTokenRequest(tokenRequest);
+    return tokenResponse;
+  }
+
+  Future<AuthenticateResult> _finishAuthentication({
+    required Uri url,
+    required String redirectURI,
+    required CodeVerifier codeVerifier,
+    required String xDeviceInfo,
+  }) async {
+    final queryParameters = url.queryParameters;
+    final state = queryParameters["state"];
+    final tokenResponse = await _exchangeCode(
+      url: url,
+      redirectURI: redirectURI,
+      codeVerifier: codeVerifier,
+      xDeviceInfo: xDeviceInfo,
+    );
     await _persistTokenResponse(
         tokenResponse, SessionStateChangeReason.authenticated);
     // TODO: disable biometric
     final userInfo = await _apiClient.getUserInfo();
     return AuthenticateResult(userInfo: userInfo, state: state);
+  }
+
+  Future<ReauthenticateResult> _finishReauthentication({
+    required Uri url,
+    required String redirectURI,
+    required CodeVerifier codeVerifier,
+    required String xDeviceInfo,
+  }) async {
+    final queryParameters = url.queryParameters;
+    final state = queryParameters["state"];
+    final tokenResponse = await _exchangeCode(
+      url: url,
+      redirectURI: redirectURI,
+      codeVerifier: codeVerifier,
+      xDeviceInfo: xDeviceInfo,
+    );
+    final idToken = tokenResponse.idToken;
+    if (idToken != null) {
+      _idToken = idToken;
+    }
+    final userInfo = await _apiClient.getUserInfo();
+    return ReauthenticateResult(userInfo: userInfo, state: state);
   }
 
   Future<void> _persistTokenResponse(

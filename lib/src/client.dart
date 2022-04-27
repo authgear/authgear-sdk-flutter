@@ -108,6 +108,7 @@ class OIDCTokenRequest {
   final String? redirectURI;
   final String? codeVerifier;
   final String? refreshToken;
+  final String? accessToken;
   final String? jwt;
   final String? xDeviceInfo;
 
@@ -118,6 +119,7 @@ class OIDCTokenRequest {
     this.redirectURI,
     this.codeVerifier,
     this.refreshToken,
+    this.accessToken,
     this.jwt,
     this.xDeviceInfo,
   });
@@ -146,6 +148,11 @@ class OIDCTokenRequest {
     final refreshToken = this.refreshToken;
     if (refreshToken != null) {
       q["refresh_token"] = refreshToken;
+    }
+
+    final accessToken = this.accessToken;
+    if (accessToken != null) {
+      q["access_token"] = accessToken;
     }
 
     final jwt = this.jwt;
@@ -205,11 +212,14 @@ class APIClient {
     return newConfig;
   }
 
-  Future<OIDCTokenResponse> sendTokenRequest(OIDCTokenRequest request) async {
+  Future<OIDCTokenResponse> sendTokenRequest(OIDCTokenRequest request,
+      {bool includeAccessToken = false}) async {
     final config = await fetchOIDCConfiguration();
     final url = Uri.parse(config.tokenEndpoint);
+    final clientToUse =
+        includeAccessToken ? _authgearHttpClient : _plainHttpClient;
     final httpResponse =
-        await _plainHttpClient.post(url, body: request.toQueryParameters());
+        await clientToUse.post(url, body: request.toQueryParameters());
     return _decodeOIDCResponse(httpResponse, OIDCTokenResponse.fromJSON);
   }
 

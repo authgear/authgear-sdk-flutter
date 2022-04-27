@@ -16,9 +16,14 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
       let urlString = arguments["url"] as! String
       let redirectURIString = arguments["redirectURI"] as! String
       let preferEphemeral = arguments["preferEphemeral"] as! Bool
-      let url = URL(string: urlString)
-      let redirectURI = URL(string: redirectURIString)
+      let url = URL(string: urlString)!
+      let redirectURI = URL(string: redirectURIString)!
       self.authenticate(url: url, redirectURI: redirectURI, preferEphemeral: preferEphemeral, result: result)
+    case "openURL":
+      let arguments = call.arguments as! Dictionary<String, AnyObject>
+      let urlString = arguments["url"] as! String
+      let url = URL(string: urlString)!
+      self.openURL(url: url, result: result);
     case "getDeviceInfo":
       self.getDeviceInfo(result: result)
     case "storageSetItem":
@@ -39,7 +44,7 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     }
   }
 
-  private func authenticate(url: URL?, redirectURI: URL?, preferEphemeral: Bool, result: @escaping FlutterResult) {
+  private func authenticate(url: URL, redirectURI: URL, preferEphemeral: Bool, result: @escaping FlutterResult) {
     var sessionToKeepAlive: Any? = nil
     let completionHandler = { (url: URL?, error: Error?) in
       sessionToKeepAlive = nil
@@ -66,13 +71,49 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
 
     if #available(iOS 12, *) {
       let session = ASWebAuthenticationSession(
-        url: url!,
-        callbackURLScheme: redirectURI?.scheme,
+        url: url,
+        callbackURLScheme: redirectURI.scheme,
         completionHandler: completionHandler
       )
       if #available(iOS 13, *) {
         session.presentationContextProvider = self
         session.prefersEphemeralWebBrowserSession = preferEphemeral
+      }
+      session.start()
+      sessionToKeepAlive = session
+    } else {
+      result(FlutterError.unsupported)
+    }
+  }
+
+  private func openURL(url: URL, result: @escaping FlutterResult) {
+    var sessionToKeepAlive: Any? = nil
+    let completionHandler = { (url: URL?, error: Error?) in
+      sessionToKeepAlive = nil
+      if let error = error {
+        if #available(iOS 12, *) {
+          if case ASWebAuthenticationSessionError.canceledLogin = error {
+            result(nil)
+            return
+          }
+        }
+
+        self.handleError(result: result, error: error)
+        return
+      }
+
+      result(FlutterError.unreachable)
+      return
+    }
+    if #available(iOS 12, *) {
+      let session = ASWebAuthenticationSession(
+        url: url,
+        callbackURLScheme: "nocallback",
+        completionHandler: completionHandler
+      )
+      if #available(iOS 13, *) {
+        session.presentationContextProvider = self
+        session.prefersEphemeralWebBrowserSession = true
       }
       session.start()
       sessionToKeepAlive = session

@@ -25,6 +25,16 @@ Future<String> authenticate(
   }
 }
 
+Future<void> openURL(String url) async {
+  try {
+    await _channel.invokeMethod("openURL", {
+      "url": url,
+    });
+  } on PlatformException catch (e) {
+    throw _wrapException(e);
+  }
+}
+
 Future<Map> getDeviceInfo() async {
   try {
     return await _channel.invokeMethod("getDeviceInfo");

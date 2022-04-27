@@ -133,6 +133,44 @@ class Authgear implements AuthgearHttpClientDelegate {
     return _apiClient.getUserInfo();
   }
 
+  Future<void> openURL(String url) async {
+    final refreshToken = _refreshToken;
+    if (refreshToken == null) {
+      throw Exception("openURL requires authenticated user");
+    }
+
+    final appSessionTokenResp =
+        await _apiClient.getAppSessionToken(refreshToken);
+
+    final loginHint =
+        Uri.parse("https://authgear.com/login_hint").replace(queryParameters: {
+      "type": "app_session_token",
+      "app_session_token": appSessionTokenResp.appSessionToken,
+    }).toString();
+
+    final oidcRequest = OIDCAuthenticationRequest(
+      clientID: clientID,
+      redirectURI: url,
+      responseType: "none",
+      scope: [
+        "openid",
+        "offline_access",
+        "https://authgear.com/scopes/full-access",
+      ],
+      prompt: [PromptOption.none],
+      loginHint: loginHint,
+    );
+    final config = await _apiClient.fetchOIDCConfiguration();
+    final targetURL = Uri.parse(config.authorizationEndpoint)
+        .replace(queryParameters: oidcRequest.toQueryParameters());
+    await native.openURL(targetURL.toString());
+  }
+
+  Future<void> open(SettingsPage page) async {
+    final url = Uri.parse(endpoint).replace(path: page.path).toString();
+    return openURL(url);
+  }
+
   Future<void> logout({bool force = false}) async {
     final refreshToken = _refreshToken;
     if (refreshToken != null) {

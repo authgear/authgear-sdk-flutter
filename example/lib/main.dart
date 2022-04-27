@@ -177,6 +177,16 @@ class _MyAppState extends State<MyApp> {
                 SessionStateButton(
                   sessionState: _authgear.sessionState,
                   targetState: SessionState.authenticated,
+                  label: "Open Settings",
+                  onPressed: unconfigured || loading
+                      ? null
+                      : () {
+                          _onPressOpenSettings(context);
+                        },
+                ),
+                SessionStateButton(
+                  sessionState: _authgear.sessionState,
+                  targetState: SessionState.authenticated,
                   label: "Logout",
                   onPressed: unconfigured || loading
                       ? null
@@ -279,6 +289,21 @@ class _MyAppState extends State<MyApp> {
         setState(() {});
       });
     });
+  }
+
+  Future<void> _onPressOpenSettings(BuildContext context) async {
+    try {
+      setState(() {
+        loading = true;
+      });
+      await _authgear.open(SettingsPage.settings);
+    } catch (e) {
+      onError(context, e);
+    } finally {
+      setState(() {
+        loading = false;
+      });
+    }
   }
 
   void onError(BuildContext context, dynamic e) {

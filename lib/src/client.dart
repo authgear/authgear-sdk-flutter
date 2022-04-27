@@ -1,5 +1,5 @@
 import 'dart:io' show Platform;
-import 'dart:convert' show utf8, jsonDecode;
+import 'dart:convert' show utf8, jsonDecode, jsonEncode;
 import 'package:http/http.dart'
     show Client, Response, BaseClient, BaseRequest, StreamedResponse;
 import 'exception.dart';
@@ -229,6 +229,19 @@ class APIClient {
     await _plainHttpClient.post(url, body: body);
   }
 
+  Future<AppSessionTokenResponse> getAppSessionToken(
+      String refreshToken) async {
+    final url = Uri.parse(endpoint).replace(path: "/oauth2/app_session_token");
+    final httpResponse = await _plainHttpClient.post(url,
+        headers: {
+          "content-type": "application/json; charset=UTF-8",
+        },
+        body: jsonEncode({
+          "refresh_token": refreshToken,
+        }));
+    return _decodeAPIResponse(httpResponse, AppSessionTokenResponse.fromJSON);
+  }
+
   T _decodeOIDCResponse<T>(Response resp, T Function(dynamic) f) {
     final json = jsonDecode(utf8.decode(resp.bodyBytes));
     String? error = json["error"];
@@ -241,6 +254,16 @@ class APIClient {
       );
     }
     return f(json);
+  }
+
+  T _decodeAPIResponse<T>(Response resp, T Function(dynamic) f) {
+    final json = jsonDecode(utf8.decode(resp.bodyBytes));
+    dynamic error = json["error"];
+    dynamic result = json["result"];
+    if (result != null) {
+      return f(result);
+    }
+    throw decodeException(error);
   }
 }
 

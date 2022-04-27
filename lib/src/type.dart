@@ -40,6 +40,22 @@ enum AuthenticationPage {
   signup,
 }
 
+enum SettingsPage {
+  settings,
+  identity,
+}
+
+extension SettingsPageExtension on SettingsPage {
+  String get path {
+    switch (this) {
+      case SettingsPage.settings:
+        return "/settings";
+      case SettingsPage.identity:
+        return "/settings/identity";
+    }
+  }
+}
+
 class UserInfo {
   final String sub;
   final bool isAnonymous;
@@ -71,6 +87,15 @@ class OIDCConfiguration {
         userinfoEndpoint = json["userinfo_endpoint"],
         revocationEndpoint = json["revocation_endpoint"],
         endSessionEndpoint = json["end_session_endpoint"];
+}
+
+class AppSessionTokenResponse {
+  final String appSessionToken;
+  final DateTime expireAt;
+
+  AppSessionTokenResponse.fromJSON(dynamic json)
+      : appSessionToken = json["app_session_token"],
+        expireAt = DateTime.parse(json["expire_at"]);
 }
 
 abstract class AuthgearHttpClientDelegate {

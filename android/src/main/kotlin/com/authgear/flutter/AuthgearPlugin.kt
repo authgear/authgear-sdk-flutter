@@ -11,7 +11,6 @@ import android.provider.Settings
 import androidx.annotation.NonNull
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
-import androidx.security.crypto.MasterKeys
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -29,7 +28,8 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
   private val startActivityHandles = StartActivityHandles()
 
   companion object {
-    val TAG_AUTHENTICATION = 1
+    private const val TAG_AUTHENTICATION = 1
+    private const val TAG_OPEN_URL = 2
   }
 
   override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
@@ -77,6 +77,13 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
         }
         true
       }
+      TAG_OPEN_URL -> {
+        when (resultCode) {
+          Activity.RESULT_CANCELED -> handle.result.success(null)
+          Activity.RESULT_OK -> handle.result.success(null)
+        }
+        true
+      }
       else -> false
     }
   }
@@ -96,6 +103,17 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
         }
         OAuthRedirectActivity.registerRedirectURI(redirectURI)
         val intent = OAuthCoordinatorActivity.createAuthorizationIntent(activity, url)
+        activity.startActivityForResult(intent, requestCode)
+      }
+      "openURL" -> {
+        val url = Uri.parse(call.argument("url"))
+        val requestCode = startActivityHandles.push(StartActivityHandle(TAG_OPEN_URL, result))
+        val activity = activityBinding?.activity
+        if (activity == null) {
+          result.noActivity()
+          return
+        }
+        val intent = WebViewActivity.createIntent(activity, url)
         activity.startActivityForResult(intent, requestCode)
       }
       "getDeviceInfo" -> {

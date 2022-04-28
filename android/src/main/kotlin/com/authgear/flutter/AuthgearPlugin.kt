@@ -20,6 +20,7 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry
+import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
@@ -134,6 +135,9 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
       "storageDeleteItem" -> {
         val key: String = call.argument("key")!!
         this.storageDeleteItem(key, result)
+      }
+      "generateUUID" -> {
+        this.generateUUID(result)
       }
       "checkBiometricSupported" -> {
         val android = call.argument<HashMap<String, Any>>("android")!!
@@ -304,6 +308,11 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
     } catch (e: Exception) {
       result.exception(e)
     }
+  }
+
+  private fun generateUUID(result: Result) {
+    val uuid = UUID.randomUUID().toString()
+    result.success(uuid)
   }
 
   private fun constraintToFlag(constraint: ArrayList<String>): Int {

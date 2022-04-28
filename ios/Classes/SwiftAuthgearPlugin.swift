@@ -40,6 +40,8 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
       let arguments = call.arguments as! Dictionary<String, AnyObject>
       let key = arguments["key"] as! String
       self.storageDeleteItem(key: key, result: result)
+    case "generateUUID":
+      self.generateUUID(result: result)
     case "checkBiometricSupported":
       self.checkBiometricSupported(result: result)
     default:
@@ -276,6 +278,11 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     default:
       result(FlutterError(status: status))
     }
+  }
+
+  private func generateUUID(result: FlutterResult) {
+    let uuid = UUID().uuidString
+    result(uuid)
   }
 
   private func checkBiometricSupported(result: @escaping FlutterResult) {

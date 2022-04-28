@@ -68,6 +68,14 @@ Future<void> storageDeleteItem(String key) async {
   }
 }
 
+Future<String> generateUUID() async {
+  try {
+    return await _channel.invokeMethod("generateUUID");
+  } on PlatformException catch (e) {
+    throw wrapException(e);
+  }
+}
+
 Future<void> checkBiometricSupported({
   required BiometricOptionsIOS ios,
   required BiometricOptionsAndroid android,

@@ -141,7 +141,6 @@ class _MyAppState extends State<MyApp> {
       if (endpoint != null && clientID != null) {
         _endpointController.text = endpoint;
         _clientIDController.text = clientID;
-        await _onPressConfigure();
       }
     }
 

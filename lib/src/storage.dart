@@ -6,7 +6,7 @@ abstract class TokenStorage {
   Future<void> delRefreshToken(String namespace);
 }
 
-abstract class _ContainerStorage {
+abstract class ContainerStorage {
   Future<void> setAnonymousKeyID(String namespace, String kid);
   Future<String?> getAnonymousKeyID(String namespace);
   Future<void> delAnonymousKeyID(String namespace);
@@ -35,7 +35,7 @@ class _KeyMaker {
     return scopedKey("${namespace}_anonymousKeyID");
   }
 
-  String keyBiometricID(String namespace) {
+  String keyBiometricKeyID(String namespace) {
     return scopedKey("${namespace}_biometricKeyID");
   }
 }
@@ -119,4 +119,49 @@ class PersistentTokenStorage extends AbstractTokenStorage {
   PersistentTokenStorage()
       : _driver = _PlatformStorageDriver(),
         _keyMaker = _KeyMaker();
+}
+
+class PersistentContainerStorage implements ContainerStorage {
+  final _StorageDriver _driver;
+  final _KeyMaker _keyMaker;
+
+  PersistentContainerStorage()
+      : _driver = _PlatformStorageDriver(),
+        _keyMaker = _KeyMaker();
+
+  @override
+  Future<void> setBiometricKeyID(String namespace, String token) async {
+    final key = _keyMaker.keyBiometricKeyID(namespace);
+    _driver.set(key, token);
+  }
+
+  @override
+  Future<String?> getBiometricKeyID(String namespace) async {
+    final key = _keyMaker.keyBiometricKeyID(namespace);
+    return _driver.get(key);
+  }
+
+  @override
+  Future<void> delBiometricKeyID(String namespace) async {
+    final key = _keyMaker.keyBiometricKeyID(namespace);
+    _driver.del(key);
+  }
+
+  @override
+  Future<void> setAnonymousKeyID(String namespace, String token) async {
+    final key = _keyMaker.keyAnonymousKeyID(namespace);
+    _driver.set(key, token);
+  }
+
+  @override
+  Future<String?> getAnonymousKeyID(String namespace) async {
+    final key = _keyMaker.keyAnonymousKeyID(namespace);
+    return _driver.get(key);
+  }
+
+  @override
+  Future<void> delAnonymousKeyID(String namespace) async {
+    final key = _keyMaker.keyAnonymousKeyID(namespace);
+    _driver.del(key);
+  }
 }

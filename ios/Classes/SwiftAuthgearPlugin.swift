@@ -1,6 +1,7 @@
 import Flutter
 import UIKit
 import AuthenticationServices
+import LocalAuthentication
 
 public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPresentationContextProviding {
   public static func register(with registrar: FlutterPluginRegistrar) {
@@ -39,6 +40,8 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
       let arguments = call.arguments as! Dictionary<String, AnyObject>
       let key = arguments["key"] as! String
       self.storageDeleteItem(key: key, result: result)
+    case "checkBiometricSupported":
+      self.checkBiometricSupported(result: result)
     default:
       result(FlutterMethodNotImplemented)
     }
@@ -229,7 +232,7 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
       case errSecSuccess:
         result(nil)
       default:
-        result(FlutterError.osStatus(status: addStatus))
+        result(FlutterError(status: addStatus))
       }
     }
   }
@@ -254,7 +257,7 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     case errSecItemNotFound:
       result(nil)
     default:
-      result(FlutterError.osStatus(status: status))
+      result(FlutterError(status: status))
     }
   }
 
@@ -271,7 +274,22 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     case errSecItemNotFound:
       result(nil)
     default:
-      result(FlutterError.osStatus(status: status))
+      result(FlutterError(status: status))
+    }
+  }
+
+  private func checkBiometricSupported(result: @escaping FlutterResult) {
+    if #available(iOS 11.3, *) {
+      let laContext = LAContext()
+      var nsError: NSError? = nil
+      _ = laContext.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &nsError)
+      if let nsError = nsError {
+        result(FlutterError(nsError: nsError))
+      } else {
+        result(nil)
+      }
+    } else {
+      result(FlutterError.unsupported)
     }
   }
 
@@ -303,7 +321,7 @@ fileprivate extension FlutterError {
     return FlutterError(code: "UNSUPPORTED", message: "flutter_authgear supports iOS >= 12", details: nil)
   }
 
-  static func osStatus(status: OSStatus) -> FlutterError {
+  convenience init(status: OSStatus) {
     let nsError = NSError(domain: NSOSStatusErrorDomain, code: Int(status), userInfo: nil)
     var message = String(status)
     if #available(iOS 11.3, *) {
@@ -311,7 +329,11 @@ fileprivate extension FlutterError {
         message = s as String
       }
     }
-    return FlutterError(code: String(nsError.code), message: message, details: nil)
+    self.init(code: String(nsError.code), message: message, details: nil)
+  }
+
+  convenience init(nsError: NSError) {
+    self.init(code: String(nsError.code), message: nsError.localizedDescription, details: nsError.userInfo)
   }
 }
 

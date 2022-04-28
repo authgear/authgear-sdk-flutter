@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.annotation.NonNull
+import androidx.biometric.BiometricManager
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -19,6 +20,8 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 
 class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginRegistry.ActivityResultListener {
@@ -131,6 +134,12 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
       "storageDeleteItem" -> {
         val key: String = call.argument("key")!!
         this.storageDeleteItem(key, result)
+      }
+      "checkBiometricSupported" -> {
+        val android = call.argument<HashMap<String, Any>>("android")!!
+        val constraint = android["constraint"] as ArrayList<String>
+        val flags = constraintToFlag(constraint)
+        this.checkBiometricSupported(flags, result)
       }
       else -> result.notImplemented()
     }
@@ -296,6 +305,50 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
       result.exception(e)
     }
   }
+
+  private fun constraintToFlag(constraint: ArrayList<String>): Int {
+    var flag = 0
+    for (c in constraint) {
+      when (c) {
+        "BIOMETRIC_STRONG" -> {
+          flag = flag or BiometricManager.Authenticators.BIOMETRIC_STRONG
+        }
+        "DEVICE_CREDENTIAL" -> {
+          flag = flag or BiometricManager.Authenticators.DEVICE_CREDENTIAL
+        }
+      }
+    }
+    return flag
+  }
+
+  private fun resultToString(result: Int): String {
+    return when (result) {
+      BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE -> "BIOMETRIC_ERROR_HW_UNAVAILABLE"
+      BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> "BIOMETRIC_ERROR_NONE_ENROLLED"
+      BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE -> "BIOMETRIC_ERROR_NO_HARDWARE"
+      BiometricManager.BIOMETRIC_ERROR_SECURITY_UPDATE_REQUIRED -> "BIOMETRIC_ERROR_SECURITY_UPDATE_REQUIRED"
+      BiometricManager.BIOMETRIC_ERROR_UNSUPPORTED -> "BIOMETRIC_ERROR_UNSUPPORTED"
+      BiometricManager.BIOMETRIC_STATUS_UNKNOWN -> "BIOMETRIC_STATUS_UNKNOWN"
+      else -> "BIOMETRIC_ERROR_UNKNOWN"
+    }
+  }
+
+  private fun checkBiometricSupported(flag: Int, result: Result) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+      result.biometricAPILevel()
+      return
+    }
+
+    val manager = BiometricManager.from(pluginBinding?.applicationContext!!)
+    val can = manager.canAuthenticate(flag)
+    if (can == BiometricManager.BIOMETRIC_SUCCESS) {
+      result.success(null)
+      return
+    }
+
+    val resultString = resultToString(can)
+    result.error(resultString, resultString, null)
+  }
 }
 
 internal fun Result.noActivity() {
@@ -304,6 +357,10 @@ internal fun Result.noActivity() {
 
 internal fun Result.cancel() {
   this.error("CANCEL", "cancel", null)
+}
+
+internal fun Result.biometricAPILevel() {
+  this.error("DeviceAPILevelTooLow", "Biometric authentication requires at least API Level 23", null)
 }
 
 internal fun Result.exception(e: Exception) {

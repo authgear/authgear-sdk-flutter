@@ -315,6 +315,13 @@ class Authgear implements AuthgearHttpClientDelegate {
     }
   }
 
+  Future<void> checkBiometricSupported({
+    required BiometricOptionsIOS ios,
+    required BiometricOptionsAndroid android,
+  }) async {
+    await native.checkBiometricSupported(ios: ios, android: android);
+  }
+
   Future<void> _clearSession(SessionStateChangeReason reason) async {
     await _tokenStorage.delRefreshToken(name);
     _idToken = null;

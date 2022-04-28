@@ -112,39 +112,35 @@ class SessionStateButton extends StatelessWidget {
 
 class _MyAppState extends State<MyApp> {
   Authgear _authgear = Authgear(endpoint: "", clientID: "");
-  late SharedPreferences sharedPreferences;
-
-  TextEditingController endpointController = TextEditingController();
-  TextEditingController clientIDController = TextEditingController();
-
+  late SharedPreferences _sharedPreferences;
+  final TextEditingController _endpointController = TextEditingController();
+  final TextEditingController _clientIDController = TextEditingController();
   StreamSubscription<SessionStateChangeEvent>? _sub;
-
-  bool loading = false;
+  bool _loading = false;
   bool _useTransientTokenStorage = false;
   bool _shareSessionWithSystemBrowser = false;
-
-  bool get unconfigured {
-    return _authgear.endpoint != endpointController.text ||
-        _authgear.clientID != clientIDController.text;
+  bool get _unconfigured {
+    return _authgear.endpoint != _endpointController.text ||
+        _authgear.clientID != _clientIDController.text;
   }
 
   @override
   void initState() {
     super.initState();
-    endpointController.addListener(() {
+    _endpointController.addListener(() {
       setState(() {});
     });
-    clientIDController.addListener(() {
+    _clientIDController.addListener(() {
       setState(() {});
     });
 
     void init() async {
-      sharedPreferences = await SharedPreferences.getInstance();
-      final endpoint = sharedPreferences.getString("authgear.endpoint");
-      final clientID = sharedPreferences.getString("authgear.clientID");
+      _sharedPreferences = await SharedPreferences.getInstance();
+      final endpoint = _sharedPreferences.getString("authgear.endpoint");
+      final clientID = _sharedPreferences.getString("authgear.clientID");
       if (endpoint != null && clientID != null) {
-        endpointController.text = endpoint;
-        clientIDController.text = clientID;
+        _endpointController.text = endpoint;
+        _clientIDController.text = clientID;
         await _onPressConfigure();
       }
     }
@@ -155,8 +151,8 @@ class _MyAppState extends State<MyApp> {
   @override
   void dispose() {
     _sub?.cancel();
-    endpointController.dispose();
-    clientIDController.dispose();
+    _endpointController.dispose();
+    _clientIDController.dispose();
     super.dispose();
   }
 
@@ -174,12 +170,12 @@ class _MyAppState extends State<MyApp> {
                 TextFieldWithLabel(
                   label: "Endpoint",
                   hintText: "Enter Authegar endpoint",
-                  controller: endpointController,
+                  controller: _endpointController,
                 ),
                 TextFieldWithLabel(
                   label: "Client ID",
                   hintText: "Enter client ID",
-                  controller: clientIDController,
+                  controller: _clientIDController,
                 ),
                 SwitchWithLabel(
                   label: "Use TransientTokenStorage",
@@ -209,7 +205,7 @@ class _MyAppState extends State<MyApp> {
                   sessionState: _authgear.sessionState,
                   targetState: SessionState.noSession,
                   label: "Authenticate",
-                  onPressed: unconfigured || loading
+                  onPressed: _unconfigured || _loading
                       ? null
                       : () {
                           _onPressAuthenticate(context);
@@ -219,7 +215,7 @@ class _MyAppState extends State<MyApp> {
                   sessionState: _authgear.sessionState,
                   targetState: SessionState.authenticated,
                   label: "Reauthenticate (web-only)",
-                  onPressed: unconfigured || loading
+                  onPressed: _unconfigured || _loading
                       ? null
                       : () {
                           _onPressReauthenticateWeb(context);
@@ -229,7 +225,7 @@ class _MyAppState extends State<MyApp> {
                   sessionState: _authgear.sessionState,
                   targetState: SessionState.authenticated,
                   label: "Get UserInfo",
-                  onPressed: unconfigured || loading
+                  onPressed: _unconfigured || _loading
                       ? null
                       : () {
                           _onPressGetUserInfo(context);
@@ -239,7 +235,7 @@ class _MyAppState extends State<MyApp> {
                   sessionState: _authgear.sessionState,
                   targetState: SessionState.authenticated,
                   label: "Open Settings",
-                  onPressed: unconfigured || loading
+                  onPressed: _unconfigured || _loading
                       ? null
                       : () {
                           _onPressOpenSettings(context);
@@ -249,7 +245,7 @@ class _MyAppState extends State<MyApp> {
                   sessionState: _authgear.sessionState,
                   targetState: SessionState.authenticated,
                   label: "Show auth_time",
-                  onPressed: unconfigured || loading
+                  onPressed: _unconfigured || _loading
                       ? null
                       : () {
                           _onPressShowAuthTime(context);
@@ -259,7 +255,7 @@ class _MyAppState extends State<MyApp> {
                   sessionState: _authgear.sessionState,
                   targetState: SessionState.authenticated,
                   label: "Logout",
-                  onPressed: unconfigured || loading
+                  onPressed: _unconfigured || _loading
                       ? null
                       : () {
                           _onPressLogout(context);
@@ -276,14 +272,14 @@ class _MyAppState extends State<MyApp> {
   Future<void> _onPressAuthenticate(BuildContext context) async {
     try {
       setState(() {
-        loading = true;
+        _loading = true;
       });
       await _authgear.authenticate(redirectURI: redirectURI);
     } catch (e) {
       onError(context, e);
     } finally {
       setState(() {
-        loading = false;
+        _loading = false;
       });
     }
   }
@@ -291,7 +287,7 @@ class _MyAppState extends State<MyApp> {
   Future<void> _onPressReauthenticateWeb(BuildContext context) async {
     try {
       setState(() {
-        loading = true;
+        _loading = true;
       });
       await _authgear.refreshIDToken();
       if (!_authgear.canReauthenticate) {
@@ -302,7 +298,7 @@ class _MyAppState extends State<MyApp> {
       onError(context, e);
     } finally {
       setState(() {
-        loading = false;
+        _loading = false;
       });
     }
   }
@@ -310,7 +306,7 @@ class _MyAppState extends State<MyApp> {
   Future<void> _onPressGetUserInfo(BuildContext context) async {
     try {
       setState(() {
-        loading = true;
+        _loading = true;
       });
       final userInfo = await _authgear.getUserInfo();
       await showDialog(
@@ -337,7 +333,7 @@ class _MyAppState extends State<MyApp> {
       onError(context, e);
     } finally {
       setState(() {
-        loading = false;
+        _loading = false;
       });
     }
   }
@@ -345,21 +341,21 @@ class _MyAppState extends State<MyApp> {
   Future<void> _onPressLogout(BuildContext context) async {
     try {
       setState(() {
-        loading = true;
+        _loading = true;
       });
       await _authgear.logout();
     } catch (e) {
       onError(context, e);
     } finally {
       setState(() {
-        loading = false;
+        _loading = false;
       });
     }
   }
 
   Future<void> _onPressConfigure() async {
-    final endpoint = endpointController.text;
-    final clientID = clientIDController.text;
+    final endpoint = _endpointController.text;
+    final clientID = _clientIDController.text;
 
     final authgear = Authgear(
       endpoint: endpoint,
@@ -369,11 +365,11 @@ class _MyAppState extends State<MyApp> {
     );
     _sub?.cancel();
     await authgear.configure();
-    await sharedPreferences.setString(
+    await _sharedPreferences.setString(
       "authgear.endpoint",
       endpoint,
     );
-    await sharedPreferences.setString(
+    await _sharedPreferences.setString(
       "authgear.clientID",
       clientID,
     );
@@ -389,14 +385,14 @@ class _MyAppState extends State<MyApp> {
   Future<void> _onPressOpenSettings(BuildContext context) async {
     try {
       setState(() {
-        loading = true;
+        _loading = true;
       });
       await _authgear.open(SettingsPage.settings);
     } catch (e) {
       onError(context, e);
     } finally {
       setState(() {
-        loading = false;
+        _loading = false;
       });
     }
   }

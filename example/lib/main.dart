@@ -37,22 +37,20 @@ class TextFieldWithLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-        child: Column(
-          children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(label),
-            ),
-            TextField(
-              controller: controller,
-              decoration: InputDecoration(
-                hintText: hintText,
-              ),
-            ),
-          ],
-        ));
+    return Column(
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(label),
+        ),
+        TextField(
+          controller: controller,
+          decoration: InputDecoration(
+            hintText: hintText,
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -70,19 +68,60 @@ class SwitchWithLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(label),
+    return Row(
+      children: [
+        Expanded(
+          child: Text(label),
+        ),
+        Switch(
+          value: value,
+          onChanged: onChanged,
+        ),
+      ],
+    );
+  }
+}
+
+class RadioOption<T> {
+  final String label;
+  final T? value;
+
+  RadioOption({required this.label, required this.value});
+}
+
+class RadioGroup<T> extends StatelessWidget {
+  final String title;
+  final T? groupValue;
+  final List<RadioOption<T>> options;
+  final ValueChanged<T?> onChanged;
+
+  const RadioGroup({
+    Key? key,
+    required this.title,
+    required this.groupValue,
+    required this.options,
+    required this.onChanged,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+            child: Text(title),
           ),
-          Switch(
-            value: value,
+        ),
+        for (var option in options)
+          RadioListTile<T?>(
+            value: option.value,
+            groupValue: groupValue,
             onChanged: onChanged,
+            title: Text(option.label),
           ),
-        ],
-      ),
+      ],
     );
   }
 }
@@ -123,6 +162,8 @@ class _MyAppState extends State<MyApp> {
     return _authgear.endpoint != _endpointController.text ||
         _authgear.clientID != _clientIDController.text;
   }
+
+  AuthenticationPage? _page;
 
   @override
   void initState() {
@@ -166,31 +207,69 @@ class _MyAppState extends State<MyApp> {
             ),
             body: ListView(
               children: [
-                TextFieldWithLabel(
-                  label: "Endpoint",
-                  hintText: "Enter Authegar endpoint",
-                  controller: _endpointController,
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  child: TextFieldWithLabel(
+                    label: "Endpoint",
+                    hintText: "Enter Authegar endpoint",
+                    controller: _endpointController,
+                  ),
                 ),
-                TextFieldWithLabel(
-                  label: "Client ID",
-                  hintText: "Enter client ID",
-                  controller: _clientIDController,
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  child: TextFieldWithLabel(
+                    label: "Client ID",
+                    hintText: "Enter client ID",
+                    controller: _clientIDController,
+                  ),
                 ),
-                SwitchWithLabel(
-                  label: "Use TransientTokenStorage",
-                  value: _useTransientTokenStorage,
-                  onChanged: (newValue) {
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                  child: SwitchWithLabel(
+                    label: "Use TransientTokenStorage",
+                    value: _useTransientTokenStorage,
+                    onChanged: (newValue) {
+                      setState(() {
+                        _useTransientTokenStorage = newValue;
+                      });
+                    },
+                  ),
+                ),
+                Container(
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    child: SwitchWithLabel(
+                      label: "Share Session With Device Browser",
+                      value: _shareSessionWithSystemBrowser,
+                      onChanged: (newValue) {
+                        setState(() {
+                          _shareSessionWithSystemBrowser = newValue;
+                        });
+                      },
+                    )),
+                RadioGroup<AuthenticationPage>(
+                  title: "Intial Page",
+                  groupValue: _page,
+                  options: [
+                    RadioOption(
+                      label: "Unset",
+                      value: null,
+                    ),
+                    RadioOption(
+                      label: "login",
+                      value: AuthenticationPage.login,
+                    ),
+                    RadioOption(
+                      label: "signup",
+                      value: AuthenticationPage.signup,
+                    ),
+                  ],
+                  onChanged: (newPage) {
                     setState(() {
-                      _useTransientTokenStorage = newValue;
-                    });
-                  },
-                ),
-                SwitchWithLabel(
-                  label: "Share Session With Device Browser",
-                  value: _shareSessionWithSystemBrowser,
-                  onChanged: (newValue) {
-                    setState(() {
-                      _shareSessionWithSystemBrowser = newValue;
+                      _page = newPage;
                     });
                   },
                 ),
@@ -273,7 +352,7 @@ class _MyAppState extends State<MyApp> {
       setState(() {
         _loading = true;
       });
-      await _authgear.authenticate(redirectURI: redirectURI);
+      await _authgear.authenticate(redirectURI: redirectURI, page: _page);
     } catch (e) {
       onError(context, e);
     } finally {

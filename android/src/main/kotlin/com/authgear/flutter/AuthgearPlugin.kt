@@ -7,9 +7,18 @@ import android.content.SharedPreferences
 import android.content.pm.PackageInfo
 import android.net.Uri
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyPermanentlyInvalidatedException
+import android.security.keystore.KeyProperties
+import android.util.Base64
 import androidx.annotation.NonNull
+import androidx.annotation.RequiresApi
 import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricPrompt
+import androidx.fragment.app.FragmentActivity
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -20,9 +29,10 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry
-import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
+import org.json.JSONObject
+import java.security.*
+import java.security.interfaces.RSAPublicKey
+import java.util.UUID
 
 
 class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginRegistry.ActivityResultListener {
@@ -140,10 +150,26 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
         this.generateUUID(result)
       }
       "checkBiometricSupported" -> {
-        val android = call.argument<HashMap<String, Any>>("android")!!
+        val android = call.argument<Map<String, Any>>("android")!!
         val constraint = android["constraint"] as ArrayList<String>
         val flags = constraintToFlag(constraint)
         this.checkBiometricSupported(flags, result)
+      }
+      "createBiometricPrivateKey" -> {
+        val kid = call.argument<String>("kid")!!
+        val payload = call.argument<Map<String, Any>>("payload")!!
+        val android = call.argument<Map<String, Any>>("android")!!
+        this.createBiometricPrivateKey(android, kid, payload, result)
+      }
+      "removeBiometricPrivateKey" -> {
+        val kid = call.argument<String>("kid")!!
+        this.removeBiometricPrivateKey(kid, result)
+      }
+      "signWithBiometricPrivateKey" -> {
+        val kid = call.argument<String>("kid")!!
+        val payload = call.argument<Map<String, Any>>("payload")!!
+        val android = call.argument<Map<String, Any>>("android")!!
+        this.signWithBiometricPrivateKey(android, kid, payload, result)
       }
       else -> result.notImplemented()
     }
@@ -342,6 +368,37 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
     }
   }
 
+  private fun authenticatorTypesToKeyProperties(flags: Int): Int {
+    var out = 0
+    if ((flags and BiometricManager.Authenticators.BIOMETRIC_STRONG) != 0) {
+      out = out or KeyProperties.AUTH_BIOMETRIC_STRONG
+    }
+    if ((flags and BiometricManager.Authenticators.DEVICE_CREDENTIAL) != 0) {
+      out = out or KeyProperties.AUTH_DEVICE_CREDENTIAL
+    }
+    return out
+  }
+
+  private fun errorCodeToString(errorCode: Int): String {
+    return when (errorCode) {
+      BiometricPrompt.ERROR_CANCELED -> "ERROR_CANCELED"
+      BiometricPrompt.ERROR_HW_NOT_PRESENT -> "ERROR_HW_NOT_PRESENT"
+      BiometricPrompt.ERROR_HW_UNAVAILABLE -> "ERROR_HW_UNAVAILABLE"
+      BiometricPrompt.ERROR_LOCKOUT -> "ERROR_LOCKOUT"
+      BiometricPrompt.ERROR_LOCKOUT_PERMANENT -> "ERROR_LOCKOUT_PERMANENT"
+      BiometricPrompt.ERROR_NEGATIVE_BUTTON -> "ERROR_NEGATIVE_BUTTON"
+      BiometricPrompt.ERROR_NO_BIOMETRICS -> "ERROR_NO_BIOMETRICS"
+      BiometricPrompt.ERROR_NO_DEVICE_CREDENTIAL -> "ERROR_NO_DEVICE_CREDENTIAL"
+      BiometricPrompt.ERROR_NO_SPACE -> "ERROR_NO_SPACE"
+      BiometricPrompt.ERROR_SECURITY_UPDATE_REQUIRED -> "ERROR_SECURITY_UPDATE_REQUIRED"
+      BiometricPrompt.ERROR_TIMEOUT -> "ERROR_TIMEOUT"
+      BiometricPrompt.ERROR_UNABLE_TO_PROCESS -> "ERROR_UNABLE_TO_PROCESS"
+      BiometricPrompt.ERROR_USER_CANCELED -> "ERROR_USER_CANCELED"
+      BiometricPrompt.ERROR_VENDOR -> "ERROR_VENDOR"
+      else -> "ERROR_UNKNOWN"
+    }
+  }
+
   private fun checkBiometricSupported(flag: Int, result: Result) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
       result.biometricAPILevel()
@@ -358,6 +415,233 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
     val resultString = resultToString(can)
     result.error(resultString, resultString, null)
   }
+
+  private fun createBiometricPrivateKey(android: Map<String, Any>, kid: String, payload: Map<String, Any>, result: Result) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+      result.biometricAPILevel()
+      return
+    }
+
+    val fragmentActivity = getFragmentActivity()
+    if (fragmentActivity == null) {
+      result.fragmentActivity()
+      return
+    }
+
+    val constraint = android["constraint"] as ArrayList<String>
+    val invalidatedByBiometricEnrollment = android["invalidatedByBiometricEnrollment"] as Boolean
+    val flags = constraintToFlag(constraint)
+    val alias = "com.authgear.keys.biometric." + kid
+    val promptInfo = buildPromptInfo(android, flags)
+
+    val spec = makeGenerateKeyPairSpec(alias, authenticatorTypesToKeyProperties(flags), invalidatedByBiometricEnrollment)
+
+    try {
+      val keyPair = createKeyPair(spec)
+      signBiometricJWT(fragmentActivity, keyPair, kid, payload, promptInfo, result)
+    } catch (e: Exception) {
+      result.exception(e)
+    }
+  }
+
+  private fun removeBiometricPrivateKey(kid: String, result: Result) {
+    val alias = "com.authgear.keys.biometric.$kid"
+    try {
+      val keyStore = KeyStore.getInstance("AndroidKeyStore")
+      keyStore.load(null)
+      keyStore.deleteEntry(alias)
+      result.success(null)
+    } catch (e: Exception) {
+      result.exception(e)
+    }
+  }
+
+  private fun signWithBiometricPrivateKey(android: Map<String, Any>, kid: String, payload: Map<String, Any>, result: Result) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+      result.biometricAPILevel()
+      return
+    }
+
+    val fragmentActivity = getFragmentActivity()
+    if (fragmentActivity == null) {
+      result.fragmentActivity()
+      return
+    }
+
+    val constraint = android["constraint"] as ArrayList<String>
+    val flags = constraintToFlag(constraint)
+    val alias = "com.authgear.keys.biometric." + kid
+    val promptInfo = buildPromptInfo(android, flags)
+
+    try {
+      val keyPair = getKeyPair(alias)
+      signBiometricJWT(fragmentActivity, keyPair, kid, payload, promptInfo, result)
+    } catch (e: Exception) {
+      result.exception(e)
+    }
+  }
+
+  private fun getFragmentActivity(): FragmentActivity? {
+    val fragmentActivity = activityBinding?.activity
+    if (fragmentActivity is FragmentActivity) {
+      return fragmentActivity
+    }
+    return null
+  }
+
+  @RequiresApi(Build.VERSION_CODES.M)
+  private fun makeGenerateKeyPairSpec(alias: String, flags: Int, invalidatedByBiometricEnrollment: Boolean): KeyGenParameterSpec {
+    val builder = KeyGenParameterSpec.Builder(
+        alias,
+      KeyProperties.PURPOSE_SIGN or KeyProperties.PURPOSE_VERIFY
+    )
+    builder.setKeySize(2048)
+    builder.setDigests(KeyProperties.DIGEST_SHA256)
+    builder.setSignaturePaddings(KeyProperties.SIGNATURE_PADDING_RSA_PKCS1)
+    builder.setUserAuthenticationRequired(true)
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+      builder.setUserAuthenticationParameters(
+        0,
+        flags
+      )
+    }
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+      builder.setInvalidatedByBiometricEnrollment(invalidatedByBiometricEnrollment)
+    }
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+      builder.setUnlockedDeviceRequired(true)
+    }
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+      // User confirmation is not needed because the BiometricPrompt itself is a kind of confirmation.
+      // builder.setUserConfirmationRequired(true)
+    }
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+      // User presence requires a physical button which is not our intended use case.
+      // builder.setUserPresenceRequired(true)
+    }
+
+    return builder.build()
+  }
+
+  @RequiresApi(Build.VERSION_CODES.M)
+  private fun getKeyPair(alias: String): KeyPair {
+    val keyStore = KeyStore.getInstance("AndroidKeyStore")
+    keyStore.load(null)
+    val entry = keyStore.getEntry(alias, null)
+    if (entry is KeyStore.PrivateKeyEntry) {
+      val privateKeyEntry = entry as KeyStore.PrivateKeyEntry
+      return KeyPair(privateKeyEntry.certificate.publicKey, privateKeyEntry.privateKey)
+    }
+    throw KeyPermanentlyInvalidatedException()
+  }
+
+  private fun buildPromptInfo(android: Map<String, Any>, flags: Int): BiometricPrompt.PromptInfo {
+    val title = android["title"] as String
+    val subtitle = android["subtitle"] as String
+    val description = android["description"] as String
+    val negativeButtonText = android["negativeButtonText"] as String
+
+    val builder = BiometricPrompt.PromptInfo.Builder()
+    builder.setTitle(title)
+    builder.setSubtitle(subtitle)
+    builder.setDescription(description)
+    builder.setAllowedAuthenticators(flags)
+    if ((flags and BiometricManager.Authenticators.DEVICE_CREDENTIAL) == 0) {
+      builder.setNegativeButtonText(negativeButtonText)
+    }
+    return builder.build()
+  }
+
+  @RequiresApi(Build.VERSION_CODES.M)
+  private fun createKeyPair(spec: KeyGenParameterSpec ): KeyPair {
+    val keyPairGenerator = KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA, "AndroidKeyStore")
+    keyPairGenerator.initialize(spec)
+    return keyPairGenerator.generateKeyPair()
+  }
+
+  private fun signBiometricJWT(
+    activity: FragmentActivity,
+    keyPair: KeyPair,
+    kid: String,
+    payload: Map<String, Any>,
+    promptInfo: BiometricPrompt.PromptInfo,
+    result: Result,
+  ) {
+    val jwk = getJWK(keyPair, kid)
+    val header = makeBiometricJWTHeader(jwk)
+    val lockedSignature = makeSignature(keyPair.private)
+    val cryptoObject = BiometricPrompt.CryptoObject(lockedSignature)
+    val prompt = BiometricPrompt(activity, object : BiometricPrompt.AuthenticationCallback() {
+      override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+        result.authenticationError(this@AuthgearPlugin.errorCodeToString(errorCode), errString.toString())
+      }
+
+      override fun onAuthenticationSucceeded(authResult: BiometricPrompt.AuthenticationResult) {
+        val signature = authResult.cryptoObject?.signature!!
+        try {
+          val jwt = this@AuthgearPlugin.signJWT(signature, header, payload)
+          result.success(jwt)
+        } catch (e: Exception) {
+          result.exception(e)
+        }
+      }
+
+      override fun onAuthenticationFailed() {
+        // This callback will be invoked EVERY time the recognition failed.
+        // So while the prompt is still opened, this callback can be called repetitively.
+        // Finally, either onAuthenticationError or onAuthenticationSucceeded will be called.
+        // So this callback is not important to the developer.
+      }
+    })
+    val handler = Handler(Looper.getMainLooper())
+    handler.post {
+      prompt.authenticate(promptInfo, cryptoObject)
+    }
+  }
+
+  private fun getJWK(keyPair: KeyPair, kid: String): Map<String, Any> {
+    val publicKey = keyPair.public
+    val rsaPublicKey = publicKey as RSAPublicKey
+    val jwk = hashMapOf(
+      "kid" to kid,
+      "alg" to "RS256",
+      "kty" to "RSA",
+      "n" to rsaPublicKey.modulus.toByteArray().base64URLEncode(),
+      "e" to rsaPublicKey.publicExponent.toByteArray().base64URLEncode(),
+    )
+    return jwk
+  }
+
+  private fun makeBiometricJWTHeader(jwk: Map<String, Any>): Map<String, Any> {
+    return hashMapOf(
+      "typ" to "vnd.authgear.biometric-request",
+      "kid" to jwk["kid"]!!,
+      "alg" to jwk["alg"]!!,
+      "jwk" to jwk,
+    )
+  }
+
+  private fun makeSignature(privateKey: PrivateKey): Signature {
+    val signature = Signature.getInstance("SHA256withRSA")
+    signature.initSign(privateKey)
+    return signature
+  }
+
+  private fun signJWT(signature: Signature, header: Map<String, Any>, payload: Map<String, Any>): String {
+    val headerJSON = JSONObject(header).toString()
+    val payloadJSON = JSONObject(payload).toString()
+    val headerString = headerJSON.toByteArray(Charsets.UTF_8).base64URLEncode()
+    val payloadString = payloadJSON.toByteArray(Charsets.UTF_8).base64URLEncode()
+    val strToSign = "$headerString.$payloadString"
+    signature.update(strToSign.toByteArray(Charsets.UTF_8))
+    val sig = signature.sign()
+    return "$strToSign.${sig.base64URLEncode()}"
+  }
 }
 
 internal fun Result.noActivity() {
@@ -372,6 +656,18 @@ internal fun Result.biometricAPILevel() {
   this.error("DeviceAPILevelTooLow", "Biometric authentication requires at least API Level 23", null)
 }
 
+internal fun Result.fragmentActivity() {
+  this.error("FragmentActivity", "Authgear SDK requires your MainActivity to be a subclass of FlutterFragmentActivity", null)
+}
+
+internal fun Result.authenticationError(errorCodeString: String, message: String) {
+  this.error(errorCodeString, message, null)
+}
+
 internal fun Result.exception(e: Exception) {
   this.error(e.javaClass.name, e.message, e)
+}
+
+internal fun ByteArray.base64URLEncode(): String {
+  return Base64.encodeToString(this, Base64.NO_WRAP or Base64.URL_SAFE or Base64.NO_PADDING)
 }

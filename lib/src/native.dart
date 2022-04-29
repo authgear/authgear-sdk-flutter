@@ -89,3 +89,49 @@ Future<void> checkBiometricSupported({
     throw wrapException(e);
   }
 }
+
+Future<String> createBiometricPrivateKey({
+  required String kid,
+  required Map<String, dynamic> payload,
+  required BiometricOptionsIOS ios,
+  required BiometricOptionsAndroid android,
+}) async {
+  try {
+    return await _channel.invokeMethod("createBiometricPrivateKey", {
+      "kid": kid,
+      "payload": payload,
+      "ios": ios.toMap(),
+      "android": android.toMap(),
+    });
+  } on PlatformException catch (e) {
+    throw wrapException(e);
+  }
+}
+
+Future<void> removeBiometricPrivateKey(String kid) async {
+  try {
+    return await _channel.invokeMethod("removeBiometricPrivateKey", {
+      "kid": kid,
+    });
+  } on PlatformException catch (e) {
+    throw wrapException(e);
+  }
+}
+
+Future<String> signWithBiometricPrivateKey({
+  required String kid,
+  required Map<String, dynamic> payload,
+  required BiometricOptionsIOS ios,
+  required BiometricOptionsAndroid android,
+}) async {
+  try {
+    return await _channel.invokeMethod("signWithBiometricPrivateKey", {
+      "kid": kid,
+      "payload": payload,
+      "ios": ios.toMap(),
+      "android": android.toMap(),
+    });
+  } on PlatformException catch (e) {
+    throw wrapException(e);
+  }
+}

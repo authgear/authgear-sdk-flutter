@@ -105,6 +105,15 @@ class AppSessionTokenResponse {
         expireAt = DateTime.parse(json["expire_at"]);
 }
 
+class ChallengeResponse {
+  final String token;
+  final DateTime expireAt;
+
+  ChallengeResponse.fromJSON(dynamic json)
+      : token = json["token"],
+        expireAt = DateTime.parse(json["expire_at"]);
+}
+
 abstract class AuthgearHttpClientDelegate {
   String? get accessToken;
   bool get shouldRefreshAccessToken;

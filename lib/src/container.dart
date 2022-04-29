@@ -40,6 +40,7 @@ class Authgear implements AuthgearHttpClientDelegate {
   final bool shareSessionWithSystemBrowser;
 
   final TokenStorage _tokenStorage;
+  final ContainerStorage _storage;
   late final APIClient _apiClient;
 
   SessionState _sessionStateRaw = SessionState.unknown;
@@ -87,7 +88,8 @@ class Authgear implements AuthgearHttpClientDelegate {
     this.name = "default",
     this.shareSessionWithSystemBrowser = false,
     TokenStorage? tokenStorage,
-  }) : _tokenStorage = tokenStorage ?? PersistentTokenStorage() {
+  })  : _tokenStorage = tokenStorage ?? PersistentTokenStorage(),
+        _storage = PersistentContainerStorage() {
     final plainHttpClient = Client();
     final authgearHttpClient = AuthgearHttpClient(this, plainHttpClient);
     _apiClient = APIClient(
@@ -322,6 +324,97 @@ class Authgear implements AuthgearHttpClientDelegate {
     await native.checkBiometricSupported(ios: ios, android: android);
   }
 
+  Future<void> enableBiometric({
+    required BiometricOptionsIOS ios,
+    required BiometricOptionsAndroid android,
+  }) async {
+    final kid = await native.generateUUID();
+    final deviceInfo = await native.getDeviceInfo();
+    final challengeResponse =
+        await _apiClient.getChallenge("biometric_request");
+    final now = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+    final payload = {
+      "iat": now,
+      "exp": now + 300,
+      "challenge": challengeResponse.token,
+      "action": "setup",
+      "device_info": deviceInfo,
+    };
+    final jwt = await native.createBiometricPrivateKey(
+      kid: kid,
+      payload: payload,
+      ios: ios,
+      android: android,
+    );
+    await _apiClient.sendSetupBiometricRequest(BiometricRequest(
+      clientID: clientID,
+      jwt: jwt,
+    ));
+    await _storage.setBiometricKeyID(name, kid);
+  }
+
+  Future<bool> isBiometricEnabled() async {
+    final keyID = await _storage.getBiometricKeyID(name);
+    return keyID != null;
+  }
+
+  Future<void> disableBiometric() async {
+    final keyID = await _storage.getBiometricKeyID(name);
+    if (keyID != null) {
+      await native.removeBiometricPrivateKey(keyID);
+      await _storage.delBiometricKeyID(name);
+    }
+  }
+
+  Future<UserInfo> authenticateBiometric({
+    required BiometricOptionsIOS ios,
+    required BiometricOptionsAndroid android,
+  }) async {
+    final kid = await _storage.getBiometricKeyID(name);
+    if (kid == null) {
+      throw Exception("biometric is not enabled");
+    }
+
+    final deviceInfo = await native.getDeviceInfo();
+    final challengeResponse =
+        await _apiClient.getChallenge("biometric_request");
+    final now = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+    final payload = {
+      "iat": now,
+      "exp": now + 300,
+      "challenge": challengeResponse.token,
+      "action": "authenticate",
+      "device_info": deviceInfo,
+    };
+
+    try {
+      final jwt = await native.signWithBiometricPrivateKey(
+        kid: kid,
+        payload: payload,
+        ios: ios,
+        android: android,
+      );
+      final tokenResponse =
+          await _apiClient.sendAuthenticateBiometricRequest(BiometricRequest(
+        clientID: clientID,
+        jwt: jwt,
+      ));
+      await _persistTokenResponse(
+          tokenResponse, SessionStateChangeReason.authenticated);
+      final userInfo = await _apiClient.getUserInfo();
+      return userInfo;
+    } on BiometricPrivateKeyNotFoundException {
+      await disableBiometric();
+      rethrow;
+    } on OAuthException catch (e) {
+      if (e.error == "invalid_grant" &&
+          e.errorDescription == "InvalidCredentials") {
+        await disableBiometric();
+      }
+      rethrow;
+    }
+  }
+
   Future<void> _clearSession(SessionStateChangeReason reason) async {
     await _tokenStorage.delRefreshToken(name);
     _idToken = null;
@@ -387,7 +480,7 @@ class Authgear implements AuthgearHttpClientDelegate {
     );
     await _persistTokenResponse(
         tokenResponse, SessionStateChangeReason.authenticated);
-    // TODO: disable biometric
+    await disableBiometric();
     final userInfo = await _apiClient.getUserInfo();
     return AuthenticateResult(userInfo: userInfo, state: state);
   }

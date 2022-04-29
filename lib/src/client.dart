@@ -184,6 +184,21 @@ class OIDCTokenResponse {
         refreshToken = json["refresh_token"];
 }
 
+class BiometricRequest {
+  final String clientID;
+  final String jwt;
+
+  BiometricRequest({required this.clientID, required this.jwt});
+
+  Map<String, String> toQueryParameters() {
+    return {
+      "grant_type": "urn:authgear:params:oauth:grant-type:biometric-request",
+      "client_id": clientID,
+      "jwt": jwt,
+    };
+  }
+}
+
 class APIClient {
   final String endpoint;
   final Client _plainHttpClient;
@@ -220,14 +235,14 @@ class APIClient {
         includeAccessToken ? _authgearHttpClient : _plainHttpClient;
     final httpResponse =
         await clientToUse.post(url, body: request.toQueryParameters());
-    return _decodeOIDCResponse(httpResponse, OIDCTokenResponse.fromJSON);
+    return _decodeOIDCResponseJSON(httpResponse, OIDCTokenResponse.fromJSON);
   }
 
   Future<UserInfo> getUserInfo() async {
     final config = await fetchOIDCConfiguration();
     final url = Uri.parse(config.userinfoEndpoint);
     final httpResponse = await _authgearHttpClient.get(url);
-    return _decodeOIDCResponse(httpResponse, UserInfo.fromJSON);
+    return _decodeOIDCResponseJSON(httpResponse, UserInfo.fromJSON);
   }
 
   Future<void> revoke(String refreshToken) async {
@@ -236,7 +251,8 @@ class APIClient {
     final body = {
       "token": refreshToken,
     };
-    await _plainHttpClient.post(url, body: body);
+    final httpResponse = await _plainHttpClient.post(url, body: body);
+    return _decodeOIDCResponse(httpResponse);
   }
 
   Future<AppSessionTokenResponse> getAppSessionToken(
@@ -252,10 +268,41 @@ class APIClient {
     return _decodeAPIResponse(httpResponse, AppSessionTokenResponse.fromJSON);
   }
 
-  T _decodeOIDCResponse<T>(Response resp, T Function(dynamic) f) {
-    final json = jsonDecode(utf8.decode(resp.bodyBytes));
-    String? error = json["error"];
-    if (error != null) {
+  Future<void> sendSetupBiometricRequest(BiometricRequest request) async {
+    final config = await fetchOIDCConfiguration();
+    final url = Uri.parse(config.tokenEndpoint);
+    final httpResponse =
+        await _authgearHttpClient.post(url, body: request.toQueryParameters());
+    return _decodeOIDCResponse(httpResponse);
+  }
+
+  Future<OIDCTokenResponse> sendAuthenticateBiometricRequest(
+      BiometricRequest request) async {
+    final config = await fetchOIDCConfiguration();
+    final url = Uri.parse(config.tokenEndpoint);
+    final httpResponse =
+        await _authgearHttpClient.post(url, body: request.toQueryParameters());
+    return _decodeOIDCResponseJSON(httpResponse, OIDCTokenResponse.fromJSON);
+  }
+
+  Future<ChallengeResponse> getChallenge(String purpose) async {
+    final url = Uri.parse(endpoint).replace(path: "/oauth2/challenge");
+    final httpResponse = await _plainHttpClient.post(
+      url,
+      headers: {
+        "content-type": "application/json; charset=UTF-8",
+      },
+      body: jsonEncode({
+        "purpose": purpose,
+      }),
+    );
+    return _decodeAPIResponse(httpResponse, ChallengeResponse.fromJSON);
+  }
+
+  void _decodeOIDCResponse(Response resp) {
+    if (resp.statusCode < 200 || resp.statusCode >= 400) {
+      final json = jsonDecode(utf8.decode(resp.bodyBytes));
+      String error = json["error"];
       throw OAuthException(
         error: error,
         errorDescription: json["error_description"],
@@ -263,6 +310,11 @@ class APIClient {
         state: json["state"],
       );
     }
+  }
+
+  T _decodeOIDCResponseJSON<T>(Response resp, T Function(dynamic) f) {
+    _decodeOIDCResponse(resp);
+    final json = jsonDecode(utf8.decode(resp.bodyBytes));
     return f(json);
   }
 

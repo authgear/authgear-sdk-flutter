@@ -1,4 +1,5 @@
 import 'dart:async' show StreamSubscription;
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:shared_preferences/shared_preferences.dart'
@@ -19,7 +20,57 @@ class MyApp extends StatefulWidget {
 
 const redirectURI = "com.authgear.exampleapp.flutter://host/path";
 
+final ios = BiometricOptionsIOS(
+  localizedReason: "Use biometric to sign in",
+  constraint: BiometricAccessConstraintIOS.biometryAny,
+);
+
+final android = BiometricOptionsAndroid(
+  title: "Sign in with biometric",
+  subtitle: "Sign in securely with biometric",
+  description: "Use your enrolled biometric to sign in",
+  negativeButtonText: "Cancel",
+  constraint: [BiometricAccessConstraintAndroid.biometricStrong],
+  invalidatedByBiometricEnrollment: false,
+);
+
 String _showError(dynamic e) {
+  if (e is BiometricPrivateKeyNotFoundException) {
+    if (Platform.isIOS) {
+      return "Your Touch ID or Face ID has changed. For security reason, you have to set up biometric authentication again.";
+    }
+    if (Platform.isAndroid) {
+      return "Your biometric info has changed. For security reason, you have to set up biometric authentication again.";
+    }
+  }
+  if (e is BiometricNoEnrollmentException) {
+    if (Platform.isIOS) {
+      return "You do not have Face ID or Touch ID set up yet. Please set it up first.";
+    }
+    if (Platform.isAndroid) {
+      return "You have not set up biometric yet. Please set up your fingerprint or face.";
+    }
+  }
+  if (e is BiometricNotSupportedOrPermissionDeniedException) {
+    if (Platform.isIOS) {
+      return "If the developer should performed checking, then it is likely that you have denied the permission of Face ID. Please enable it in Settings";
+    }
+    if (Platform.isAndroid) {
+      return "Your device does not support biometric. The developer should have checked this and not letting you to see feature that requires biometric";
+    }
+  }
+  if (e is BiometricNoPasscodeException) {
+    if (Platform.isIOS) {
+      return "You device does not have passcode set up. Please set up a passcode.";
+    }
+    if (Platform.isAndroid) {
+      return "You device does not have credential set up. Please set up either a PIN, a pattern or a password.";
+    }
+  }
+  if (e is BiometricLockoutException) {
+    return "The biometric is locked out due to too many failed attempts. The developer should handle this error by using normal authentication as a fallback. So normally you should not see this error";
+  }
+
   return "$e";
 }
 
@@ -158,6 +209,7 @@ class _MyAppState extends State<MyApp> {
   bool _loading = false;
   bool _useTransientTokenStorage = false;
   bool _shareSessionWithSystemBrowser = false;
+  bool _isBiometricEnabled = false;
   bool get _unconfigured {
     return _authgear.endpoint != _endpointController.text ||
         _authgear.clientID != _clientIDController.text;
@@ -291,12 +343,42 @@ class _MyAppState extends State<MyApp> {
                 ),
                 SessionStateButton(
                   sessionState: _authgear.sessionState,
+                  targetState: SessionState.noSession,
+                  label: "Authenticate Biometric",
+                  onPressed: _unconfigured || _loading || !_isBiometricEnabled
+                      ? null
+                      : () {
+                          _onPressAuthenticateBiometric(context);
+                        },
+                ),
+                SessionStateButton(
+                  sessionState: _authgear.sessionState,
                   targetState: SessionState.authenticated,
                   label: "Reauthenticate (web-only)",
                   onPressed: _unconfigured || _loading
                       ? null
                       : () {
                           _onPressReauthenticateWeb(context);
+                        },
+                ),
+                SessionStateButton(
+                  sessionState: _authgear.sessionState,
+                  targetState: SessionState.authenticated,
+                  label: "Enable Biometric",
+                  onPressed: _unconfigured || _loading || _isBiometricEnabled
+                      ? null
+                      : () {
+                          _onPressEnableBiometric(context);
+                        },
+                ),
+                SessionStateButton(
+                  sessionState: _authgear.sessionState,
+                  targetState: SessionState.authenticated,
+                  label: "Disable Biometric",
+                  onPressed: _unconfigured || _loading || !_isBiometricEnabled
+                      ? null
+                      : () {
+                          _onPressDisableBiometric(context);
                         },
                 ),
                 SessionStateButton(
@@ -347,12 +429,37 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
+  Future<void> _syncAuthgearState() async {
+    final isBiometricEnabled = await _authgear.isBiometricEnabled();
+    setState(() {
+      _isBiometricEnabled = isBiometricEnabled;
+    });
+  }
+
   Future<void> _onPressAuthenticate(BuildContext context) async {
     try {
       setState(() {
         _loading = true;
       });
       await _authgear.authenticate(redirectURI: redirectURI, page: _page);
+    } catch (e) {
+      onError(context, e);
+    } finally {
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _onPressAuthenticateBiometric(BuildContext context) async {
+    try {
+      setState(() {
+        _loading = true;
+      });
+      await _authgear.authenticateBiometric(
+        ios: ios,
+        android: android,
+      );
     } catch (e) {
       onError(context, e);
     } finally {
@@ -455,8 +562,9 @@ class _MyAppState extends State<MyApp> {
     setState(() {
       _authgear = authgear;
       _sub = _authgear.onSessionStateChange.listen((e) {
-        setState(() {});
+        _syncAuthgearState();
       });
+      _syncAuthgearState();
     });
   }
 
@@ -496,7 +604,50 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
+  Future<void> _onPressEnableBiometric(BuildContext context) async {
+    try {
+      setState(() {
+        _loading = true;
+      });
+      await _authgear.checkBiometricSupported(
+        ios: ios,
+        android: android,
+      );
+      await _authgear.enableBiometric(
+        ios: ios,
+        android: android,
+      );
+      await _syncAuthgearState();
+    } catch (e) {
+      onError(context, e);
+    } finally {
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _onPressDisableBiometric(BuildContext context) async {
+    try {
+      setState(() {
+        _loading = true;
+      });
+      await _authgear.disableBiometric();
+      await _syncAuthgearState();
+    } catch (e) {
+      onError(context, e);
+    } finally {
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
+
   void onError(BuildContext context, dynamic e) {
+    if (e is CancelException) {
+      return;
+    }
+
     showDialog(
       context: context,
       barrierDismissible: false,

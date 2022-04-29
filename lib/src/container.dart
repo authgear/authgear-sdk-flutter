@@ -155,7 +155,17 @@ class Authgear implements AuthgearHttpClientDelegate {
     required String redirectURI,
     int maxAge = 0,
     List<String>? uiLocales,
+    BiometricOptionsIOS? biometricIOS,
+    BiometricOptionsAndroid? biometricAndroid,
   }) async {
+    final biometricEnabled = await isBiometricEnabled();
+    if (biometricEnabled && biometricIOS != null && biometricAndroid != null) {
+      return await authenticateBiometric(
+        ios: biometricIOS,
+        android: biometricAndroid,
+      );
+    }
+
     final codeVerifier = CodeVerifier(_rng);
     final oidcRequest = OIDCAuthenticationRequest(
       clientID: clientID,

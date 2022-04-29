@@ -364,6 +364,16 @@ class _MyAppState extends State<MyApp> {
                 SessionStateButton(
                   sessionState: _authgear.sessionState,
                   targetState: SessionState.authenticated,
+                  label: "Reauthenticate (biometric or web)",
+                  onPressed: _unconfigured || _loading
+                      ? null
+                      : () {
+                          _onPressReauthenticate(context);
+                        },
+                ),
+                SessionStateButton(
+                  sessionState: _authgear.sessionState,
+                  targetState: SessionState.authenticated,
                   label: "Enable Biometric",
                   onPressed: _unconfigured || _loading || _isBiometricEnabled
                       ? null
@@ -479,6 +489,29 @@ class _MyAppState extends State<MyApp> {
         throw Exception("canReauthenticate returns false for the current user");
       }
       await _authgear.reauthenticate(redirectURI: redirectURI);
+    } catch (e) {
+      onError(context, e);
+    } finally {
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _onPressReauthenticate(BuildContext context) async {
+    try {
+      setState(() {
+        _loading = true;
+      });
+      await _authgear.refreshIDToken();
+      if (!_authgear.canReauthenticate) {
+        throw Exception("canReauthenticate returns false for the current user");
+      }
+      await _authgear.reauthenticate(
+        redirectURI: redirectURI,
+        biometricIOS: ios,
+        biometricAndroid: android,
+      );
     } catch (e) {
       onError(context, e);
     } finally {

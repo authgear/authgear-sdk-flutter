@@ -67,20 +67,6 @@ class UserInfo {
         isVerified = json["https://authgear.com/claims/user/is_verified"];
 }
 
-class AuthenticateResult {
-  final UserInfo userInfo;
-  final String? state;
-
-  AuthenticateResult({required this.userInfo, required this.state});
-}
-
-class ReauthenticateResult {
-  final UserInfo userInfo;
-  final String? state;
-
-  ReauthenticateResult({required this.userInfo, required this.state});
-}
-
 class OIDCConfiguration {
   final String authorizationEndpoint;
   final String tokenEndpoint;

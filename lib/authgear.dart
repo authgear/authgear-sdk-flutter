@@ -6,8 +6,6 @@ export 'src/type.dart'
         AuthenticationPage,
         SettingsPage,
         UserInfo,
-        AuthenticateResult,
-        ReauthenticateResult,
         BiometricAccessConstraintAndroid,
         BiometricAccessConstraintIOS,
         BiometricOptionsAndroid,

@@ -113,9 +113,8 @@ class Authgear implements AuthgearHttpClientDelegate {
         .add(SessionStateChangeEvent(instance: this, reason: r));
   }
 
-  Future<AuthenticateResult> authenticate({
+  Future<UserInfo> authenticate({
     required String redirectURI,
-    String? state,
     List<PromptOption>? prompt,
     List<String>? uiLocales,
     AuthenticationPage? page,
@@ -131,7 +130,6 @@ class Authgear implements AuthgearHttpClientDelegate {
         "https://authgear.com/scopes/full-access",
       ],
       codeChallenge: codeVerifier.codeChallenge,
-      state: state,
       prompt: prompt,
       uiLocales: uiLocales,
       page: page,
@@ -153,10 +151,9 @@ class Authgear implements AuthgearHttpClientDelegate {
         xDeviceInfo: xDeviceInfo);
   }
 
-  Future<ReauthenticateResult> reauthenticate({
+  Future<UserInfo> reauthenticate({
     required String redirectURI,
     int maxAge = 0,
-    String? state,
     List<String>? uiLocales,
   }) async {
     final codeVerifier = CodeVerifier(_rng);
@@ -169,7 +166,6 @@ class Authgear implements AuthgearHttpClientDelegate {
         "https://authgear.com/scopes/full-access",
       ],
       codeChallenge: codeVerifier.codeChallenge,
-      state: state,
       uiLocales: uiLocales,
       idTokenHint: idTokenHint,
       maxAge: maxAge,
@@ -464,14 +460,12 @@ class Authgear implements AuthgearHttpClientDelegate {
     return tokenResponse;
   }
 
-  Future<AuthenticateResult> _finishAuthentication({
+  Future<UserInfo> _finishAuthentication({
     required Uri url,
     required String redirectURI,
     required CodeVerifier codeVerifier,
     required String xDeviceInfo,
   }) async {
-    final queryParameters = url.queryParameters;
-    final state = queryParameters["state"];
     final tokenResponse = await _exchangeCode(
       url: url,
       redirectURI: redirectURI,
@@ -482,17 +476,15 @@ class Authgear implements AuthgearHttpClientDelegate {
         tokenResponse, SessionStateChangeReason.authenticated);
     await disableBiometric();
     final userInfo = await _apiClient.getUserInfo();
-    return AuthenticateResult(userInfo: userInfo, state: state);
+    return userInfo;
   }
 
-  Future<ReauthenticateResult> _finishReauthentication({
+  Future<UserInfo> _finishReauthentication({
     required Uri url,
     required String redirectURI,
     required CodeVerifier codeVerifier,
     required String xDeviceInfo,
   }) async {
-    final queryParameters = url.queryParameters;
-    final state = queryParameters["state"];
     final tokenResponse = await _exchangeCode(
       url: url,
       redirectURI: redirectURI,
@@ -504,7 +496,7 @@ class Authgear implements AuthgearHttpClientDelegate {
       _idToken = idToken;
     }
     final userInfo = await _apiClient.getUserInfo();
-    return ReauthenticateResult(userInfo: userInfo, state: state);
+    return userInfo;
   }
 
   Future<void> _persistTokenResponse(

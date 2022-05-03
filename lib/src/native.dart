@@ -135,3 +135,31 @@ Future<String> signWithBiometricPrivateKey({
     throw wrapException(e);
   }
 }
+
+Future<String> createAnonymousPrivateKey({
+  required String kid,
+  required Map<String, dynamic> payload,
+}) async {
+  try {
+    return await _channel.invokeMethod("createAnonymousPrivateKey", {
+      "kid": kid,
+      "payload": payload,
+    });
+  } on PlatformException catch (e) {
+    throw wrapException(e);
+  }
+}
+
+Future<String> signWithAnonymousPrivateKey({
+  required String kid,
+  required Map<String, dynamic> payload,
+}) async {
+  try {
+    return await _channel.invokeMethod("signWithAnonymousPrivateKey", {
+      "kid": kid,
+      "payload": payload,
+    });
+  } on PlatformException catch (e) {
+    throw wrapException(e);
+  }
+}

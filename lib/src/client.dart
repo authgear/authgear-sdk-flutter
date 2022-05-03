@@ -199,6 +199,21 @@ class BiometricRequest {
   }
 }
 
+class AnonymousRequest {
+  final String clientID;
+  final String jwt;
+
+  AnonymousRequest({required this.clientID, required this.jwt});
+
+  Map<String, String> toQueryParameters() {
+    return {
+      "grant_type": "urn:authgear:params:oauth:grant-type:anonymous-request",
+      "client_id": clientID,
+      "jwt": jwt,
+    };
+  }
+}
+
 class APIClient {
   final String endpoint;
   final Client _plainHttpClient;
@@ -282,6 +297,15 @@ class APIClient {
     final url = Uri.parse(config.tokenEndpoint);
     final httpResponse =
         await _authgearHttpClient.post(url, body: request.toQueryParameters());
+    return _decodeOIDCResponseJSON(httpResponse, OIDCTokenResponse.fromJSON);
+  }
+
+  Future<OIDCTokenResponse> sendAuthenticateAnonymousRequest(
+      AnonymousRequest request) async {
+    final config = await fetchOIDCConfiguration();
+    final url = Uri.parse(config.tokenEndpoint);
+    final httpResponse =
+        await _plainHttpClient.post(url, body: request.toQueryParameters());
     return _decodeOIDCResponseJSON(httpResponse, OIDCTokenResponse.fromJSON);
   }
 

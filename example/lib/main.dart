@@ -344,6 +344,16 @@ class _MyAppState extends State<MyApp> {
                 SessionStateButton(
                   sessionState: _authgear.sessionState,
                   targetState: SessionState.noSession,
+                  label: "Authenticate Anonymously",
+                  onPressed: _unconfigured || _loading
+                      ? null
+                      : () {
+                          _onPressAuthenticateAnonymously(context);
+                        },
+                ),
+                SessionStateButton(
+                  sessionState: _authgear.sessionState,
+                  targetState: SessionState.noSession,
                   label: "Authenticate Biometric",
                   onPressed: _unconfigured || _loading || !_isBiometricEnabled
                       ? null
@@ -452,6 +462,21 @@ class _MyAppState extends State<MyApp> {
         _loading = true;
       });
       await _authgear.authenticate(redirectURI: redirectURI, page: _page);
+    } catch (e) {
+      onError(context, e);
+    } finally {
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _onPressAuthenticateAnonymously(BuildContext context) async {
+    try {
+      setState(() {
+        _loading = true;
+      });
+      await _authgear.authenticateAnonymously();
     } catch (e) {
       onError(context, e);
     } finally {

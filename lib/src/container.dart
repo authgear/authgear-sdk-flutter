@@ -421,6 +421,68 @@ class Authgear implements AuthgearHttpClientDelegate {
     }
   }
 
+  Future<UserInfo> authenticateAnonymously() async {
+    final kid = await _storage.getAnonymousKeyID(name);
+    if (kid == null) {
+      return _authenticateAnonymouslyCreate();
+    }
+    return _authenticateAnonymouslyExisting(kid);
+  }
+
+  Future<UserInfo> _authenticateAnonymouslyCreate() async {
+    final challengeResponse =
+        await _apiClient.getChallenge("anonymous_request");
+    final kid = await native.generateUUID();
+    final now = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+    final payload = {
+      "iat": now,
+      "exp": now + 300,
+      "challenge": challengeResponse.token,
+      "action": "auth",
+    };
+    final jwt = await native.createAnonymousPrivateKey(
+      kid: kid,
+      payload: payload,
+    );
+    final tokenResponse =
+        await _apiClient.sendAuthenticateAnonymousRequest(AnonymousRequest(
+      clientID: clientID,
+      jwt: jwt,
+    ));
+    await _persistTokenResponse(
+        tokenResponse, SessionStateChangeReason.authenticated);
+    final userInfo = await _apiClient.getUserInfo();
+    await _storage.setAnonymousKeyID(name, kid);
+    await disableBiometric();
+    return userInfo;
+  }
+
+  Future<UserInfo> _authenticateAnonymouslyExisting(String kid) async {
+    final challengeResponse =
+        await _apiClient.getChallenge("anonymous_request");
+    final now = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+    final payload = {
+      "iat": now,
+      "exp": now + 300,
+      "challenge": challengeResponse.token,
+      "action": "auth",
+    };
+    final jwt = await native.signWithAnonymousPrivateKey(
+      kid: kid,
+      payload: payload,
+    );
+    final tokenResponse =
+        await _apiClient.sendAuthenticateAnonymousRequest(AnonymousRequest(
+      clientID: clientID,
+      jwt: jwt,
+    ));
+    await _persistTokenResponse(
+        tokenResponse, SessionStateChangeReason.authenticated);
+    final userInfo = await _apiClient.getUserInfo();
+    await disableBiometric();
+    return userInfo;
+  }
+
   Future<void> _clearSession(SessionStateChangeReason reason) async {
     await _tokenStorage.delRefreshToken(name);
     _idToken = null;

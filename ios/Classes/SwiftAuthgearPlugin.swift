@@ -57,6 +57,16 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
       let kid = arguments["kid"] as! String
       let payload = arguments["payload"] as! [String: Any]
       self.signWithBiometricPrivateKey(kid: kid, payload: payload, result: result)
+    case "createAnonymousPrivateKey":
+      let arguments = call.arguments as! Dictionary<String, AnyObject>
+      let kid = arguments["kid"] as! String
+      let payload = arguments["payload"] as! [String: Any]
+      self.createAnonymousPrivateKey(kid: kid, payload: payload, result: result)
+    case "signWithAnonymousPrivateKey":
+      let arguments = call.arguments as! Dictionary<String, AnyObject>
+      let kid = arguments["kid"] as! String
+      let payload = arguments["payload"] as! [String: Any]
+      self.signWithAnonymousPrivateKey(kid: kid, payload: payload, result: result)
     default:
       result(FlutterMethodNotImplemented)
     }
@@ -331,7 +341,7 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
             return
           }
 
-          switch self.generateBiometricPrivateKey() {
+          switch self.generatePrivateKey() {
           case .failure(let error):
             result(FlutterError(error: error))
             return
@@ -391,8 +401,54 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     }
   }
 
+  private func createAnonymousPrivateKey(kid: String, payload: [String: Any], result: FlutterResult) {
+    let tag = "com.authgear.keys.anonymous.\(kid)"
+
+    if #available(iOS 11.3, *) {
+      switch self.generatePrivateKey() {
+      case .failure(let error):
+        result(FlutterError(error: error))
+        return
+      case .success(let secKey):
+        if let error = self.addAnonymousPrivateKey(privateKey: secKey, tag: tag) {
+          result(FlutterError(error: error))
+          return
+        }
+
+        switch self.signAnonymousJWT(privateKey: secKey, kid: kid, payload: payload) {
+        case .failure(let error):
+          result(FlutterError(error: error))
+          return
+        case .success(let jwt):
+          result(jwt)
+          return
+        }
+      }
+    } else {
+      result(FlutterError.unsupported)
+    }
+  }
+
+  private func signWithAnonymousPrivateKey(kid: String, payload: [String: Any], result: FlutterResult) {
+    if #available(iOS 10.0, *) {
+      switch self.getAnonymousPrivateKey(kid: kid) {
+      case .failure(let error):
+        result(FlutterError(error: error))
+      case .success(let privateKey):
+        switch self.signAnonymousJWT(privateKey: privateKey, kid: kid, payload: payload) {
+        case .failure(let error):
+          result(FlutterError(error: error))
+        case .success(let jwt):
+          result(jwt)
+        }
+      }
+    } else {
+      result(FlutterError.unsupported)
+    }
+  }
+
   @available(iOS 11.3, *)
-  private func generateBiometricPrivateKey() -> Result<SecKey, Error> {
+  private func generatePrivateKey() -> Result<SecKey, Error> {
     var error: Unmanaged<CFError>?
     let query: [String: Any] = [
       kSecAttrKeyType as String: kSecAttrKeyTypeRSA,
@@ -434,8 +490,32 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     return nil
   }
 
+  private func addAnonymousPrivateKey(privateKey: SecKey, tag: String) -> Error? {
+    let query: [String: Any] = [
+      kSecValueRef as String: privateKey,
+      kSecClass as String: kSecClassKey,
+      kSecAttrApplicationTag as String: tag,
+    ]
+
+    let status = SecItemAdd(query as CFDictionary, nil)
+    guard status == errSecSuccess else {
+      return NSError(osStatus: status)
+    }
+
+    return nil
+  }
+
   private func getBiometricPrivateKey(kid: String) -> Result<SecKey, Error> {
     let tag = "com.authgear.keys.biometric.\(kid)"
+    return getPrivateKey(tag: tag)
+  }
+
+  private func getAnonymousPrivateKey(kid: String) -> Result<SecKey, Error> {
+    let tag = "com.authgear.keys.anonymous.\(kid)"
+    return getPrivateKey(tag: tag)
+  }
+
+  private func getPrivateKey(tag: String) -> Result<SecKey, Error> {
     let query: [String: Any] = [
       kSecClass as String: kSecClassKey,
       kSecMatchLimit as String: kSecMatchLimitOne,
@@ -470,6 +550,19 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
   }
 
   @available(iOS 10.0, *)
+  private func signAnonymousJWT(privateKey: SecKey, kid: String, payload: [String: Any]) -> Result<String, Error> {
+    var jwk: [String: Any] = [:]
+    jwk["kid"] = kid
+
+    if let error = getJWKFromPrivateKey(privateKey: privateKey, jwk: &jwk) {
+      return .failure(error)
+    }
+
+    let header = makeAnonymousJWTHeader(jwk: jwk)
+    return signJWT(privateKey: privateKey, header: header, payload: payload)
+  }
+
+  @available(iOS 10.0, *)
   private func getJWKFromPrivateKey(privateKey: SecKey, jwk: inout [String: Any]) -> Error? {
     var error: Unmanaged<CFError>?
 
@@ -494,6 +587,15 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
   private func makeBiometricJWTHeader(jwk: [String: Any]) -> [String: Any] {
     return [
       "typ": "vnd.authgear.biometric-request",
+      "kid": jwk["kid"]!,
+      "alg": jwk["alg"]!,
+      "jwk": jwk,
+    ]
+  }
+
+  private func makeAnonymousJWTHeader(jwk: [String: Any]) -> [String: Any] {
+    return [
+      "typ": "vnd.authgear.anonymous-request",
       "kid": jwk["kid"]!,
       "alg": jwk["alg"]!,
       "jwk": jwk,

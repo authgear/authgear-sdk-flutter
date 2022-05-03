@@ -171,6 +171,20 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
         val android = call.argument<Map<String, Any>>("android")!!
         this.signWithBiometricPrivateKey(android, kid, payload, result)
       }
+      "createAnonymousPrivateKey" -> {
+        val kid = call.argument<String>("kid")!!
+        val payload = call.argument<Map<String, Any>>("payload")!!
+        this.createAnonymousPrivateKey(kid, payload, result)
+      }
+      "removeAnonymousPrivateKey" -> {
+        val kid = call.argument<String>("kid")!!
+        this.removeAnonymousPrivateKey(kid, result)
+      }
+      "signWithAnonymousPrivateKey" -> {
+        val kid = call.argument<String>("kid")!!
+        val payload = call.argument<Map<String, Any>>("payload")!!
+        this.signWithAnonymousPrivateKey(kid, payload, result)
+      }
       else -> result.notImplemented()
     }
   }
@@ -434,7 +448,7 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
     val alias = "com.authgear.keys.biometric." + kid
     val promptInfo = buildPromptInfo(android, flags)
 
-    val spec = makeGenerateKeyPairSpec(alias, authenticatorTypesToKeyProperties(flags), invalidatedByBiometricEnrollment)
+    val spec = makeBiometricKeyPairSpec(alias, authenticatorTypesToKeyProperties(flags), invalidatedByBiometricEnrollment)
 
     try {
       val keyPair = createKeyPair(spec)
@@ -444,8 +458,33 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
     }
   }
 
+  private fun createAnonymousPrivateKey(kid: String, payload: Map<String, Any>, result: Result) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+      result.anonymousAPILevel()
+      return
+    }
+
+    val alias = "com.authgear.keys.anonymous.$kid"
+    val spec = makeAnonymousKeyPairSpec(alias)
+    try {
+      val keyPair = createKeyPair(spec)
+      signAnonymousJWT(keyPair, kid, payload, result)
+    } catch (e: Exception) {
+      result.exception(e)
+    }
+  }
+
   private fun removeBiometricPrivateKey(kid: String, result: Result) {
     val alias = "com.authgear.keys.biometric.$kid"
+    removePrivateKey(alias, result)
+  }
+
+  private fun removeAnonymousPrivateKey(kid: String, result: Result) {
+    val alias = "com.authgear.keys.anonymous.$kid"
+    removePrivateKey(alias, result)
+  }
+
+  private fun removePrivateKey(alias: String, result: Result) {
     try {
       val keyStore = KeyStore.getInstance("AndroidKeyStore")
       keyStore.load(null)
@@ -481,6 +520,21 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
     }
   }
 
+  private fun signWithAnonymousPrivateKey(kid: String, payload: Map<String, Any>, result: Result) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+      result.anonymousAPILevel()
+      return
+    }
+
+    val alias = "com.authgear.keys.anonymous.$kid"
+    try {
+      val keyPair = getKeyPair(alias)
+      signAnonymousJWT(keyPair, kid, payload, result)
+    } catch (e: Exception) {
+      result.exception(e)
+    }
+  }
+
   private fun getFragmentActivity(): FragmentActivity? {
     val fragmentActivity = activityBinding?.activity
     if (fragmentActivity is FragmentActivity) {
@@ -490,7 +544,7 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
   }
 
   @RequiresApi(Build.VERSION_CODES.M)
-  private fun makeGenerateKeyPairSpec(alias: String, flags: Int, invalidatedByBiometricEnrollment: Boolean): KeyGenParameterSpec {
+  private fun makeBiometricKeyPairSpec(alias: String, flags: Int, invalidatedByBiometricEnrollment: Boolean): KeyGenParameterSpec {
     val builder = KeyGenParameterSpec.Builder(
         alias,
       KeyProperties.PURPOSE_SIGN or KeyProperties.PURPOSE_VERIFY
@@ -524,6 +578,19 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
       // User presence requires a physical button which is not our intended use case.
       // builder.setUserPresenceRequired(true)
     }
+
+    return builder.build()
+  }
+
+  @RequiresApi(Build.VERSION_CODES.M)
+  private fun makeAnonymousKeyPairSpec(alias: String): KeyGenParameterSpec {
+    val builder = KeyGenParameterSpec.Builder(
+      alias,
+      KeyProperties.PURPOSE_SIGN or KeyProperties.PURPOSE_VERIFY
+    )
+    builder.setKeySize(2048)
+    builder.setDigests(KeyProperties.DIGEST_SHA256)
+    builder.setSignaturePaddings(KeyProperties.SIGNATURE_PADDING_RSA_PKCS1)
 
     return builder.build()
   }
@@ -604,6 +671,18 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
     }
   }
 
+  private fun signAnonymousJWT(keyPair: KeyPair, kid: String, payload: Map<String, Any>, result: Result) {
+    val jwk = getJWK(keyPair, kid)
+    val header = makeAnonymousJWTHeader(jwk)
+    try {
+      val signature = makeSignature(keyPair.private)
+      val jwt = signJWT(signature, header, payload)
+      result.success(jwt)
+    } catch (e: Exception) {
+      result.exception(e)
+    }
+  }
+
   private fun getJWK(keyPair: KeyPair, kid: String): Map<String, Any> {
     val publicKey = keyPair.public
     val rsaPublicKey = publicKey as RSAPublicKey
@@ -620,6 +699,15 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
   private fun makeBiometricJWTHeader(jwk: Map<String, Any>): Map<String, Any> {
     return hashMapOf(
       "typ" to "vnd.authgear.biometric-request",
+      "kid" to jwk["kid"]!!,
+      "alg" to jwk["alg"]!!,
+      "jwk" to jwk,
+    )
+  }
+
+  private fun makeAnonymousJWTHeader(jwk: Map<String, Any>): Map<String, Any> {
+    return hashMapOf(
+      "typ" to "vnd.authgear.anonymous-request",
       "kid" to jwk["kid"]!!,
       "alg" to jwk["alg"]!!,
       "jwk" to jwk,
@@ -654,6 +742,10 @@ internal fun Result.cancel() {
 
 internal fun Result.biometricAPILevel() {
   this.error("DeviceAPILevelTooLow", "Biometric authentication requires at least API Level 23", null)
+}
+
+internal fun Result.anonymousAPILevel() {
+  this.error("DeviceAPILevelTooLow", "Anonymous user requires at least API Level 23", null)
 }
 
 internal fun Result.fragmentActivity() {

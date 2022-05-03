@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches:
+    - '*'
+    - '!gh-pages'
+  pull_request:
+    branches:
+    - '*'
+    - '!gh-pages'
+
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v3
+    - uses: subosito/flutter-action@v2
+      with:
+        # Use the latest stable release
+        channel: 'stable'
+    - run: flutter pub get
+    - run: flutter test
+    - run: flutter analyze --no-fatal-infos
+    - run: flutter format --set-exit-if-changed lib

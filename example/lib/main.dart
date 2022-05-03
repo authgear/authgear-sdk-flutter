@@ -215,6 +215,15 @@ class _MyAppState extends State<MyApp> {
         _authgear.clientID != _clientIDController.text;
   }
 
+  UserInfo? _userInfo;
+  bool get _isAnonymous {
+    final userInfo = _userInfo;
+    if (userInfo == null) {
+      return false;
+    }
+    return userInfo.isAnonymous;
+  }
+
   AuthenticationPage? _page;
 
   @override
@@ -353,6 +362,16 @@ class _MyAppState extends State<MyApp> {
                 ),
                 SessionStateButton(
                   sessionState: _authgear.sessionState,
+                  targetState: SessionState.authenticated,
+                  label: "Promote Anonymous User",
+                  onPressed: _unconfigured || _loading || !_isAnonymous
+                      ? null
+                      : () {
+                          _onPressPromoteAnonymousUser(context);
+                        },
+                ),
+                SessionStateButton(
+                  sessionState: _authgear.sessionState,
                   targetState: SessionState.noSession,
                   label: "Authenticate Biometric",
                   onPressed: _unconfigured || _loading || !_isBiometricEnabled
@@ -385,7 +404,10 @@ class _MyAppState extends State<MyApp> {
                   sessionState: _authgear.sessionState,
                   targetState: SessionState.authenticated,
                   label: "Enable Biometric",
-                  onPressed: _unconfigured || _loading || _isBiometricEnabled
+                  onPressed: _unconfigured ||
+                          _loading ||
+                          _isBiometricEnabled ||
+                          _isAnonymous
                       ? null
                       : () {
                           _onPressEnableBiometric(context);
@@ -461,7 +483,11 @@ class _MyAppState extends State<MyApp> {
       setState(() {
         _loading = true;
       });
-      await _authgear.authenticate(redirectURI: redirectURI, page: _page);
+      final userInfo =
+          await _authgear.authenticate(redirectURI: redirectURI, page: _page);
+      setState(() {
+        _userInfo = userInfo;
+      });
     } catch (e) {
       onError(context, e);
     } finally {
@@ -476,7 +502,29 @@ class _MyAppState extends State<MyApp> {
       setState(() {
         _loading = true;
       });
-      await _authgear.authenticateAnonymously();
+      final userInfo = await _authgear.authenticateAnonymously();
+      setState(() {
+        _userInfo = userInfo;
+      });
+    } catch (e) {
+      onError(context, e);
+    } finally {
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _onPressPromoteAnonymousUser(BuildContext context) async {
+    try {
+      setState(() {
+        _loading = true;
+      });
+      final userInfo =
+          await _authgear.promoteAnonymousUser(redirectURI: redirectURI);
+      setState(() {
+        _userInfo = userInfo;
+      });
     } catch (e) {
       onError(context, e);
     } finally {
@@ -491,10 +539,13 @@ class _MyAppState extends State<MyApp> {
       setState(() {
         _loading = true;
       });
-      await _authgear.authenticateBiometric(
+      final userInfo = await _authgear.authenticateBiometric(
         ios: ios,
         android: android,
       );
+      setState(() {
+        _userInfo = userInfo;
+      });
     } catch (e) {
       onError(context, e);
     } finally {
@@ -513,7 +564,10 @@ class _MyAppState extends State<MyApp> {
       if (!_authgear.canReauthenticate) {
         throw Exception("canReauthenticate returns false for the current user");
       }
-      await _authgear.reauthenticate(redirectURI: redirectURI);
+      final userInfo = await _authgear.reauthenticate(redirectURI: redirectURI);
+      setState(() {
+        _userInfo = userInfo;
+      });
     } catch (e) {
       onError(context, e);
     } finally {
@@ -532,11 +586,14 @@ class _MyAppState extends State<MyApp> {
       if (!_authgear.canReauthenticate) {
         throw Exception("canReauthenticate returns false for the current user");
       }
-      await _authgear.reauthenticate(
+      final userInfo = await _authgear.reauthenticate(
         redirectURI: redirectURI,
         biometricIOS: ios,
         biometricAndroid: android,
       );
+      setState(() {
+        _userInfo = userInfo;
+      });
     } catch (e) {
       onError(context, e);
     } finally {
@@ -552,6 +609,9 @@ class _MyAppState extends State<MyApp> {
         _loading = true;
       });
       final userInfo = await _authgear.getUserInfo();
+      setState(() {
+        _userInfo = userInfo;
+      });
       await showDialog(
         context: context,
         barrierDismissible: false,
@@ -587,6 +647,9 @@ class _MyAppState extends State<MyApp> {
         _loading = true;
       });
       await _authgear.logout();
+      setState(() {
+        _userInfo = null;
+      });
     } catch (e) {
       onError(context, e);
     } finally {
@@ -617,8 +680,14 @@ class _MyAppState extends State<MyApp> {
       clientID,
     );
 
+    UserInfo? userInfo;
+    if (authgear.sessionState == SessionState.authenticated) {
+      userInfo = await authgear.getUserInfo();
+    }
+
     setState(() {
       _authgear = authgear;
+      _userInfo = userInfo;
       _sub = _authgear.onSessionStateChange.listen((e) {
         _syncAuthgearState();
       });

@@ -62,6 +62,10 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
       let kid = arguments["kid"] as! String
       let payload = arguments["payload"] as! [String: Any]
       self.createAnonymousPrivateKey(kid: kid, payload: payload, result: result)
+    case "removeAnonymousPrivateKey":
+      let arguments = call.arguments as! Dictionary<String, AnyObject>
+      let kid = arguments["kid"] as! String
+      self.removeAnonymousPrivateKey(kid: kid, result: result)
     case "signWithAnonymousPrivateKey":
       let arguments = call.arguments as! Dictionary<String, AnyObject>
       let kid = arguments["kid"] as! String
@@ -369,6 +373,15 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
 
   private func removeBiometricPrivateKey(kid: String, result: FlutterResult) {
     let tag = "com.authgear.keys.biometric.\(kid)"
+    removePrivateKey(tag: tag, result: result)
+  }
+
+  private func removeAnonymousPrivateKey(kid: String, result: FlutterResult) {
+    let tag = "com.authgear.keys.anonymous.\(kid)"
+    removePrivateKey(tag: tag, result: result)
+  }
+
+  private func removePrivateKey(tag: String, result: FlutterResult) {
     let query: [String: Any] = [
       kSecClass as String: kSecClassKey,
       kSecAttrKeyType as String: kSecAttrKeyTypeRSA,

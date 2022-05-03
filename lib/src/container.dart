@@ -421,6 +421,68 @@ class Authgear implements AuthgearHttpClientDelegate {
     }
   }
 
+  Future<UserInfo> promoteAnonymousUser({
+    required String redirectURI,
+    List<String>? uiLocales,
+  }) async {
+    final kid = await _storage.getAnonymousKeyID(name);
+    if (kid == null) {
+      throw Exception("anonymous kid not found");
+    }
+    final challengeResponse =
+        await _apiClient.getChallenge("anonymous_request");
+    final now = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+    final payload = {
+      "iat": now,
+      "exp": now + 300,
+      "challenge": challengeResponse.token,
+      "action": "promote",
+    };
+    final jwt = await native.signWithAnonymousPrivateKey(
+      kid: kid,
+      payload: payload,
+    );
+    final loginHint =
+        Uri.parse("https://authgear.com/login_hint").replace(queryParameters: {
+      "type": "anonymous",
+      "jwt": jwt,
+    }).toString();
+
+    final codeVerifier = CodeVerifier(_rng);
+    final oidcRequest = OIDCAuthenticationRequest(
+      clientID: clientID,
+      redirectURI: redirectURI,
+      responseType: "code",
+      scope: [
+        "openid",
+        "offline_access",
+        "https://authgear.com/scopes/full-access",
+      ],
+      codeChallenge: codeVerifier.codeChallenge,
+      prompt: [PromptOption.login],
+      loginHint: loginHint,
+      uiLocales: uiLocales,
+      suppressIDPSessionCookie: !shareSessionWithSystemBrowser,
+    );
+    final config = await _apiClient.fetchOIDCConfiguration();
+    final authenticationURL = Uri.parse(config.authorizationEndpoint)
+        .replace(queryParameters: oidcRequest.toQueryParameters());
+    final resultURL = await native.authenticate(
+      url: authenticationURL.toString(),
+      redirectURI: redirectURI,
+      preferEphemeral: !shareSessionWithSystemBrowser,
+    );
+    final xDeviceInfo = await _getXDeviceInfo();
+    final userInfo = await _finishAuthentication(
+        url: Uri.parse(resultURL),
+        redirectURI: redirectURI,
+        codeVerifier: codeVerifier,
+        xDeviceInfo: xDeviceInfo);
+    await _disableAnonymous();
+    await disableBiometric();
+    return userInfo;
+  }
+
   Future<UserInfo> authenticateAnonymously() async {
     final kid = await _storage.getAnonymousKeyID(name);
     if (kid == null) {
@@ -481,6 +543,14 @@ class Authgear implements AuthgearHttpClientDelegate {
     final userInfo = await _apiClient.getUserInfo();
     await disableBiometric();
     return userInfo;
+  }
+
+  Future<void> _disableAnonymous() async {
+    final kid = await _storage.getAnonymousKeyID(name);
+    if (kid != null) {
+      await native.removeAnonymousPrivateKey(kid);
+      await _storage.delAnonymousKeyID(name);
+    }
   }
 
   Future<void> _clearSession(SessionStateChangeReason reason) async {

@@ -150,6 +150,16 @@ Future<String> createAnonymousPrivateKey({
   }
 }
 
+Future<void> removeAnonymousPrivateKey(String kid) async {
+  try {
+    return await _channel.invokeMethod("removeAnonymousPrivateKey", {
+      "kid": kid,
+    });
+  } on PlatformException catch (e) {
+    throw wrapException(e);
+  }
+}
+
 Future<String> signWithAnonymousPrivateKey({
   required String kid,
   required Map<String, dynamic> payload,

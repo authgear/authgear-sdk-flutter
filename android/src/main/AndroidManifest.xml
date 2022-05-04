@@ -13,4 +13,10 @@
         android:theme="@style/AuthgearTheme"
         android:configChanges="orientation|screenSize" />
   </application>
+  <queries>
+    <package android:name="com.android.chrome" />
+    <package android:name="com.chrome.beta" />
+    <package android:name="com.chrome.dev" />
+    <package android:name="com.google.android.apps.chrome" />
+  </queries>
 </manifest>

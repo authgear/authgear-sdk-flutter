@@ -23,3 +23,13 @@ jobs:
     - run: flutter test
     - run: flutter analyze --no-fatal-infos
     - run: flutter format --set-exit-if-changed lib
+    # Install the latest dartdoc to avoid a bug
+    # See DEVELOPER.md
+    - run: flutter pub global activate dartdoc
+    - run: flutter pub global run dartdoc
+    - name: Deploy docs to gh-pages
+      uses: peaceiris/actions-gh-pages@v3
+      if: ${{ github.ref == 'refs/heads/main' }}
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./doc/api

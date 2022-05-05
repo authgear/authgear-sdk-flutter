@@ -37,8 +37,19 @@
                     android:host="host"
                     android:pathPrefix="/path"
                     android:scheme="com.authgear.exampleapp.flutter" />
+                <data
+                    android:host="host"
+                    android:pathPrefix="/open_wechat_app"
+                    android:scheme="com.authgear.exampleapp.flutter" />
             </intent-filter>
         </activity>
+       <activity
+           android:name=".wxapi.WXEntryActivity"
+           android:theme="@style/LaunchTheme"
+           android:exported="true"
+           android:taskAffinity="com.authgear.exampleapp.flutter"
+           android:launchMode="singleTask">
+       </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

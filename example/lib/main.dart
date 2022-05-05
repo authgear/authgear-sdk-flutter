@@ -1,12 +1,26 @@
 import 'dart:async' show StreamSubscription;
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
 import 'package:shared_preferences/shared_preferences.dart'
     show SharedPreferences;
 import 'package:flutter_authgear/authgear.dart';
 
+const redirectURI = "com.authgear.exampleapp.flutter://host/path";
+var wechatRedirectURI = "";
+
+const _nativeMethodChannel = MethodChannel("example");
+
 void main() {
+  if (Platform.isIOS) {
+    wechatRedirectURI =
+        "https://authgear-demo-flutter.pandawork.com/authgear/open_wechat_app";
+  }
+  if (Platform.isAndroid) {
+    wechatRedirectURI =
+        "com.authgear.exampleapp.flutter://host/open_wechat_app";
+  }
   // debugPaintSizeEnabled = true;
   runApp(const MyApp());
 }
@@ -17,8 +31,6 @@ class MyApp extends StatefulWidget {
   @override
   State<MyApp> createState() => _MyAppState();
 }
-
-const redirectURI = "com.authgear.exampleapp.flutter://host/path";
 
 final ios = BiometricOptionsIOS(
   localizedReason: "Use biometric to sign in",
@@ -483,8 +495,11 @@ class _MyAppState extends State<MyApp> {
       setState(() {
         _loading = true;
       });
-      final userInfo =
-          await _authgear.authenticate(redirectURI: redirectURI, page: _page);
+      final userInfo = await _authgear.authenticate(
+        redirectURI: redirectURI,
+        page: _page,
+        wechatRedirectURI: wechatRedirectURI,
+      );
       setState(() {
         _userInfo = userInfo;
       });
@@ -520,8 +535,10 @@ class _MyAppState extends State<MyApp> {
       setState(() {
         _loading = true;
       });
-      final userInfo =
-          await _authgear.promoteAnonymousUser(redirectURI: redirectURI);
+      final userInfo = await _authgear.promoteAnonymousUser(
+        redirectURI: redirectURI,
+        wechatRedirectURI: wechatRedirectURI,
+      );
       setState(() {
         _userInfo = userInfo;
       });
@@ -564,7 +581,10 @@ class _MyAppState extends State<MyApp> {
       if (!_authgear.canReauthenticate) {
         throw Exception("canReauthenticate returns false for the current user");
       }
-      final userInfo = await _authgear.reauthenticate(redirectURI: redirectURI);
+      final userInfo = await _authgear.reauthenticate(
+        redirectURI: redirectURI,
+        wechatRedirectURI: wechatRedirectURI,
+      );
       setState(() {
         _userInfo = userInfo;
       });
@@ -588,6 +608,7 @@ class _MyAppState extends State<MyApp> {
       }
       final userInfo = await _authgear.reauthenticate(
         redirectURI: redirectURI,
+        wechatRedirectURI: wechatRedirectURI,
         biometricIOS: ios,
         biometricAndroid: android,
       );
@@ -668,6 +689,7 @@ class _MyAppState extends State<MyApp> {
       clientID: clientID,
       shareSessionWithSystemBrowser: _shareSessionWithSystemBrowser,
       tokenStorage: _useTransientTokenStorage ? TransientTokenStorage() : null,
+      sendWechatAuthRequest: _sendWechatAuthRequest,
     );
     _sub?.cancel();
     await authgear.configure();
@@ -700,7 +722,10 @@ class _MyAppState extends State<MyApp> {
       setState(() {
         _loading = true;
       });
-      await _authgear.open(SettingsPage.settings);
+      await _authgear.open(
+        page: SettingsPage.settings,
+        wechatRedirectURI: wechatRedirectURI,
+      );
     } catch (e) {
       onError(context, e);
     } finally {
@@ -767,6 +792,18 @@ class _MyAppState extends State<MyApp> {
       setState(() {
         _loading = false;
       });
+    }
+  }
+
+  Future<void> _sendWechatAuthRequest(String state) async {
+    try {
+      final code =
+          await _nativeMethodChannel.invokeMethod("sendWechatAuthRequest", {
+        "state": state,
+      });
+      await _authgear.wechatAuthCallback(state: state, code: code);
+    } on PlatformException catch (e) {
+      print("exception: $e");
     }
   }
 

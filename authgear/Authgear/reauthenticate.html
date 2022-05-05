@@ -56,6 +56,7 @@
 <span class="name ">reauthenticate</span>(<wbr><ol class="parameter-list"><li><span class="parameter" id="reauthenticate-param-redirectURI">{<span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">redirectURI</span>, </span></li>
 <li><span class="parameter" id="reauthenticate-param-maxAge"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/int-class.html">int</a></span> <span class="parameter-name">maxAge</span> = <span class="default-value">0</span>, </span></li>
 <li><span class="parameter" id="reauthenticate-param-uiLocales"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>&gt;</span>?</span> <span class="parameter-name">uiLocales</span>, </span></li>
+<li><span class="parameter" id="reauthenticate-param-wechatRedirectURI"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">wechatRedirectURI</span>, </span></li>
 <li><span class="parameter" id="reauthenticate-param-biometricIOS"><span class="type-annotation"><a href="../../authgear/BiometricOptionsIOS-class.html">BiometricOptionsIOS</a>?</span> <span class="parameter-name">biometricIOS</span>, </span></li>
 <li><span class="parameter" id="reauthenticate-param-biometricAndroid"><span class="type-annotation"><a href="../../authgear/BiometricOptionsAndroid-class.html">BiometricOptionsAndroid</a>?</span> <span class="parameter-name">biometricAndroid</span>}</span></li>
 </ol>)
@@ -73,6 +74,7 @@
   required String redirectURI,
   int maxAge = 0,
   List&lt;String&gt;? uiLocales,
+  String? wechatRedirectURI,
   BiometricOptionsIOS? biometricIOS,
   BiometricOptionsAndroid? biometricAndroid,
 }) async {
@@ -98,6 +100,7 @@
     idTokenHint: idTokenHint,
     maxAge: maxAge,
     suppressIDPSessionCookie: !shareSessionWithSystemBrowser,
+    wechatRedirectURI: wechatRedirectURI,
   );
   final config = await _apiClient.fetchOIDCConfiguration();
   final authenticationURL = Uri.parse(config.authorizationEndpoint)
@@ -106,6 +109,8 @@
     url: authenticationURL.toString(),
     redirectURI: redirectURI,
     preferEphemeral: !shareSessionWithSystemBrowser,
+    wechatRedirectURI: wechatRedirectURI,
+    onWechatRedirectURI: _onWechatRedirectURI,
   );
   final xDeviceInfo = await _getXDeviceInfo();
   return await _finishReauthentication(
@@ -154,6 +159,7 @@
     <li><a href="../../authgear/Authgear/name.html">name</a></li>
     <li><a href="../../authgear/Authgear/onSessionStateChange.html">onSessionStateChange</a></li>
     <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/runtimeType.html">runtimeType</a></li>
+    <li><a href="../../authgear/Authgear/sendWechatAuthRequest.html">sendWechatAuthRequest</a></li>
     <li><a href="../../authgear/Authgear/sessionState.html">sessionState</a></li>
     <li><a href="../../authgear/Authgear/shareSessionWithSystemBrowser.html">shareSessionWithSystemBrowser</a></li>
     <li><a href="../../authgear/Authgear/shouldRefreshAccessToken.html">shouldRefreshAccessToken</a></li>
@@ -177,6 +183,7 @@
     <li><a href="../../authgear/Authgear/refreshAccessToken.html">refreshAccessToken</a></li>
     <li><a href="../../authgear/Authgear/refreshIDToken.html">refreshIDToken</a></li>
     <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/toString.html">toString</a></li>
+    <li><a href="../../authgear/Authgear/wechatAuthCallback.html">wechatAuthCallback</a></li>
     <li><a href="../../authgear/Authgear/wrapHttpClient.html">wrapHttpClient</a></li>
 
     <li class="section-title inherited"><a href="../../authgear/Authgear-class.html#operators">Operators</a></li>

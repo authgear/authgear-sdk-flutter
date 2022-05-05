@@ -16,9 +16,13 @@ class OAuthRedirectActivity: Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val uri = intent.data
-        if (uri != null && isRedirectURI((uri))) {
-            startActivity(OAuthCoordinatorActivity.createRedirectIntent(this, uri))
-            redirectURI = null
+        if (uri != null) {
+            if (AuthgearPlugin.onWechatRedirectURI(uri)) {
+                // handled
+            } else if (isRedirectURI(uri)) {
+                startActivity(OAuthCoordinatorActivity.createRedirectIntent(this, uri))
+                redirectURI = null
+            }
         }
         finish()
     }

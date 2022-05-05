@@ -18,5 +18,6 @@
     <package android:name="com.chrome.beta" />
     <package android:name="com.chrome.dev" />
     <package android:name="com.google.android.apps.chrome" />
+    <package android:name="com.tencent.mm" />
   </queries>
 </manifest>

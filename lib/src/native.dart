@@ -4,25 +4,56 @@ import 'type.dart';
 
 const MethodChannel _channel = MethodChannel("flutter_authgear");
 
-Future<String> authenticate(
-    {required String url,
-    required String redirectURI,
-    required bool preferEphemeral}) async {
+var _wechatMethodChannelCounter = 0;
+
+String _getNextWechatMethodChannelName() {
+  _wechatMethodChannelCounter += 1;
+  final counter = _wechatMethodChannelCounter;
+  return "flutter_authgear:wechat:$counter";
+}
+
+Future<String> authenticate({
+  required String url,
+  required String redirectURI,
+  required bool preferEphemeral,
+  required void Function(Uri) onWechatRedirectURI,
+  required String? wechatRedirectURI,
+}) async {
   try {
+    final wechatMethodChannelName = _getNextWechatMethodChannelName();
+    final wechatMethodChannel = MethodChannel(wechatMethodChannelName);
+    wechatMethodChannel.setMethodCallHandler((call) async {
+      final uri = Uri.parse(call.arguments);
+      onWechatRedirectURI(uri);
+    });
     return await _channel.invokeMethod("authenticate", {
       "url": url,
       "redirectURI": redirectURI,
       "preferEphemeral": preferEphemeral,
+      "wechatRedirectURI": wechatRedirectURI,
+      "wechatMethodChannel": wechatMethodChannelName,
     });
   } on PlatformException catch (e) {
     throw wrapException(e);
   }
 }
 
-Future<void> openURL(String url) async {
+Future<void> openURL({
+  required String url,
+  required void Function(Uri) onWechatRedirectURI,
+  required String? wechatRedirectURI,
+}) async {
   try {
+    final wechatMethodChannelName = _getNextWechatMethodChannelName();
+    final wechatMethodChannel = MethodChannel(wechatMethodChannelName);
+    wechatMethodChannel.setMethodCallHandler((call) async {
+      final uri = Uri.parse(call.arguments);
+      onWechatRedirectURI(uri);
+    });
     await _channel.invokeMethod("openURL", {
       "url": url,
+      "wechatRedirectURI": wechatRedirectURI,
+      "wechatMethodChannel": wechatMethodChannelName,
     });
   } on PlatformException catch (e) {
     throw wrapException(e);

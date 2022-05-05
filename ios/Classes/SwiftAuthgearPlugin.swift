@@ -7,11 +7,26 @@ import CommonCrypto
 public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPresentationContextProviding {
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "flutter_authgear", binaryMessenger: registrar.messenger())
-    let instance = SwiftAuthgearPlugin()
+    let instance = SwiftAuthgearPlugin(binaryMessenger: registrar.messenger())
     registrar.addMethodCallDelegate(instance, channel: channel)
+    registrar.addApplicationDelegate(instance)
+  }
+
+  public static func wechatFlutterError(errCode: Int32, errStr: String) -> FlutterError {
+    return FlutterError(wechatErrCode: errCode, errStr: errStr)
+  }
+
+  private var wechatRedirectURIToMethodChannel: [String: String]
+  private let binaryMessenger: FlutterBinaryMessenger
+
+  internal init(binaryMessenger: FlutterBinaryMessenger) {
+    self.wechatRedirectURIToMethodChannel = [String: String]()
+    self.binaryMessenger = binaryMessenger
+    super.init()
   }
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    self.storeWechat(arguments: call.arguments)
     switch call.method {
     case "authenticate":
       let arguments = call.arguments as! Dictionary<String, AnyObject>
@@ -74,6 +89,70 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     default:
       result(FlutterMethodNotImplemented)
     }
+  }
+
+  public func application(
+    _ application: UIApplication,
+    open url: URL,
+    options: [UIApplication.OpenURLOptionsKey : Any] = [:]
+  ) -> Bool {
+    return self.handleWechatRedirectURI(url: url)
+  }
+
+  public func application(
+    _ application: UIApplication,
+    open url: URL,
+    sourceApplication: String,
+    annotation: Any
+  ) -> Bool {
+    return self.handleWechatRedirectURI(url: url)
+  }
+
+  public func application(
+    _ application: UIApplication,
+    continue userActivity: NSUserActivity,
+    restorationHandler: @escaping ([Any]) -> Void
+  ) -> Bool {
+    guard userActivity.activityType == NSUserActivityTypeBrowsingWeb, let url = userActivity.webpageURL else {
+      return false
+    }
+    return self.handleWechatRedirectURI(url: url)
+  }
+
+  private func storeWechat(arguments: Any?) {
+    guard let arguments = arguments as? Dictionary<String, AnyObject> else {
+      return
+    }
+
+    guard
+      let wechatRedirectURI = arguments["wechatRedirectURI"] as? String,
+      let wechatMethodChannel = arguments["wechatMethodChannel"] as? String
+    else {
+      return
+    }
+
+    self.wechatRedirectURIToMethodChannel[wechatRedirectURI] = wechatMethodChannel
+  }
+
+  private func handleWechatRedirectURI(url: URL) -> Bool {
+    guard var urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+      return false
+    }
+
+    urlComponents.query = nil
+    urlComponents.fragment = nil
+
+    guard let urlWithoutQuery = urlComponents.string else {
+      return false
+    }
+
+    guard let methodChannel = wechatRedirectURIToMethodChannel.removeValue(forKey: urlWithoutQuery) else {
+      return false
+    }
+
+    let channel = FlutterMethodChannel(name: methodChannel, binaryMessenger: self.binaryMessenger)
+    channel.invokeMethod("onWechatRedirectURI", arguments: url.absoluteString)
+    return true
   }
 
   private func authenticate(url: URL, redirectURI: URL, preferEphemeral: Bool, result: @escaping FlutterResult) {
@@ -731,6 +810,17 @@ fileprivate extension FlutterError {
   convenience init(error: Error) {
     let nsError = error as NSError
     self.init(nsError: nsError)
+  }
+
+  convenience init(wechatErrCode: Int32, errStr: String) {
+    switch wechatErrCode {
+    case -2:
+      self.init(code: "CANCEL", message: "CANCEL", details: nil)
+    default:
+      self.init(code: "WechatError", message: errStr, details: [
+        "errCode": Int(wechatErrCode),
+      ])
+    }
   }
 }
 

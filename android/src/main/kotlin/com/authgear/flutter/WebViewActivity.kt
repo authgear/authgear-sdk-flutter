@@ -4,11 +4,14 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 
 class WebViewActivity: AppCompatActivity() {
@@ -33,7 +36,27 @@ class WebViewActivity: AppCompatActivity() {
         // It is extremely important to set webViewClient,
         // otherwise the default webViewClient is used,
         // which opens the system browser
-        webView.webViewClient = object : WebViewClient() {}
+        webView.webViewClient = object : WebViewClient() {
+
+            @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+            override fun shouldOverrideUrlLoading(
+                view: WebView?,
+                request: WebResourceRequest?
+            ): Boolean {
+                val url = request?.url
+                if (url != null && AuthgearPlugin.onWechatRedirectURI(url)) {
+                    return true
+                }
+                return super.shouldOverrideUrlLoading(view, request)
+            }
+
+            override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                if (url != null && AuthgearPlugin.onWechatRedirectURI(Uri.parse(url))) {
+                    return true
+                }
+                return super.shouldOverrideUrlLoading(view, url)
+            }
+        }
         webView.settings?.javaScriptEnabled = true
         webView.loadUrl(url)
     }

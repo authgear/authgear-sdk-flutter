@@ -44,6 +44,28 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
   companion object {
     private const val TAG_AUTHENTICATION = 1
     private const val TAG_OPEN_URL = 2
+
+    private val wechat: HashMap<String, MethodChannel> = hashMapOf()
+
+    internal fun onWechatRedirectURI(uri: Uri): Boolean {
+      val uriWithoutQuery = uri.buildUpon().clearQuery().fragment("").build().toString()
+      val methodChannel = wechat.remove(uriWithoutQuery)
+      if (methodChannel == null) {
+        return false
+      }
+      methodChannel.invokeMethod("onWechatRedirectURI", uri.toString())
+      return true
+    }
+
+    fun wechatErrorResult(errCode: Int, errStr: String, result: Result) {
+      if (errCode == -2) {
+        result.cancel()
+      } else {
+        result.error("WechatError", errStr, hashMapOf(
+          "errCode" to errCode,
+        ))
+      }
+    }
   }
 
   override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
@@ -103,6 +125,7 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
   }
 
   override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
+    this.storeWechat(call)
     when (call.method) {
       "authenticate" -> {
         val url = Uri.parse(call.argument("url"))
@@ -187,6 +210,20 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
       }
       else -> result.notImplemented()
     }
+  }
+
+  private fun storeWechat(call: MethodCall) {
+    val wechatRedirectURI = call.argument<String>("wechatRedirectURI")
+    val wechatMethodChannel = call.argument<String>("wechatMethodChannel")
+    if (wechatRedirectURI == null || wechatMethodChannel == null) {
+      return
+    }
+    val binaryMessenger = pluginBinding?.binaryMessenger
+    if (binaryMessenger == null) {
+      return
+    }
+    val channel = MethodChannel(binaryMessenger, wechatMethodChannel)
+    wechat[wechatRedirectURI] = channel
   }
 
   private fun getDeviceInfo(result: Result) {

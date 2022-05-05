@@ -38,6 +38,7 @@ class Authgear implements AuthgearHttpClientDelegate {
   final String endpoint;
   final String name;
   final bool shareSessionWithSystemBrowser;
+  final Future<void> Function(String)? sendWechatAuthRequest;
 
   final TokenStorage _tokenStorage;
   final ContainerStorage _storage;
@@ -87,6 +88,7 @@ class Authgear implements AuthgearHttpClientDelegate {
     required this.endpoint,
     this.name = "default",
     this.shareSessionWithSystemBrowser = false,
+    this.sendWechatAuthRequest,
     TokenStorage? tokenStorage,
   })  : _tokenStorage = tokenStorage ?? PersistentTokenStorage(),
         _storage = PersistentContainerStorage() {
@@ -118,6 +120,7 @@ class Authgear implements AuthgearHttpClientDelegate {
     List<PromptOption>? prompt,
     List<String>? uiLocales,
     AuthenticationPage? page,
+    String? wechatRedirectURI,
   }) async {
     final codeVerifier = CodeVerifier(_rng);
     final oidcRequest = OIDCAuthenticationRequest(
@@ -134,6 +137,7 @@ class Authgear implements AuthgearHttpClientDelegate {
       uiLocales: uiLocales,
       page: page,
       suppressIDPSessionCookie: !shareSessionWithSystemBrowser,
+      wechatRedirectURI: wechatRedirectURI,
     );
     final config = await _apiClient.fetchOIDCConfiguration();
     final authenticationURL = Uri.parse(config.authorizationEndpoint)
@@ -142,6 +146,8 @@ class Authgear implements AuthgearHttpClientDelegate {
       url: authenticationURL.toString(),
       redirectURI: redirectURI,
       preferEphemeral: !shareSessionWithSystemBrowser,
+      wechatRedirectURI: wechatRedirectURI,
+      onWechatRedirectURI: _onWechatRedirectURI,
     );
     final xDeviceInfo = await _getXDeviceInfo();
     return await _finishAuthentication(
@@ -155,6 +161,7 @@ class Authgear implements AuthgearHttpClientDelegate {
     required String redirectURI,
     int maxAge = 0,
     List<String>? uiLocales,
+    String? wechatRedirectURI,
     BiometricOptionsIOS? biometricIOS,
     BiometricOptionsAndroid? biometricAndroid,
   }) async {
@@ -180,6 +187,7 @@ class Authgear implements AuthgearHttpClientDelegate {
       idTokenHint: idTokenHint,
       maxAge: maxAge,
       suppressIDPSessionCookie: !shareSessionWithSystemBrowser,
+      wechatRedirectURI: wechatRedirectURI,
     );
     final config = await _apiClient.fetchOIDCConfiguration();
     final authenticationURL = Uri.parse(config.authorizationEndpoint)
@@ -188,6 +196,8 @@ class Authgear implements AuthgearHttpClientDelegate {
       url: authenticationURL.toString(),
       redirectURI: redirectURI,
       preferEphemeral: !shareSessionWithSystemBrowser,
+      wechatRedirectURI: wechatRedirectURI,
+      onWechatRedirectURI: _onWechatRedirectURI,
     );
     final xDeviceInfo = await _getXDeviceInfo();
     return await _finishReauthentication(
@@ -201,7 +211,10 @@ class Authgear implements AuthgearHttpClientDelegate {
     return _apiClient.getUserInfo();
   }
 
-  Future<void> openURL(String url) async {
+  Future<void> openURL({
+    required String url,
+    String? wechatRedirectURI,
+  }) async {
     final refreshToken = _refreshToken;
     if (refreshToken == null) {
       throw Exception("openURL requires authenticated user");
@@ -227,16 +240,24 @@ class Authgear implements AuthgearHttpClientDelegate {
       ],
       prompt: [PromptOption.none],
       loginHint: loginHint,
+      wechatRedirectURI: wechatRedirectURI,
     );
     final config = await _apiClient.fetchOIDCConfiguration();
     final targetURL = Uri.parse(config.authorizationEndpoint)
         .replace(queryParameters: oidcRequest.toQueryParameters());
-    await native.openURL(targetURL.toString());
+    await native.openURL(
+      url: targetURL.toString(),
+      wechatRedirectURI: wechatRedirectURI,
+      onWechatRedirectURI: _onWechatRedirectURI,
+    );
   }
 
-  Future<void> open(SettingsPage page) async {
+  Future<void> open({
+    required SettingsPage page,
+    String? wechatRedirectURI,
+  }) async {
     final url = Uri.parse(endpoint).replace(path: page.path).toString();
-    return openURL(url);
+    return openURL(url: url, wechatRedirectURI: wechatRedirectURI);
   }
 
   Future<void> refreshIDToken() async {
@@ -423,6 +444,7 @@ class Authgear implements AuthgearHttpClientDelegate {
 
   Future<UserInfo> promoteAnonymousUser({
     required String redirectURI,
+    String? wechatRedirectURI,
     List<String>? uiLocales,
   }) async {
     final kid = await _storage.getAnonymousKeyID(name);
@@ -463,6 +485,7 @@ class Authgear implements AuthgearHttpClientDelegate {
       loginHint: loginHint,
       uiLocales: uiLocales,
       suppressIDPSessionCookie: !shareSessionWithSystemBrowser,
+      wechatRedirectURI: wechatRedirectURI,
     );
     final config = await _apiClient.fetchOIDCConfiguration();
     final authenticationURL = Uri.parse(config.authorizationEndpoint)
@@ -470,6 +493,8 @@ class Authgear implements AuthgearHttpClientDelegate {
     final resultURL = await native.authenticate(
       url: authenticationURL.toString(),
       redirectURI: redirectURI,
+      wechatRedirectURI: wechatRedirectURI,
+      onWechatRedirectURI: _onWechatRedirectURI,
       preferEphemeral: !shareSessionWithSystemBrowser,
     );
     final xDeviceInfo = await _getXDeviceInfo();
@@ -489,6 +514,16 @@ class Authgear implements AuthgearHttpClientDelegate {
       return _authenticateAnonymouslyCreate();
     }
     return _authenticateAnonymouslyExisting(kid);
+  }
+
+  Future<void> wechatAuthCallback({
+    required String state,
+    required String code,
+  }) async {
+    await _apiClient.sendWechatAuthCallback(
+      state: state,
+      code: code,
+    );
   }
 
   Future<UserInfo> _authenticateAnonymouslyCreate() async {
@@ -663,5 +698,13 @@ class Authgear implements AuthgearHttpClientDelegate {
         .add(Duration(seconds: (expiresIn * _expiresInPercentage).toInt()));
 
     _setSessionState(SessionState.authenticated, reason);
+  }
+
+  void _onWechatRedirectURI(Uri uri) {
+    final q = uri.queryParameters;
+    final state = q["state"];
+    if (state != null) {
+      sendWechatAuthRequest?.call(state);
+    }
   }
 }

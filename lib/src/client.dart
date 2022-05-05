@@ -19,6 +19,7 @@ class OIDCAuthenticationRequest {
   final int? maxAge;
   final AuthenticationPage? page;
   final bool? suppressIDPSessionCookie;
+  final String? wechatRedirectURI;
 
   OIDCAuthenticationRequest({
     required this.clientID,
@@ -34,6 +35,7 @@ class OIDCAuthenticationRequest {
     this.maxAge,
     this.page,
     this.suppressIDPSessionCookie,
+    this.wechatRedirectURI,
   });
 
   Map<String, String> toQueryParameters() {
@@ -95,6 +97,11 @@ class OIDCAuthenticationRequest {
     final suppressIDPSessionCookie = this.suppressIDPSessionCookie;
     if (suppressIDPSessionCookie != null && suppressIDPSessionCookie == true) {
       q["x_suppress_idp_session_cookie"] = "true";
+    }
+
+    final wechatRedirectURI = this.wechatRedirectURI;
+    if (wechatRedirectURI != null) {
+      q["x_wechat_redirect_uri"] = wechatRedirectURI;
     }
 
     return q;
@@ -280,7 +287,8 @@ class APIClient {
         body: jsonEncode({
           "refresh_token": refreshToken,
         }));
-    return _decodeAPIResponse(httpResponse, AppSessionTokenResponse.fromJSON);
+    return _decodeAPIResponseJSON(
+        httpResponse, AppSessionTokenResponse.fromJSON);
   }
 
   Future<void> sendSetupBiometricRequest(BiometricRequest request) async {
@@ -320,7 +328,22 @@ class APIClient {
         "purpose": purpose,
       }),
     );
-    return _decodeAPIResponse(httpResponse, ChallengeResponse.fromJSON);
+    return _decodeAPIResponseJSON(httpResponse, ChallengeResponse.fromJSON);
+  }
+
+  Future<void> sendWechatAuthCallback({
+    required String state,
+    required String code,
+  }) async {
+    final url = Uri.parse(endpoint).replace(path: "/sso/wechat/callback");
+    final httpResponse = await _plainHttpClient.post(
+      url,
+      body: {
+        "state": state,
+        "code": code,
+      },
+    );
+    return _decodeAPIResponse(httpResponse);
   }
 
   void _decodeOIDCResponse(Response resp) {
@@ -342,7 +365,15 @@ class APIClient {
     return f(json);
   }
 
-  T _decodeAPIResponse<T>(Response resp, T Function(dynamic) f) {
+  void _decodeAPIResponse(Response resp) {
+    if (resp.statusCode < 200 || resp.statusCode >= 400) {
+      final json = jsonDecode(utf8.decode(resp.bodyBytes));
+      dynamic error = json["error"];
+      throw decodeException(error);
+    }
+  }
+
+  T _decodeAPIResponseJSON<T>(Response resp, T Function(dynamic) f) {
     final json = jsonDecode(utf8.decode(resp.bodyBytes));
     dynamic error = json["error"];
     dynamic result = json["result"];

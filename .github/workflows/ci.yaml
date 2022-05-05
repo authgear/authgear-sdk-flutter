@@ -11,7 +11,7 @@ on:
     - '!gh-pages'
 
 jobs:
-  test:
+  deploy:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v3
@@ -26,10 +26,62 @@ jobs:
     # Install the latest dartdoc to avoid a bug
     # See DEVELOPER.md
     - run: flutter pub global activate dartdoc
+      if: ${{ github.ref == 'refs/heads/main' }}
     - run: flutter pub global run dartdoc
+      if: ${{ github.ref == 'refs/heads/main' }}
     - name: Deploy docs to gh-pages
       uses: peaceiris/actions-gh-pages@v3
       if: ${{ github.ref == 'refs/heads/main' }}
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./doc/api
+  deploy-ios:
+    runs-on: macos-12
+    needs: "deploy"
+    if: ${{ github.ref == 'refs/heads/main' }}
+    defaults:
+      run:
+        working-directory: "./example"
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 16
+    - run: npm install -g appcenter-cli
+    - uses: subosito/flutter-action@v2
+      with:
+        # Use the latest stable release
+        channel: 'stable'
+    - run: flutter pub get
+    - run: flutter test
+    - run: flutter analyze --no-fatal-infos
+    - run: flutter format --set-exit-if-changed lib
+    - name: Prepare certificate and provisioning profile
+      env:
+        IOS_CERTIFICATE_BASE64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
+        IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+      run: |
+        CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+        PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
+        KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+        echo -n "$IOS_CERTIFICATE_BASE64" | base64 --decode --output $CERTIFICATE_PATH
+        echo -n "$IOS_PROVISIONING_PROFILE_BASE64" | base64 --decode --output $PP_PATH
+
+        security create-keychain -p "" $KEYCHAIN_PATH
+        security set-keychain-settings $KEYCHAIN_PATH
+        security unlock-keychain -p "" $KEYCHAIN_PATH
+
+        security import $CERTIFICATE_PATH -P "" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+        security list-keychain -d user -s $KEYCHAIN_PATH
+
+        mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+        cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
+    - name: Build .ipa
+      run: |
+        BUILD_NUMBER=$(date +%s)
+        flutter build ipa --export-options-plist ./exportOptions.plist --build-number $BUILD_NUMBER
+    - name: Distribute to App Center
+      env:
+        APPCENTER_ACCESS_TOKEN: ${{ secrets.APPCENTER_ACCESS_TOKEN }}
+      run: appcenter distribute release --debug --silent --file "./build/ios/ipa/Authgear Flutter.ipa" --group "Collaborators" --app "Oursky/Authgear-Demo-Flutter-iOS"

@@ -83,5 +83,45 @@ jobs:
         flutter build ipa --export-options-plist ./exportOptions.plist --build-number $BUILD_NUMBER
     - name: Distribute to App Center
       env:
-        APPCENTER_ACCESS_TOKEN: ${{ secrets.APPCENTER_ACCESS_TOKEN }}
+        APPCENTER_ACCESS_TOKEN: ${{ secrets.IOS_APPCENTER_ACCESS_TOKEN }}
       run: appcenter distribute release --debug --silent --file "./build/ios/ipa/Authgear Flutter.ipa" --group "Collaborators" --app "Oursky/Authgear-Demo-Flutter-iOS"
+
+  deploy-android:
+    runs-on: macos-12
+    needs: "deploy"
+    defaults:
+      run:
+        working-directory: "./example"
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 16
+    - run: npm install -g appcenter-cli
+    - uses: subosito/flutter-action@v2
+      with:
+        # Use the latest stable release
+        channel: 'stable'
+    - run: flutter pub get
+    - run: flutter test
+    - run: flutter analyze --no-fatal-infos
+    - run: flutter format --set-exit-if-changed lib
+    - name: Prepare key store
+      env:
+        ANDROID_KEY_STORE_BASE64: ${{ secrets.ANDROID_KEY_STORE_BASE64 }}
+      run: |
+        KEY_STORE_PATH=./android/app/keystore.jks
+
+        echo -n "$ANDROID_KEY_STORE_BASE64" | base64 --decode --output "$KEY_STORE_PATH"
+    - name: Build .apk
+      env:
+        STORE_PASSWORD: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      run: |
+        BUILD_NUMBER=$(date +%s)
+        flutter build apk --build-number $BUILD_NUMBER -P STORE_PASSWORD="$STORE_PASSWORD" -P KEY_PASSWORD="$KEY_PASSWORD" -P KEY_ALIAS="$KEY_ALIAS"
+    - name: Distribute to App Center
+      env:
+        APPCENTER_ACCESS_TOKEN: ${{ secrets.ANDROID_APPCENTER_ACCESS_TOKEN }}
+      run: appcenter distribute release --debug --silent --file "./build/app/outputs/flutter-apk/app-release.apk" --group "Collaborators" --app "Oursky/Authgear-Demo-Flutter-Android"

@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
 import 'package:shared_preferences/shared_preferences.dart'
     show SharedPreferences;
-import 'package:flutter_authgear/authgear.dart';
+import 'package:flutter_authgear/flutter_authgear.dart';
 
 const redirectURI = "com.authgear.exampleapp.flutter://host/path";
 var wechatRedirectURI = "";

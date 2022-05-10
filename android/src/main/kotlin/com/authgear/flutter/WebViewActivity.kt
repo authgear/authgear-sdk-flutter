@@ -8,9 +8,7 @@ import android.os.Build
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import android.webkit.WebResourceRequest
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import android.webkit.*
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 
@@ -18,6 +16,7 @@ class WebViewActivity: AppCompatActivity() {
     companion object {
         private const val MENU_ID_CANCEL = 1
         private const val KEY_URL = "KEY_URL"
+        private const val TAG_FILE_CHOOSER = 1
 
         internal fun createIntent(context: Context, url: Uri): Intent {
             val intent = Intent(context, WebViewActivity::class.java)
@@ -26,6 +25,7 @@ class WebViewActivity: AppCompatActivity() {
         }
     }
     private lateinit var webView: WebView
+    private val startActivityHandles = StartActivityHandles<ValueCallback<Array<Uri>>>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,6 +55,25 @@ class WebViewActivity: AppCompatActivity() {
                     return true
                 }
                 return super.shouldOverrideUrlLoading(view, url)
+            }
+        }
+        webView.webChromeClient = object : WebChromeClient() {
+
+            @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+            override fun onShowFileChooser(
+                webView: WebView?,
+                filePathCallback: ValueCallback<Array<Uri>>?,
+                fileChooserParams: FileChooserParams?
+            ): Boolean {
+                if (filePathCallback != null && fileChooserParams != null) {
+                    val handle = StartActivityHandle(TAG_FILE_CHOOSER, filePathCallback)
+                    val requestCode = startActivityHandles.push(handle)
+                    val intent = fileChooserParams.createIntent()
+                    this@WebViewActivity.startActivityForResult(intent, requestCode)
+                    return true
+                }
+
+                return super.onShowFileChooser(webView, filePathCallback, fileChooserParams)
             }
         }
         webView.settings?.javaScriptEnabled = true
@@ -88,5 +107,30 @@ class WebViewActivity: AppCompatActivity() {
             return true
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        val handle = startActivityHandles.pop(requestCode)
+        if (handle == null) {
+            return
+        }
+
+        when (handle.tag) {
+            TAG_FILE_CHOOSER -> {
+                when (resultCode) {
+                    Activity.RESULT_CANCELED -> handle.value.onReceiveValue(null)
+                    Activity.RESULT_OK -> {
+                        if (data != null && data.data != null) {
+                            handle.value.onReceiveValue(arrayOf(data.data!!))
+                        } else {
+                            handle.value.onReceiveValue(null)
+                        }
+                    }
+                }
+            }
+            else -> {}
+        }
     }
 }

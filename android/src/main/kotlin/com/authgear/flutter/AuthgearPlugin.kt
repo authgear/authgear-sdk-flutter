@@ -39,7 +39,7 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
   private lateinit var channel: MethodChannel
   private var pluginBinding: FlutterPlugin.FlutterPluginBinding? = null
   private var activityBinding: ActivityPluginBinding? = null
-  private val startActivityHandles = StartActivityHandles()
+  private val startActivityHandles = StartActivityHandles<Result>()
 
   companion object {
     private const val TAG_AUTHENTICATION = 1
@@ -108,15 +108,15 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
     return when (handle.tag) {
       TAG_AUTHENTICATION -> {
         when (resultCode) {
-          Activity.RESULT_CANCELED -> handle.result.cancel()
-          Activity.RESULT_OK -> handle.result.success(data?.data.toString())
+          Activity.RESULT_CANCELED -> handle.value.cancel()
+          Activity.RESULT_OK -> handle.value.success(data?.data.toString())
         }
         true
       }
       TAG_OPEN_URL -> {
         when (resultCode) {
-          Activity.RESULT_CANCELED -> handle.result.success(null)
-          Activity.RESULT_OK -> handle.result.success(null)
+          Activity.RESULT_CANCELED -> handle.value.success(null)
+          Activity.RESULT_OK -> handle.value.success(null)
         }
         true
       }

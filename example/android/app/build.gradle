@@ -55,9 +55,9 @@ android {
     signingConfigs {
         release {
             storeFile file("keystore.jks")
-            storePassword project.ext["STORE_PASSWORD"]
-            keyAlias project.ext["KEY_ALIAS"]
-            keyPassword project.ext["KEY_PASSWORD"]
+            storePassword project.ext.has("STORE_PASSWORD") ? project.ext["STORE_PASSWORD"] : ""
+            keyAlias project.ext.has("KEY_ALIAS") ? project.ext["KEY_ALIAS"] : ""
+            keyPassword project.ext.has("KEY_PASSWORD") ? project.ext["KEY_PASSWORD"] : ""
         }
     }
 

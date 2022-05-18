@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 enum SessionState {
   unknown,
   noSession,
@@ -43,6 +45,11 @@ enum AuthenticationPage {
 enum SettingsPage {
   settings,
   identity,
+}
+
+enum ColorScheme {
+  light,
+  dark,
 }
 
 extension SettingsPageExtension on SettingsPage {

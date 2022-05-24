@@ -21,8 +21,7 @@
 </head>
 
 
-<body data-base-href="../../"
-      data-using-base-href="false">
+<body data-base-href="../../" data-using-base-href="false">
 
 <div id="overlay-under-drawer"></div>
 
@@ -54,6 +53,8 @@
 
 <span class="returntype"><a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
 <span class="name ">open</span>(<wbr><ol class="parameter-list"><li><span class="parameter" id="open-param-page">{<span>required</span> <span class="type-annotation"><a href="../../authgear/SettingsPage.html">SettingsPage</a></span> <span class="parameter-name">page</span>, </span></li>
+<li><span class="parameter" id="open-param-uiLocales"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>&gt;</span>?</span> <span class="parameter-name">uiLocales</span>, </span></li>
+<li><span class="parameter" id="open-param-colorScheme"><span class="type-annotation"><a href="../../authgear/ColorScheme.html">ColorScheme</a>?</span> <span class="parameter-name">colorScheme</span>, </span></li>
 <li><span class="parameter" id="open-param-wechatRedirectURI"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">wechatRedirectURI</span>}</span></li>
 </ol>)
 
@@ -68,9 +69,22 @@
   <h2><span>Implementation</span></h2>
   <pre class="language-dart"><code class="language-dart">Future&lt;void&gt; open({
   required SettingsPage page,
+  List&lt;String&gt;? uiLocales,
+  ColorScheme? colorScheme,
   String? wechatRedirectURI,
 }) async {
-  final url = Uri.parse(endpoint).replace(path: page.path).toString();
+  final Map&lt;String, String&gt; q = {};
+  final uiLocalesString = uiLocales?.join(&quot; &quot;) ?? &quot;&quot;;
+  if (uiLocalesString != &quot;&quot;) {
+    q[&quot;ui_locales&quot;] = uiLocalesString;
+  }
+  if (colorScheme != null) {
+    q[&quot;x_color_scheme&quot;] = colorScheme.name;
+  }
+
+  final url = Uri.parse(endpoint)
+      .replace(path: page.path, queryParameters: q)
+      .toString();
   return openURL(url: url, wechatRedirectURI: wechatRedirectURI);
 }</code></pre>
 </section>
@@ -96,8 +110,8 @@
     <h5>Authgear class</h5>
     <ol>
 
-    <li class="section-title"><a href="../../authgear/Authgear-class.html#constructors">Constructors</a></li>
-    <li><a href="../../authgear/Authgear/Authgear.html">Authgear</a></li>
+        <li class="section-title"><a href="../../authgear/Authgear-class.html#constructors">Constructors</a></li>
+          <li><a href="../../authgear/Authgear/Authgear.html">Authgear</a></li>
 
 
     <li class="section-title">
@@ -167,7 +181,7 @@
 
 
 <script src="../../static-assets/highlight.pack.js?v1"></script>
-<script src="../../static-assets/script.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
 
 
 

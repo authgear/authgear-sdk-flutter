@@ -21,8 +21,7 @@
 </head>
 
 
-<body data-base-href="../../"
-      data-using-base-href="false">
+<body data-base-href="../../" data-using-base-href="false">
 
 <div id="overlay-under-drawer"></div>
 
@@ -56,6 +55,7 @@
 <span class="name ">authenticate</span>(<wbr><ol class="parameter-list"><li><span class="parameter" id="authenticate-param-redirectURI">{<span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">redirectURI</span>, </span></li>
 <li><span class="parameter" id="authenticate-param-prompt"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../../authgear/PromptOption.html">PromptOption</a></span>&gt;</span>?</span> <span class="parameter-name">prompt</span>, </span></li>
 <li><span class="parameter" id="authenticate-param-uiLocales"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>&gt;</span>?</span> <span class="parameter-name">uiLocales</span>, </span></li>
+<li><span class="parameter" id="authenticate-param-colorScheme"><span class="type-annotation"><a href="../../authgear/ColorScheme.html">ColorScheme</a>?</span> <span class="parameter-name">colorScheme</span>, </span></li>
 <li><span class="parameter" id="authenticate-param-page"><span class="type-annotation"><a href="../../authgear/AuthenticationPage.html">AuthenticationPage</a>?</span> <span class="parameter-name">page</span>, </span></li>
 <li><span class="parameter" id="authenticate-param-wechatRedirectURI"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">wechatRedirectURI</span>}</span></li>
 </ol>)
@@ -73,6 +73,7 @@
   required String redirectURI,
   List&lt;PromptOption&gt;? prompt,
   List&lt;String&gt;? uiLocales,
+  ColorScheme? colorScheme,
   AuthenticationPage? page,
   String? wechatRedirectURI,
 }) async {
@@ -89,6 +90,7 @@
     codeChallenge: codeVerifier.codeChallenge,
     prompt: prompt,
     uiLocales: uiLocales,
+    colorScheme: colorScheme,
     page: page,
     suppressIDPSessionCookie: !shareSessionWithSystemBrowser,
     wechatRedirectURI: wechatRedirectURI,
@@ -133,8 +135,8 @@
     <h5>Authgear class</h5>
     <ol>
 
-    <li class="section-title"><a href="../../authgear/Authgear-class.html#constructors">Constructors</a></li>
-    <li><a href="../../authgear/Authgear/Authgear.html">Authgear</a></li>
+        <li class="section-title"><a href="../../authgear/Authgear-class.html#constructors">Constructors</a></li>
+          <li><a href="../../authgear/Authgear/Authgear.html">Authgear</a></li>
 
 
     <li class="section-title">
@@ -204,7 +206,7 @@
 
 
 <script src="../../static-assets/highlight.pack.js?v1"></script>
-<script src="../../static-assets/script.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
 
 
 

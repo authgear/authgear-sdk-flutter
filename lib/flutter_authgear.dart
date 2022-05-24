@@ -20,6 +20,7 @@ export 'src/type.dart'
         SessionState,
         SessionStateChangeReason,
         PromptOption,
+        ColorScheme,
         AuthenticationPage,
         SettingsPage,
         UserInfo,

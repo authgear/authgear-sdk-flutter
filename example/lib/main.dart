@@ -1,8 +1,7 @@
 import 'dart:async' show StreamSubscription;
 import 'dart:io';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide ColorScheme;
 import 'package:flutter/services.dart';
-import 'package:flutter/rendering.dart';
 import 'package:shared_preferences/shared_preferences.dart'
     show SharedPreferences;
 import 'package:flutter_authgear/flutter_authgear.dart';
@@ -11,6 +10,16 @@ const redirectURI = "com.authgear.exampleapp.flutter://host/path";
 var wechatRedirectURI = "";
 
 const _nativeMethodChannel = MethodChannel("example");
+
+ColorScheme colorSchemeFromContext(BuildContext context) {
+  final brightness = MediaQuery.of(context).platformBrightness;
+  switch (brightness) {
+    case Brightness.light:
+      return ColorScheme.light;
+    case Brightness.dark:
+      return ColorScheme.dark;
+  }
+}
 
 void main() {
   if (Platform.isIOS) {
@@ -498,6 +507,7 @@ class _MyAppState extends State<MyApp> {
       final userInfo = await _authgear.authenticate(
         redirectURI: redirectURI,
         page: _page,
+        colorScheme: colorSchemeFromContext(context),
         wechatRedirectURI: wechatRedirectURI,
       );
       setState(() {
@@ -537,6 +547,7 @@ class _MyAppState extends State<MyApp> {
       });
       final userInfo = await _authgear.promoteAnonymousUser(
         redirectURI: redirectURI,
+        colorScheme: colorSchemeFromContext(context),
         wechatRedirectURI: wechatRedirectURI,
       );
       setState(() {
@@ -608,6 +619,7 @@ class _MyAppState extends State<MyApp> {
       }
       final userInfo = await _authgear.reauthenticate(
         redirectURI: redirectURI,
+        colorScheme: colorSchemeFromContext(context),
         wechatRedirectURI: wechatRedirectURI,
         biometricIOS: ios,
         biometricAndroid: android,
@@ -724,6 +736,7 @@ class _MyAppState extends State<MyApp> {
       });
       await _authgear.open(
         page: SettingsPage.settings,
+        colorScheme: colorSchemeFromContext(context),
         wechatRedirectURI: wechatRedirectURI,
       );
     } catch (e) {

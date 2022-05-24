@@ -1,6 +1,7 @@
 import 'dart:math' show Random;
 import 'dart:async' show StreamController;
 import 'dart:convert' show jsonEncode, utf8;
+import 'package:flutter/material.dart' hide ColorScheme;
 import 'package:http/http.dart' show Client;
 
 import 'storage.dart';
@@ -119,6 +120,7 @@ class Authgear implements AuthgearHttpClientDelegate {
     required String redirectURI,
     List<PromptOption>? prompt,
     List<String>? uiLocales,
+    ColorScheme? colorScheme,
     AuthenticationPage? page,
     String? wechatRedirectURI,
   }) async {
@@ -135,6 +137,7 @@ class Authgear implements AuthgearHttpClientDelegate {
       codeChallenge: codeVerifier.codeChallenge,
       prompt: prompt,
       uiLocales: uiLocales,
+      colorScheme: colorScheme,
       page: page,
       suppressIDPSessionCookie: !shareSessionWithSystemBrowser,
       wechatRedirectURI: wechatRedirectURI,
@@ -161,6 +164,7 @@ class Authgear implements AuthgearHttpClientDelegate {
     required String redirectURI,
     int maxAge = 0,
     List<String>? uiLocales,
+    ColorScheme? colorScheme,
     String? wechatRedirectURI,
     BiometricOptionsIOS? biometricIOS,
     BiometricOptionsAndroid? biometricAndroid,
@@ -184,6 +188,7 @@ class Authgear implements AuthgearHttpClientDelegate {
       ],
       codeChallenge: codeVerifier.codeChallenge,
       uiLocales: uiLocales,
+      colorScheme: colorScheme,
       idTokenHint: idTokenHint,
       maxAge: maxAge,
       suppressIDPSessionCookie: !shareSessionWithSystemBrowser,
@@ -254,9 +259,22 @@ class Authgear implements AuthgearHttpClientDelegate {
 
   Future<void> open({
     required SettingsPage page,
+    List<String>? uiLocales,
+    ColorScheme? colorScheme,
     String? wechatRedirectURI,
   }) async {
-    final url = Uri.parse(endpoint).replace(path: page.path).toString();
+    final Map<String, String> q = {};
+    final uiLocalesString = uiLocales?.join(" ") ?? "";
+    if (uiLocalesString != "") {
+      q["ui_locales"] = uiLocalesString;
+    }
+    if (colorScheme != null) {
+      q["x_color_scheme"] = colorScheme.name;
+    }
+
+    final url = Uri.parse(endpoint)
+        .replace(path: page.path, queryParameters: q)
+        .toString();
     return openURL(url: url, wechatRedirectURI: wechatRedirectURI);
   }
 
@@ -446,6 +464,7 @@ class Authgear implements AuthgearHttpClientDelegate {
     required String redirectURI,
     String? wechatRedirectURI,
     List<String>? uiLocales,
+    ColorScheme? colorScheme,
   }) async {
     final kid = await _storage.getAnonymousKeyID(name);
     if (kid == null) {
@@ -484,6 +503,7 @@ class Authgear implements AuthgearHttpClientDelegate {
       prompt: [PromptOption.login],
       loginHint: loginHint,
       uiLocales: uiLocales,
+      colorScheme: colorScheme,
       suppressIDPSessionCookie: !shareSessionWithSystemBrowser,
       wechatRedirectURI: wechatRedirectURI,
     );

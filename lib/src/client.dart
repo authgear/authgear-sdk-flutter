@@ -15,6 +15,7 @@ class OIDCAuthenticationRequest {
   final List<PromptOption>? prompt;
   final String? loginHint;
   final List<String>? uiLocales;
+  final ColorScheme? colorScheme;
   final String? idTokenHint;
   final int? maxAge;
   final AuthenticationPage? page;
@@ -31,6 +32,7 @@ class OIDCAuthenticationRequest {
     this.prompt,
     this.loginHint,
     this.uiLocales,
+    this.colorScheme,
     this.idTokenHint,
     this.maxAge,
     this.page,
@@ -82,6 +84,11 @@ class OIDCAuthenticationRequest {
     final uiLocales = this.uiLocales?.join(" ") ?? "";
     if (uiLocales != "") {
       q["ui_locales"] = uiLocales;
+    }
+
+    final colorScheme = this.colorScheme;
+    if (colorScheme != null) {
+      q["x_color_scheme"] = colorScheme.name;
     }
 
     final maxAge = this.maxAge;

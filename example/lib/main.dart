@@ -246,6 +246,14 @@ class _MyAppState extends State<MyApp> {
   }
 
   AuthenticationPage? _page;
+  ColorScheme? _colorScheme;
+
+  ColorScheme? _getColorScheme(BuildContext context) {
+    if (_colorScheme != null) {
+      return _colorScheme;
+    }
+    return colorSchemeFromContext(context);
+  }
 
   @override
   void initState() {
@@ -307,6 +315,52 @@ class _MyAppState extends State<MyApp> {
                     controller: _clientIDController,
                   ),
                 ),
+                RadioGroup<AuthenticationPage>(
+                  title: "Intial Page",
+                  groupValue: _page,
+                  options: [
+                    RadioOption(
+                      label: "Unset",
+                      value: null,
+                    ),
+                    RadioOption(
+                      label: "login",
+                      value: AuthenticationPage.login,
+                    ),
+                    RadioOption(
+                      label: "signup",
+                      value: AuthenticationPage.signup,
+                    ),
+                  ],
+                  onChanged: (newPage) {
+                    setState(() {
+                      _page = newPage;
+                    });
+                  },
+                ),
+                RadioGroup<ColorScheme>(
+                  title: "Color Scheme",
+                  groupValue: _colorScheme,
+                  options: [
+                    RadioOption(
+                      label: "Use System",
+                      value: null,
+                    ),
+                    RadioOption(
+                      label: ColorScheme.light.name,
+                      value: ColorScheme.light,
+                    ),
+                    RadioOption(
+                      label: ColorScheme.dark.name,
+                      value: ColorScheme.dark,
+                    ),
+                  ],
+                  onChanged: (newColorScheme) {
+                    setState(() {
+                      _colorScheme = newColorScheme;
+                    });
+                  },
+                ),
                 Container(
                   padding:
                       const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
@@ -332,29 +386,6 @@ class _MyAppState extends State<MyApp> {
                         });
                       },
                     )),
-                RadioGroup<AuthenticationPage>(
-                  title: "Intial Page",
-                  groupValue: _page,
-                  options: [
-                    RadioOption(
-                      label: "Unset",
-                      value: null,
-                    ),
-                    RadioOption(
-                      label: "login",
-                      value: AuthenticationPage.login,
-                    ),
-                    RadioOption(
-                      label: "signup",
-                      value: AuthenticationPage.signup,
-                    ),
-                  ],
-                  onChanged: (newPage) {
-                    setState(() {
-                      _page = newPage;
-                    });
-                  },
-                ),
                 TextButton(
                   onPressed: () {
                     _onPressConfigure();
@@ -507,7 +538,7 @@ class _MyAppState extends State<MyApp> {
       final userInfo = await _authgear.authenticate(
         redirectURI: redirectURI,
         page: _page,
-        colorScheme: colorSchemeFromContext(context),
+        colorScheme: _getColorScheme(context),
         wechatRedirectURI: wechatRedirectURI,
       );
       setState(() {
@@ -547,7 +578,7 @@ class _MyAppState extends State<MyApp> {
       });
       final userInfo = await _authgear.promoteAnonymousUser(
         redirectURI: redirectURI,
-        colorScheme: colorSchemeFromContext(context),
+        colorScheme: _getColorScheme(context),
         wechatRedirectURI: wechatRedirectURI,
       );
       setState(() {
@@ -619,7 +650,7 @@ class _MyAppState extends State<MyApp> {
       }
       final userInfo = await _authgear.reauthenticate(
         redirectURI: redirectURI,
-        colorScheme: colorSchemeFromContext(context),
+        colorScheme: _getColorScheme(context),
         wechatRedirectURI: wechatRedirectURI,
         biometricIOS: ios,
         biometricAndroid: android,
@@ -736,7 +767,7 @@ class _MyAppState extends State<MyApp> {
       });
       await _authgear.open(
         page: SettingsPage.settings,
-        colorScheme: colorSchemeFromContext(context),
+        colorScheme: _getColorScheme(context),
         wechatRedirectURI: wechatRedirectURI,
       );
     } catch (e) {

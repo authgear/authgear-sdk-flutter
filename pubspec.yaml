@@ -1,6 +1,6 @@
 name: flutter_authgear
 description: Authgear SDK for Flutter
-version: 0.2.0
+version: 0.3.0
 homepage: https://www.authgear.com
 repository: https://github.com/authgear/authgear-sdk-flutter
 documentation: https://authgear.github.io/authgear-sdk-flutter/

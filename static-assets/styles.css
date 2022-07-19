@@ -373,10 +373,6 @@ dl dt.callable .name {
   width: auto;
 }
 
-.parameter {
-  white-space: nowrap;
-}
-
 .type-parameter {
   white-space: nowrap;
 }
@@ -390,6 +386,7 @@ dl dt.callable .name {
   display: table-cell;
   margin-left: 10px;
   list-style-type: none;
+  padding-inline-start: unset;
 }
 
 .signature {
@@ -566,6 +563,22 @@ footer a, footer a:hover {
 
 .markdown li p {
   margin: 0;
+}
+
+table {
+  margin-bottom: 1em;
+}
+
+table,
+th,
+td {
+  border: 1px solid lightgrey;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 8px;
 }
 
 .gt-separated {

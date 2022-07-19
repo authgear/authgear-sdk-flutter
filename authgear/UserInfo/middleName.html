@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
-  <meta name="description" content="API docs for the UserInfo.fromJSON constructor from Class UserInfo from the authgear library, for the Dart programming language.">
-  <title>UserInfo.fromJSON constructor - UserInfo - authgear library - Dart API</title>
+  <meta name="description" content="API docs for the middleName property from the UserInfo class, for the Dart programming language.">
+  <title>middleName property - UserInfo class - authgear library - Dart API</title>
 
 
   
@@ -31,9 +31,9 @@
     <li><a href="../../index.html">flutter_authgear</a></li>
     <li><a href="../../authgear/authgear-library.html">authgear</a></li>
     <li><a href="../../authgear/UserInfo-class.html">UserInfo</a></li>
-    <li class="self-crumb">UserInfo.fromJSON constructor</li>
+    <li class="self-crumb">middleName property</li>
   </ol>
-  <div class="self-name">UserInfo.fromJSON</div>
+  <div class="self-name">middleName</div>
   <form class="search navbar-right" role="search">
     <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
   </form>
@@ -44,49 +44,24 @@
 
   <div id="dartdoc-main-content" class="main-content">
       <div>
-<h1><span class="kind-constructor">UserInfo.fromJSON</span> constructor 
+<h1><span class="kind-property">middleName</span> property 
     <a href="https://dart.dev/null-safety" class="feature feature-null-safety" title="Supports the null safety language feature.">Null safety</a>
 </h1></div>
 
-    <section class="multi-line-signature">
-      <span class="name ">UserInfo.fromJSON</span>(<wbr><ol class="parameter-list"><li><span class="parameter" id="fromJSON-param-json"><span class="type-annotation">dynamic</span> <span class="parameter-name">json</span></span></li>
-</ol>)
-    </section>
+        <section class="multi-line-signature">
+          <a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?
+          <span class="name ">middleName</span>
+          <div class="features">final</div>
 
-    
+        </section>
+        
 
-
-    
+        
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
-  <pre class="language-dart"><code class="language-dart">UserInfo.fromJSON(dynamic json)
-    : sub = json[&quot;sub&quot;],
-      isAnonymous = json[&quot;https:&#47;&#47;authgear.com&#47;claims&#47;user&#47;is_anonymous&quot;],
-      isVerified = json[&quot;https:&#47;&#47;authgear.com&#47;claims&#47;user&#47;is_verified&quot;],
-      canReauthenticate =
-          json[&quot;https:&#47;&#47;authgear.com&#47;claims&#47;user&#47;can_reauthenticate&quot;],
-      raw = json,
-      customAttributes = json[&quot;custom_attributes&quot;] ?? {},
-      email = json[&quot;email&quot;],
-      emailVerified = json[&quot;email_verified&quot;],
-      phoneNumber = json[&quot;phone_number&quot;],
-      phoneNumberVerified = json[&quot;phone_number_verified&quot;],
-      preferredUsername = json[&quot;preferred_username&quot;],
-      familyName = json[&quot;family_name&quot;],
-      givenName = json[&quot;given_name&quot;],
-      middleName = json[&quot;middle_name&quot;],
-      name = json[&quot;name&quot;],
-      nickname = json[&quot;nickname&quot;],
-      picture = json[&quot;picture&quot;],
-      profile = json[&quot;profile&quot;],
-      website = json[&quot;website&quot;],
-      gender = json[&quot;gender&quot;],
-      birthdate = json[&quot;birthdate&quot;],
-      zoneinfo = json[&quot;zoneinfo&quot;],
-      locale = json[&quot;locale&quot;],
-      address = json[&quot;address&quot;] != null
-          ? UserInfoAddress.fromJSON(json[&quot;address&quot;])
-          : null;</code></pre>
+  <pre class="language-dart"><code class="language-dart">final String? middleName;
+
+</code></pre>
 </section>
 
 
@@ -103,7 +78,7 @@
   <li><a href="../../index.html">flutter_authgear</a></li>
   <li><a href="../../authgear/authgear-library.html">authgear</a></li>
   <li><a href="../../authgear/UserInfo-class.html">UserInfo</a></li>
-  <li class="self-crumb">UserInfo.fromJSON constructor</li>
+  <li class="self-crumb">middleName property</li>
 </ol>
 
 
@@ -156,7 +131,7 @@
 
 </ol>
 
-  </div><!--/.sidebar-offcanvas-left-->
+  </div><!--/.sidebar-offcanvas-->
 
   <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
   </div><!--/.sidebar-offcanvas-->

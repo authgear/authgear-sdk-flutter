@@ -43,7 +43,7 @@ class MyApp extends StatefulWidget {
 
 final ios = BiometricOptionsIOS(
   localizedReason: "Use biometric to sign in",
-  constraint: BiometricAccessConstraintIOS.biometryAny,
+  constraint: BiometricAccessConstraintIOS.biometryCurrentSet,
 );
 
 final android = BiometricOptionsAndroid(
@@ -52,7 +52,7 @@ final android = BiometricOptionsAndroid(
   description: "Use your enrolled biometric to sign in",
   negativeButtonText: "Cancel",
   constraint: [BiometricAccessConstraintAndroid.biometricStrong],
-  invalidatedByBiometricEnrollment: false,
+  invalidatedByBiometricEnrollment: true,
 );
 
 String _showError(dynamic e) {

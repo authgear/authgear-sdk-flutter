@@ -44,6 +44,7 @@ class MyApp extends StatefulWidget {
 final ios = BiometricOptionsIOS(
   localizedReason: "Use biometric to sign in",
   constraint: BiometricAccessConstraintIOS.biometryCurrentSet,
+  policy: BiometricLAPolicy.deviceOwnerAuthenticationWithBiometrics,
 );
 
 final android = BiometricOptionsAndroid(

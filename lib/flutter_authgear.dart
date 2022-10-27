@@ -27,7 +27,8 @@ export 'src/type.dart'
         BiometricAccessConstraintAndroid,
         BiometricAccessConstraintIOS,
         BiometricOptionsAndroid,
-        BiometricOptionsIOS;
+        BiometricOptionsIOS,
+        BiometricLAPolicy;
 export 'src/storage.dart'
     show TokenStorage, TransientTokenStorage, PersistentTokenStorage;
 export 'src/container.dart' show SessionStateChangeEvent, Authgear;

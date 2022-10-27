@@ -69,9 +69,7 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
       self.removeBiometricPrivateKey(kid: kid, result: result)
     case "signWithBiometricPrivateKey":
       let arguments = call.arguments as! Dictionary<String, AnyObject>
-      let kid = arguments["kid"] as! String
-      let payload = arguments["payload"] as! [String: Any]
-      self.signWithBiometricPrivateKey(kid: kid, payload: payload, result: result)
+      self.signWithBiometricPrivateKey(arguments: arguments, result: result)
     case "createAnonymousPrivateKey":
       let arguments = call.arguments as! Dictionary<String, AnyObject>
       let kid = arguments["kid"] as! String
@@ -393,9 +391,10 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
 
   private func checkBiometricSupported(result: @escaping FlutterResult) {
     if #available(iOS 11.3, *) {
-      let laContext = LAContext()
+      let policy = LAPolicy.deviceOwnerAuthenticationWithBiometrics
+      let laContext = LAContext(policy: policy)
       var nsError: NSError? = nil
-      _ = laContext.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &nsError)
+      _ = laContext.canEvaluatePolicy(policy, error: &nsError)
       if let nsError = nsError {
         result(FlutterError(nsError: nsError))
       } else {
@@ -415,9 +414,12 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     let tag = "com.authgear.keys.biometric.\(kid)"
 
     if #available(iOS 11.3, *) {
+      // We intentionally ignore the option.
+      // We want to make sure the device owner has biometric
+      let policy = LAPolicy.deviceOwnerAuthenticationWithBiometrics
       let flags = SecAccessControlCreateFlags(constraint: constraint)
-      let laContext = LAContext()
-      laContext.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: localizedReason) { _, error in
+      let laContext = LAContext(policy: policy)
+      laContext.evaluatePolicy(policy, localizedReason: localizedReason) { _, error in
         DispatchQueue.main.async {
           if let error = error {
             result(FlutterError(error: error))
@@ -429,7 +431,7 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
             result(FlutterError(error: error))
             return
           case .success(let secKey):
-            if let error = self.addBiometricPrivateKey(privateKey: secKey, tag: tag, flags: flags) {
+            if let error = self.addBiometricPrivateKey(privateKey: secKey, tag: tag, flags: flags, laContext: laContext) {
               result(FlutterError(error: error))
               return
             }
@@ -475,17 +477,35 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     result(nil)
   }
 
-  private func signWithBiometricPrivateKey(kid: String, payload: [String: Any], result: FlutterResult) {
-    if #available(iOS 10.0, *) {
-      switch self.getBiometricPrivateKey(kid: kid) {
-      case .failure(let error):
-        result(FlutterError(error: error))
-      case .success(let privateKey):
-        switch self.signBiometricJWT(privateKey: privateKey, kid: kid, payload: payload) {
-        case .failure(let error):
-          result(FlutterError(error: error))
-        case .success(let jwt):
-          result(jwt)
+  private func signWithBiometricPrivateKey(arguments: [String: AnyObject], result: @escaping FlutterResult) {
+    let kid = arguments["kid"] as! String
+    let payload = arguments["payload"] as! [String: Any]
+    let ios = arguments["ios"] as! [String: Any]
+    let localizedReason = ios["localizedReason"] as! String
+    let policyString = ios["policy"] as! String
+    let tag = "com.authgear.keys.biometric.\(kid)"
+
+    if #available(iOS 11.3, *) {
+      let policy = LAPolicy(policyString: policyString)
+      let laContext = LAContext(policy: policy)
+      laContext.evaluatePolicy(policy, localizedReason: localizedReason) { _, error in
+        DispatchQueue.main.async {
+          if let error = error {
+            result(FlutterError(error: error))
+            return
+          }
+
+          switch self.getBiometricPrivateKey(tag: tag, laContext: laContext) {
+          case .failure(let error):
+            result(FlutterError(error: error))
+          case .success(let privateKey):
+            switch self.signBiometricJWT(privateKey: privateKey, kid: kid, payload: payload) {
+            case .failure(let error):
+              result(FlutterError(error: error))
+            case .success(let jwt):
+              result(jwt)
+            }
+          }
         }
       }
     } else {
@@ -553,9 +573,7 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     return Result.success(secKey)
   }
 
-  private func addBiometricPrivateKey(privateKey: SecKey, tag: String, flags: SecAccessControlCreateFlags) -> Error? {
-    let laContext = LAContext()
-
+  private func addBiometricPrivateKey(privateKey: SecKey, tag: String, flags: SecAccessControlCreateFlags, laContext: LAContext) -> Error? {
     var error: Unmanaged<CFError>?
     guard let accessControl = SecAccessControlCreateWithFlags(
       nil,
@@ -597,9 +615,26 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     return nil
   }
 
-  private func getBiometricPrivateKey(kid: String) -> Result<SecKey, Error> {
-    let tag = "com.authgear.keys.biometric.\(kid)"
-    return getPrivateKey(tag: tag)
+  private func getBiometricPrivateKey(tag: String, laContext: LAContext) -> Result<SecKey, Error> {
+    let query: [String: Any] = [
+      kSecClass as String: kSecClassKey,
+      kSecMatchLimit as String: kSecMatchLimitOne,
+      kSecAttrKeyType as String: kSecAttrKeyTypeRSA,
+      kSecAttrApplicationTag as String: tag,
+      kSecReturnRef as String: true,
+      kSecUseAuthenticationContext as String: laContext,
+    ]
+
+    var item: CFTypeRef?
+    let status = withUnsafeMutablePointer(to: &item) {
+      SecItemCopyMatching(query as CFDictionary, $0)
+    }
+
+    guard status == errSecSuccess else {
+      return .failure(NSError(osStatus: status))
+    }
+
+    return .success(item as! SecKey)
   }
 
   private func getAnonymousPrivateKey(kid: String) -> Result<SecKey, Error> {
@@ -769,6 +804,30 @@ fileprivate extension SecAccessControlCreateFlags {
       self = [.userPresence]
     default:
       self = []
+    }
+  }
+}
+
+fileprivate extension LAPolicy {
+  init(policyString: String) {
+    switch (policyString) {
+    case "deviceOwnerAuthenticationWithBiometrics":
+      self = .deviceOwnerAuthenticationWithBiometrics
+    case "deviceOwnerAuthentication":
+      self = .deviceOwnerAuthentication
+    default:
+      self = .deviceOwnerAuthentication
+    }
+  }
+}
+
+fileprivate extension LAContext {
+  convenience init(policy: LAPolicy) {
+    self.init()
+    if case .deviceOwnerAuthenticationWithBiometrics = policy {
+      // Hide the fallback button
+      // https://developer.apple.com/documentation/localauthentication/lacontext/1514183-localizedfallbacktitle
+      self.localizedFallbackTitle = ""
     }
   }
 }

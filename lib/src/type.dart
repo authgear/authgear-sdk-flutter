@@ -190,19 +190,33 @@ extension BiometricAccessConstraintIOSExtension
   }
 }
 
+enum BiometricLAPolicy {
+  deviceOwnerAuthenticationWithBiometrics,
+  deviceOwnerAuthentication,
+}
+
+extension BiometricLAPolicyExtension on BiometricLAPolicy {
+  String get value {
+    return name;
+  }
+}
+
 class BiometricOptionsIOS {
   final String localizedReason;
   final BiometricAccessConstraintIOS constraint;
+  final BiometricLAPolicy policy;
 
   BiometricOptionsIOS({
     required this.localizedReason,
     required this.constraint,
+    required this.policy,
   });
 
   Map<String, dynamic> toMap() {
     return {
       "localizedReason": localizedReason,
       "constraint": constraint.value,
+      "policy": policy.value,
     };
   }
 }

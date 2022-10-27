@@ -11,7 +11,7 @@
   
   <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0" rel="stylesheet">
   
   <link rel="stylesheet" href="../static-assets/github.css?v1">
   <link rel="stylesheet" href="../static-assets/styles.css?v1">
@@ -21,12 +21,12 @@
 </head>
 
 
-<body data-base-href="../" data-using-base-href="false">
+<body data-base-href="../" data-using-base-href="false" class="light-theme">
 
 <div id="overlay-under-drawer"></div>
 
 <header id="title">
-  <button id="sidenav-left-toggle" type="button">&nbsp;</button>
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
   <ol class="breadcrumbs gt-separated dark hidden-xs">
     <li><a href="../index.html">flutter_authgear</a></li>
     <li><a href="../authgear/authgear-library.html">authgear</a></li>
@@ -36,10 +36,16 @@
   <form class="search navbar-right" role="search">
     <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
   </form>
+  <div class="toggle" id="theme-button">
+    <label for="theme">
+      <input type="checkbox" id="theme" value="light-theme">
+      <span class="material-symbols-outlined">
+        brightness_4
+      </span>
+    </label>
+  </div>
 </header>
-
 <main>
-
 
   <div id="dartdoc-main-content" class="main-content">
       <div>
@@ -77,7 +83,7 @@
 </dt>
 <dd>
   
-  <div class="features">read-only</div>
+  <div class="features"><span class="feature">read-only</span></div>
 
 </dd>
 
@@ -88,7 +94,7 @@
 </dt>
 <dd>
   
-  <div class="features">read-only</div>
+  <div class="features"><span class="feature">read-only</span></div>
 
 </dd>
 
@@ -99,7 +105,7 @@
 </dt>
 <dd>
   
-  <div class="features">read-only</div>
+  <div class="features"><span class="feature">read-only</span></div>
 
 </dd>
 
@@ -110,7 +116,7 @@
 </dt>
 <dd>
   
-  <div class="features">final</div>
+  <div class="features"><span class="feature">final</span></div>
 
 </dd>
 
@@ -121,7 +127,7 @@
 </dt>
 <dd>
   
-  <div class="features">final</div>
+  <div class="features"><span class="feature">final</span></div>
 
 </dd>
 
@@ -132,7 +138,7 @@
 </dt>
 <dd class="inherited">
   The hash code for this object.
-  <div class="features">read-only, inherited</div>
+  <div class="features"><span class="feature">read-only</span><span class="feature">inherited</span></div>
 
 </dd>
 
@@ -143,7 +149,7 @@
 </dt>
 <dd>
   
-  <div class="features">read-only</div>
+  <div class="features"><span class="feature">read-only</span></div>
 
 </dd>
 
@@ -154,7 +160,7 @@
 </dt>
 <dd>
   
-  <div class="features">final</div>
+  <div class="features"><span class="feature">final</span></div>
 
 </dd>
 
@@ -165,7 +171,7 @@
 </dt>
 <dd>
   
-  <div class="features">read-only</div>
+  <div class="features"><span class="feature">read-only</span></div>
 
 </dd>
 
@@ -176,18 +182,18 @@
 </dt>
 <dd class="inherited">
   A representation of the runtime type of the object.
-  <div class="features">read-only, inherited</div>
+  <div class="features"><span class="feature">read-only</span><span class="feature">inherited</span></div>
 
 </dd>
 
         <dt id="sendWechatAuthRequest" class="property">
   <span class="name"><a href="../authgear/Authgear/sendWechatAuthRequest.html">sendWechatAuthRequest</a></span>
-  <span class="signature">&#8594; (<a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span> Function?<span class="signature">(<span class="parameter" id="param-"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span></span>)</span>?)</span> 
+  <span class="signature">&#8594; (<a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span> Function<span class="signature">(<span class="parameter" id="param-"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span></span>)</span>?)</span> 
 
 </dt>
 <dd>
   
-  <div class="features">final</div>
+  <div class="features"><span class="feature">final</span></div>
 
 </dd>
 
@@ -198,7 +204,7 @@
 </dt>
 <dd>
   
-  <div class="features">read-only</div>
+  <div class="features"><span class="feature">read-only</span></div>
 
 </dd>
 
@@ -209,7 +215,7 @@
 </dt>
 <dd>
   
-  <div class="features">final</div>
+  <div class="features"><span class="feature">final</span></div>
 
 </dd>
 
@@ -220,7 +226,7 @@
 </dt>
 <dd>
   
-  <div class="features">read-only</div>
+  <div class="features"><span class="feature">read-only</span></div>
 
 </dd>
 
@@ -372,7 +378,7 @@
 </dt>
 <dd class="inherited">
   Invoked when a non-existent method or property is accessed.
-  <div class="features">inherited</div>
+  <div class="features"><span class="feature">inherited</span></div>
 
 </dd>
 
@@ -463,7 +469,7 @@
 </dt>
 <dd class="inherited">
   A string representation of this object.
-  <div class="features">inherited</div>
+  <div class="features"><span class="feature">inherited</span></div>
 
 </dd>
 
@@ -481,8 +487,8 @@
 </dd>
 
         <dt id="wrapHttpClient" class="callable">
-  <span class="name"><a href="../authgear/Authgear/wrapHttpClient.html">wrapHttpClient</a></span><span class="signature">(<wbr><span class="parameter" id="wrapHttpClient-param-inner"><span class="type-annotation"><a href="https://pub.dev/documentation/http/0.13.4/http/Client-class.html">Client</a></span> <span class="parameter-name">inner</span></span>)
-    <span class="returntype parameter">&#8594; <a href="https://pub.dev/documentation/http/0.13.4/http/Client-class.html">Client</a></span>
+  <span class="name"><a href="../authgear/Authgear/wrapHttpClient.html">wrapHttpClient</a></span><span class="signature">(<wbr><span class="parameter" id="wrapHttpClient-param-inner"><span class="type-annotation"><a href="https://pub.dev/documentation/http/0.13.5/http/Client-class.html">Client</a></span> <span class="parameter-name">inner</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://pub.dev/documentation/http/0.13.5/http/Client-class.html">Client</a></span>
   </span>
   
 
@@ -510,7 +516,7 @@
 </dt>
 <dd class="inherited">
   The equality operator.
-  <div class="features">inherited</div>
+  <div class="features"><span class="feature">inherited</span></div>
 
 </dd>
 
@@ -539,42 +545,43 @@
 
     <h5>authgear library</h5>
     <ol>
-  <li class="section-title"><a href="../authgear/authgear-library.html#classes">Classes</a></li>
-  <li><a href="../authgear/Authgear-class.html">Authgear</a></li>
-  <li><a href="../authgear/BiometricOptionsAndroid-class.html">BiometricOptionsAndroid</a></li>
-  <li><a href="../authgear/BiometricOptionsIOS-class.html">BiometricOptionsIOS</a></li>
-  <li><a href="../authgear/PersistentTokenStorage-class.html">PersistentTokenStorage</a></li>
-  <li><a href="../authgear/SessionStateChangeEvent-class.html">SessionStateChangeEvent</a></li>
-  <li><a href="../authgear/TokenStorage-class.html">TokenStorage</a></li>
-  <li><a href="../authgear/TransientTokenStorage-class.html">TransientTokenStorage</a></li>
-  <li><a href="../authgear/UserInfo-class.html">UserInfo</a></li>
+      <li class="section-title"><a href="../authgear/authgear-library.html#classes">Classes</a></li>
+        <li><a href="../authgear/Authgear-class.html">Authgear</a></li>
+        <li><a href="../authgear/BiometricOptionsAndroid-class.html">BiometricOptionsAndroid</a></li>
+        <li><a href="../authgear/BiometricOptionsIOS-class.html">BiometricOptionsIOS</a></li>
+        <li><a href="../authgear/PersistentTokenStorage-class.html">PersistentTokenStorage</a></li>
+        <li><a href="../authgear/SessionStateChangeEvent-class.html">SessionStateChangeEvent</a></li>
+        <li><a href="../authgear/TokenStorage-class.html">TokenStorage</a></li>
+        <li><a href="../authgear/TransientTokenStorage-class.html">TransientTokenStorage</a></li>
+        <li><a href="../authgear/UserInfo-class.html">UserInfo</a></li>
 
 
 
 
 
 
-  <li class="section-title"><a href="../authgear/authgear-library.html#enums">Enums</a></li>
-  <li><a href="../authgear/AuthenticationPage.html">AuthenticationPage</a></li>
-  <li><a href="../authgear/BiometricAccessConstraintAndroid.html">BiometricAccessConstraintAndroid</a></li>
-  <li><a href="../authgear/BiometricAccessConstraintIOS.html">BiometricAccessConstraintIOS</a></li>
-  <li><a href="../authgear/ColorScheme.html">ColorScheme</a></li>
-  <li><a href="../authgear/PromptOption.html">PromptOption</a></li>
-  <li><a href="../authgear/SessionState.html">SessionState</a></li>
-  <li><a href="../authgear/SessionStateChangeReason.html">SessionStateChangeReason</a></li>
-  <li><a href="../authgear/SettingsPage.html">SettingsPage</a></li>
+      <li class="section-title"><a href="../authgear/authgear-library.html#enums">Enums</a></li>
+        <li><a href="../authgear/AuthenticationPage.html">AuthenticationPage</a></li>
+        <li><a href="../authgear/BiometricAccessConstraintAndroid.html">BiometricAccessConstraintAndroid</a></li>
+        <li><a href="../authgear/BiometricAccessConstraintIOS.html">BiometricAccessConstraintIOS</a></li>
+        <li><a href="../authgear/BiometricLAPolicy.html">BiometricLAPolicy</a></li>
+        <li><a href="../authgear/ColorScheme.html">ColorScheme</a></li>
+        <li><a href="../authgear/PromptOption.html">PromptOption</a></li>
+        <li><a href="../authgear/SessionState.html">SessionState</a></li>
+        <li><a href="../authgear/SessionStateChangeReason.html">SessionStateChangeReason</a></li>
+        <li><a href="../authgear/SettingsPage.html">SettingsPage</a></li>
 
 
-  <li class="section-title"><a href="../authgear/authgear-library.html#exceptions">Exceptions</a></li>
-  <li><a href="../authgear/AuthgearException-class.html">AuthgearException</a></li>
-  <li><a href="../authgear/BiometricLockoutException-class.html">BiometricLockoutException</a></li>
-  <li><a href="../authgear/BiometricNoEnrollmentException-class.html">BiometricNoEnrollmentException</a></li>
-  <li><a href="../authgear/BiometricNoPasscodeException-class.html">BiometricNoPasscodeException</a></li>
-  <li><a href="../authgear/BiometricNotSupportedOrPermissionDeniedException-class.html">BiometricNotSupportedOrPermissionDeniedException</a></li>
-  <li><a href="../authgear/BiometricPrivateKeyNotFoundException-class.html">BiometricPrivateKeyNotFoundException</a></li>
-  <li><a href="../authgear/CancelException-class.html">CancelException</a></li>
-  <li><a href="../authgear/OAuthException-class.html">OAuthException</a></li>
-  <li><a href="../authgear/ServerException-class.html">ServerException</a></li>
+      <li class="section-title"><a href="../authgear/authgear-library.html#exceptions">Exceptions</a></li>
+        <li><a href="../authgear/AuthgearException-class.html">AuthgearException</a></li>
+        <li><a href="../authgear/BiometricLockoutException-class.html">BiometricLockoutException</a></li>
+        <li><a href="../authgear/BiometricNoEnrollmentException-class.html">BiometricNoEnrollmentException</a></li>
+        <li><a href="../authgear/BiometricNoPasscodeException-class.html">BiometricNoPasscodeException</a></li>
+        <li><a href="../authgear/BiometricNotSupportedOrPermissionDeniedException-class.html">BiometricNotSupportedOrPermissionDeniedException</a></li>
+        <li><a href="../authgear/BiometricPrivateKeyNotFoundException-class.html">BiometricPrivateKeyNotFoundException</a></li>
+        <li><a href="../authgear/CancelException-class.html">CancelException</a></li>
+        <li><a href="../authgear/OAuthException-class.html">OAuthException</a></li>
+        <li><a href="../authgear/ServerException-class.html">ServerException</a></li>
 </ol>
 
   </div>
@@ -586,48 +593,48 @@
           <li><a href="../authgear/Authgear/Authgear.html">Authgear</a></li>
 
 
-    <li class="section-title">
-      <a href="../authgear/Authgear-class.html#instance-properties">Properties</a>
-    </li>
-    <li><a href="../authgear/Authgear/accessToken.html">accessToken</a></li>
-    <li><a href="../authgear/Authgear/authTime.html">authTime</a></li>
-    <li><a href="../authgear/Authgear/canReauthenticate.html">canReauthenticate</a></li>
-    <li><a href="../authgear/Authgear/clientID.html">clientID</a></li>
-    <li><a href="../authgear/Authgear/endpoint.html">endpoint</a></li>
-    <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/hashCode.html">hashCode</a></li>
-    <li><a href="../authgear/Authgear/idTokenHint.html">idTokenHint</a></li>
-    <li><a href="../authgear/Authgear/name.html">name</a></li>
-    <li><a href="../authgear/Authgear/onSessionStateChange.html">onSessionStateChange</a></li>
-    <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/runtimeType.html">runtimeType</a></li>
-    <li><a href="../authgear/Authgear/sendWechatAuthRequest.html">sendWechatAuthRequest</a></li>
-    <li><a href="../authgear/Authgear/sessionState.html">sessionState</a></li>
-    <li><a href="../authgear/Authgear/shareSessionWithSystemBrowser.html">shareSessionWithSystemBrowser</a></li>
-    <li><a href="../authgear/Authgear/shouldRefreshAccessToken.html">shouldRefreshAccessToken</a></li>
+        <li class="section-title">
+          <a href="../authgear/Authgear-class.html#instance-properties">Properties</a>
+        </li>
+          <li><a href="../authgear/Authgear/accessToken.html">accessToken</a></li>
+          <li><a href="../authgear/Authgear/authTime.html">authTime</a></li>
+          <li><a href="../authgear/Authgear/canReauthenticate.html">canReauthenticate</a></li>
+          <li><a href="../authgear/Authgear/clientID.html">clientID</a></li>
+          <li><a href="../authgear/Authgear/endpoint.html">endpoint</a></li>
+          <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/hashCode.html">hashCode</a></li>
+          <li><a href="../authgear/Authgear/idTokenHint.html">idTokenHint</a></li>
+          <li><a href="../authgear/Authgear/name.html">name</a></li>
+          <li><a href="../authgear/Authgear/onSessionStateChange.html">onSessionStateChange</a></li>
+          <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/runtimeType.html">runtimeType</a></li>
+          <li><a href="../authgear/Authgear/sendWechatAuthRequest.html">sendWechatAuthRequest</a></li>
+          <li><a href="../authgear/Authgear/sessionState.html">sessionState</a></li>
+          <li><a href="../authgear/Authgear/shareSessionWithSystemBrowser.html">shareSessionWithSystemBrowser</a></li>
+          <li><a href="../authgear/Authgear/shouldRefreshAccessToken.html">shouldRefreshAccessToken</a></li>
 
-    <li class="section-title"><a href="../authgear/Authgear-class.html#instance-methods">Methods</a></li>
-    <li><a href="../authgear/Authgear/authenticate.html">authenticate</a></li>
-    <li><a href="../authgear/Authgear/authenticateAnonymously.html">authenticateAnonymously</a></li>
-    <li><a href="../authgear/Authgear/authenticateBiometric.html">authenticateBiometric</a></li>
-    <li><a href="../authgear/Authgear/checkBiometricSupported.html">checkBiometricSupported</a></li>
-    <li><a href="../authgear/Authgear/configure.html">configure</a></li>
-    <li><a href="../authgear/Authgear/disableBiometric.html">disableBiometric</a></li>
-    <li><a href="../authgear/Authgear/enableBiometric.html">enableBiometric</a></li>
-    <li><a href="../authgear/Authgear/getUserInfo.html">getUserInfo</a></li>
-    <li><a href="../authgear/Authgear/isBiometricEnabled.html">isBiometricEnabled</a></li>
-    <li><a href="../authgear/Authgear/logout.html">logout</a></li>
-    <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/noSuchMethod.html">noSuchMethod</a></li>
-    <li><a href="../authgear/Authgear/open.html">open</a></li>
-    <li><a href="../authgear/Authgear/openURL.html">openURL</a></li>
-    <li><a href="../authgear/Authgear/promoteAnonymousUser.html">promoteAnonymousUser</a></li>
-    <li><a href="../authgear/Authgear/reauthenticate.html">reauthenticate</a></li>
-    <li><a href="../authgear/Authgear/refreshAccessToken.html">refreshAccessToken</a></li>
-    <li><a href="../authgear/Authgear/refreshIDToken.html">refreshIDToken</a></li>
-    <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/toString.html">toString</a></li>
-    <li><a href="../authgear/Authgear/wechatAuthCallback.html">wechatAuthCallback</a></li>
-    <li><a href="../authgear/Authgear/wrapHttpClient.html">wrapHttpClient</a></li>
+        <li class="section-title"><a href="../authgear/Authgear-class.html#instance-methods">Methods</a></li>
+          <li><a href="../authgear/Authgear/authenticate.html">authenticate</a></li>
+          <li><a href="../authgear/Authgear/authenticateAnonymously.html">authenticateAnonymously</a></li>
+          <li><a href="../authgear/Authgear/authenticateBiometric.html">authenticateBiometric</a></li>
+          <li><a href="../authgear/Authgear/checkBiometricSupported.html">checkBiometricSupported</a></li>
+          <li><a href="../authgear/Authgear/configure.html">configure</a></li>
+          <li><a href="../authgear/Authgear/disableBiometric.html">disableBiometric</a></li>
+          <li><a href="../authgear/Authgear/enableBiometric.html">enableBiometric</a></li>
+          <li><a href="../authgear/Authgear/getUserInfo.html">getUserInfo</a></li>
+          <li><a href="../authgear/Authgear/isBiometricEnabled.html">isBiometricEnabled</a></li>
+          <li><a href="../authgear/Authgear/logout.html">logout</a></li>
+          <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/noSuchMethod.html">noSuchMethod</a></li>
+          <li><a href="../authgear/Authgear/open.html">open</a></li>
+          <li><a href="../authgear/Authgear/openURL.html">openURL</a></li>
+          <li><a href="../authgear/Authgear/promoteAnonymousUser.html">promoteAnonymousUser</a></li>
+          <li><a href="../authgear/Authgear/reauthenticate.html">reauthenticate</a></li>
+          <li><a href="../authgear/Authgear/refreshAccessToken.html">refreshAccessToken</a></li>
+          <li><a href="../authgear/Authgear/refreshIDToken.html">refreshIDToken</a></li>
+          <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/toString.html">toString</a></li>
+          <li><a href="../authgear/Authgear/wechatAuthCallback.html">wechatAuthCallback</a></li>
+          <li><a href="../authgear/Authgear/wrapHttpClient.html">wrapHttpClient</a></li>
 
-    <li class="section-title inherited"><a href="../authgear/Authgear-class.html#operators">Operators</a></li>
-    <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/operator_equals.html">operator ==</a></li>
+        <li class="section-title inherited"><a href="../authgear/Authgear-class.html#operators">Operators</a></li>
+          <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/operator_equals.html">operator ==</a></li>
 
 
 

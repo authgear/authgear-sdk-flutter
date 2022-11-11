@@ -84,7 +84,7 @@ jobs:
     - name: Distribute to App Center
       env:
         APPCENTER_ACCESS_TOKEN: ${{ secrets.IOS_APPCENTER_ACCESS_TOKEN }}
-      run: appcenter distribute release --debug --silent --file "./build/ios/ipa/Authgear Flutter.ipa" --group "Collaborators" --app "Oursky/Authgear-Demo-Flutter-iOS"
+      run: appcenter distribute release --debug --silent --file "./build/ios/ipa/Authgear Flutter.ipa" --store "App Store Connect Users" --app "Oursky/Authgear-Demo-Flutter-iOS" --release-notes "no release notes"
 
   deploy-android:
     runs-on: macos-12

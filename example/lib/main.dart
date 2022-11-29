@@ -230,7 +230,7 @@ class _MyAppState extends State<MyApp> {
   StreamSubscription<SessionStateChangeEvent>? _sub;
   bool _loading = false;
   bool _useTransientTokenStorage = false;
-  bool _shareSessionWithSystemBrowser = false;
+  bool _ssoEnabled = false;
   bool _isBiometricEnabled = false;
   bool get _unconfigured {
     return _authgear.endpoint != _endpointController.text ||
@@ -379,11 +379,11 @@ class _MyAppState extends State<MyApp> {
                     padding:
                         const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                     child: SwitchWithLabel(
-                      label: "Share Session With Device Browser",
-                      value: _shareSessionWithSystemBrowser,
+                      label: "SSO Enabled",
+                      value: _ssoEnabled,
                       onChanged: (newValue) {
                         setState(() {
-                          _shareSessionWithSystemBrowser = newValue;
+                          _ssoEnabled = newValue;
                         });
                       },
                     )),
@@ -731,7 +731,7 @@ class _MyAppState extends State<MyApp> {
     final authgear = Authgear(
       endpoint: endpoint,
       clientID: clientID,
-      shareSessionWithSystemBrowser: _shareSessionWithSystemBrowser,
+      ssoEnabled: _ssoEnabled,
       tokenStorage: _useTransientTokenStorage ? TransientTokenStorage() : null,
       sendWechatAuthRequest: _sendWechatAuthRequest,
     );

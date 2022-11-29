@@ -10,6 +10,7 @@ void main() {
       redirectURI: "http://host/path",
       responseType: "code",
       scope: ["openid", "email"],
+      ssoEnabled: false,
       codeChallenge: "codeChallenge",
       state: "state",
       prompt: [PromptOption.login],
@@ -18,14 +19,13 @@ void main() {
       idTokenHint: "idTokenHint",
       maxAge: 1000000000000000000,
       page: AuthenticationPage.login,
-      suppressIDPSessionCookie: true,
       wechatRedirectURI: "wechatRedirectURI",
     );
 
     var u = Uri.https("localhost", "/");
     u = u.replace(queryParameters: r.toQueryParameters());
     expect(u.toString(),
-        "https://localhost/?response_type=code&client_id=clientID&redirect_uri=http%3A%2F%2Fhost%2Fpath&scope=openid+email&code_challenge_method=S256&code_challenge=codeChallenge&state=state&prompt=login&login_hint=loginHint&id_token_hint=idTokenHint&ui_locales=en-US+zh-HK&max_age=1000000000000000000&x_page=login&x_suppress_idp_session_cookie=true&x_wechat_redirect_uri=wechatRedirectURI");
+        "https://localhost/?response_type=code&client_id=clientID&redirect_uri=http%3A%2F%2Fhost%2Fpath&scope=openid+email&code_challenge_method=S256&code_challenge=codeChallenge&state=state&prompt=login&login_hint=loginHint&id_token_hint=idTokenHint&ui_locales=en-US+zh-HK&max_age=1000000000000000000&x_page=login&x_suppress_idp_session_cookie=true&x_sso_enabled=false&x_wechat_redirect_uri=wechatRedirectURI");
   });
 
   test("OIDCTokenRequest", () {

@@ -38,7 +38,7 @@ class Authgear implements AuthgearHttpClientDelegate {
   final String clientID;
   final String endpoint;
   final String name;
-  final bool shareSessionWithSystemBrowser;
+  final bool ssoEnabled;
   final Future<void> Function(String)? sendWechatAuthRequest;
 
   final TokenStorage _tokenStorage;
@@ -88,7 +88,7 @@ class Authgear implements AuthgearHttpClientDelegate {
     required this.clientID,
     required this.endpoint,
     this.name = "default",
-    this.shareSessionWithSystemBrowser = false,
+    this.ssoEnabled = false,
     this.sendWechatAuthRequest,
     TokenStorage? tokenStorage,
   })  : _tokenStorage = tokenStorage ?? PersistentTokenStorage(),
@@ -134,12 +134,12 @@ class Authgear implements AuthgearHttpClientDelegate {
         "offline_access",
         "https://authgear.com/scopes/full-access",
       ],
+      ssoEnabled: ssoEnabled,
       codeChallenge: codeVerifier.codeChallenge,
       prompt: prompt,
       uiLocales: uiLocales,
       colorScheme: colorScheme,
       page: page,
-      suppressIDPSessionCookie: !shareSessionWithSystemBrowser,
       wechatRedirectURI: wechatRedirectURI,
     );
     final config = await _apiClient.fetchOIDCConfiguration();
@@ -148,7 +148,7 @@ class Authgear implements AuthgearHttpClientDelegate {
     final resultURL = await native.authenticate(
       url: authenticationURL.toString(),
       redirectURI: redirectURI,
-      preferEphemeral: !shareSessionWithSystemBrowser,
+      preferEphemeral: !ssoEnabled,
       wechatRedirectURI: wechatRedirectURI,
       onWechatRedirectURI: _onWechatRedirectURI,
     );
@@ -186,12 +186,12 @@ class Authgear implements AuthgearHttpClientDelegate {
         "openid",
         "https://authgear.com/scopes/full-access",
       ],
+      ssoEnabled: ssoEnabled,
       codeChallenge: codeVerifier.codeChallenge,
       uiLocales: uiLocales,
       colorScheme: colorScheme,
       idTokenHint: idTokenHint,
       maxAge: maxAge,
-      suppressIDPSessionCookie: !shareSessionWithSystemBrowser,
       wechatRedirectURI: wechatRedirectURI,
     );
     final config = await _apiClient.fetchOIDCConfiguration();
@@ -200,7 +200,7 @@ class Authgear implements AuthgearHttpClientDelegate {
     final resultURL = await native.authenticate(
       url: authenticationURL.toString(),
       redirectURI: redirectURI,
-      preferEphemeral: !shareSessionWithSystemBrowser,
+      preferEphemeral: !ssoEnabled,
       wechatRedirectURI: wechatRedirectURI,
       onWechatRedirectURI: _onWechatRedirectURI,
     );
@@ -243,6 +243,7 @@ class Authgear implements AuthgearHttpClientDelegate {
         "offline_access",
         "https://authgear.com/scopes/full-access",
       ],
+      ssoEnabled: ssoEnabled,
       prompt: [PromptOption.none],
       loginHint: loginHint,
       wechatRedirectURI: wechatRedirectURI,
@@ -499,12 +500,12 @@ class Authgear implements AuthgearHttpClientDelegate {
         "offline_access",
         "https://authgear.com/scopes/full-access",
       ],
+      ssoEnabled: ssoEnabled,
       codeChallenge: codeVerifier.codeChallenge,
       prompt: [PromptOption.login],
       loginHint: loginHint,
       uiLocales: uiLocales,
       colorScheme: colorScheme,
-      suppressIDPSessionCookie: !shareSessionWithSystemBrowser,
       wechatRedirectURI: wechatRedirectURI,
     );
     final config = await _apiClient.fetchOIDCConfiguration();
@@ -515,7 +516,7 @@ class Authgear implements AuthgearHttpClientDelegate {
       redirectURI: redirectURI,
       wechatRedirectURI: wechatRedirectURI,
       onWechatRedirectURI: _onWechatRedirectURI,
-      preferEphemeral: !shareSessionWithSystemBrowser,
+      preferEphemeral: !ssoEnabled,
     );
     final xDeviceInfo = await _getXDeviceInfo();
     final userInfo = await _finishAuthentication(

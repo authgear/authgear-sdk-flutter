@@ -10,7 +10,7 @@ void main() {
       redirectURI: "http://host/path",
       responseType: "code",
       scope: ["openid", "email"],
-      ssoEnabled: false,
+      isSsoEnabled: false,
       codeChallenge: "codeChallenge",
       state: "state",
       prompt: [PromptOption.login],

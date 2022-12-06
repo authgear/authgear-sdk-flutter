@@ -102,7 +102,7 @@
       &quot;openid&quot;,
       &quot;https:&#47;&#47;authgear.com&#47;scopes&#47;full-access&quot;,
     ],
-    ssoEnabled: ssoEnabled,
+    isSsoEnabled: isSsoEnabled,
     codeChallenge: codeVerifier.codeChallenge,
     uiLocales: uiLocales,
     colorScheme: colorScheme,
@@ -116,7 +116,7 @@
   final resultURL = await native.authenticate(
     url: authenticationURL.toString(),
     redirectURI: redirectURI,
-    preferEphemeral: !ssoEnabled,
+    preferEphemeral: !isSsoEnabled,
     wechatRedirectURI: wechatRedirectURI,
     onWechatRedirectURI: _onWechatRedirectURI,
   );
@@ -164,13 +164,13 @@
           <li><a href="../../authgear/Authgear/endpoint.html">endpoint</a></li>
           <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/hashCode.html">hashCode</a></li>
           <li><a href="../../authgear/Authgear/idTokenHint.html">idTokenHint</a></li>
+          <li><a href="../../authgear/Authgear/isSsoEnabled.html">isSsoEnabled</a></li>
           <li><a href="../../authgear/Authgear/name.html">name</a></li>
           <li><a href="../../authgear/Authgear/onSessionStateChange.html">onSessionStateChange</a></li>
           <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/runtimeType.html">runtimeType</a></li>
           <li><a href="../../authgear/Authgear/sendWechatAuthRequest.html">sendWechatAuthRequest</a></li>
           <li><a href="../../authgear/Authgear/sessionState.html">sessionState</a></li>
           <li><a href="../../authgear/Authgear/shouldRefreshAccessToken.html">shouldRefreshAccessToken</a></li>
-          <li><a href="../../authgear/Authgear/ssoEnabled.html">ssoEnabled</a></li>
 
         <li class="section-title"><a href="../../authgear/Authgear-class.html#instance-methods">Methods</a></li>
           <li><a href="../../authgear/Authgear/authenticate.html">authenticate</a></li>

@@ -9,7 +9,7 @@ class OIDCAuthenticationRequest {
   final String clientID;
   final String redirectURI;
   final String responseType;
-  final bool ssoEnabled;
+  final bool isSsoEnabled;
   final List<String> scope;
   final String? codeChallenge;
   final String? state;
@@ -27,7 +27,7 @@ class OIDCAuthenticationRequest {
     required this.redirectURI,
     required this.responseType,
     required this.scope,
-    required this.ssoEnabled,
+    required this.isSsoEnabled,
     this.codeChallenge,
     this.state,
     this.prompt,
@@ -101,14 +101,14 @@ class OIDCAuthenticationRequest {
       q["x_page"] = page.name;
     }
 
-    final ssoEnabled = this.ssoEnabled;
-    if (ssoEnabled == false) {
+    final isSsoEnabled = this.isSsoEnabled;
+    if (isSsoEnabled == false) {
       // For backward compatibility
       // If the developer updates the SDK but not the server
       q["x_suppress_idp_session_cookie"] = "true";
     }
 
-    q["x_sso_enabled"] = ssoEnabled ? "true" : "false";
+    q["x_sso_enabled"] = isSsoEnabled ? "true" : "false";
 
     final wechatRedirectURI = this.wechatRedirectURI;
     if (wechatRedirectURI != null) {

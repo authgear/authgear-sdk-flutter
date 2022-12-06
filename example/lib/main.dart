@@ -230,7 +230,7 @@ class _MyAppState extends State<MyApp> {
   StreamSubscription<SessionStateChangeEvent>? _sub;
   bool _loading = false;
   bool _useTransientTokenStorage = false;
-  bool _ssoEnabled = false;
+  bool _isSsoEnabled = false;
   bool _isBiometricEnabled = false;
   bool get _unconfigured {
     return _authgear.endpoint != _endpointController.text ||
@@ -379,11 +379,11 @@ class _MyAppState extends State<MyApp> {
                     padding:
                         const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                     child: SwitchWithLabel(
-                      label: "SSO Enabled",
-                      value: _ssoEnabled,
+                      label: "Is SSO Enabled",
+                      value: _isSsoEnabled,
                       onChanged: (newValue) {
                         setState(() {
-                          _ssoEnabled = newValue;
+                          _isSsoEnabled = newValue;
                         });
                       },
                     )),
@@ -731,7 +731,7 @@ class _MyAppState extends State<MyApp> {
     final authgear = Authgear(
       endpoint: endpoint,
       clientID: clientID,
-      ssoEnabled: _ssoEnabled,
+      isSsoEnabled: _isSsoEnabled,
       tokenStorage: _useTransientTokenStorage ? TransientTokenStorage() : null,
       sendWechatAuthRequest: _sendWechatAuthRequest,
     );

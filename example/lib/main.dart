@@ -387,6 +387,11 @@ class _MyAppState extends State<MyApp> {
                         });
                       },
                     )),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16 ),
+                  child: Text("SessionState: ${_authgear.sessionState.toString()}"),
+                ),
                 TextButton(
                   onPressed: () {
                     _onPressConfigure();

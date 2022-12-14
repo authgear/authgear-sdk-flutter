@@ -213,7 +213,7 @@ class Authgear implements AuthgearHttpClientDelegate {
   }
 
   Future<UserInfo> getUserInfo() async {
-    return _apiClient.getUserInfo();
+    return _getUserInfo();
   }
 
   Future<void> openURL({
@@ -225,9 +225,7 @@ class Authgear implements AuthgearHttpClientDelegate {
       throw Exception("openURL requires authenticated user");
     }
 
-    final appSessionTokenResp =
-        await _apiClient.getAppSessionToken(refreshToken);
-
+    final appSessionTokenResp = await _getAppSessionToken(refreshToken);
     final loginHint =
         Uri.parse("https://authgear.com/login_hint").replace(queryParameters: {
       "type": "app_session_token",
@@ -290,11 +288,16 @@ class Authgear implements AuthgearHttpClientDelegate {
       accessToken: accessToken,
     );
 
-    final tokenResponse = await _apiClient.sendTokenRequest(tokenRequest,
-        includeAccessToken: true);
-    final idToken = tokenResponse.idToken;
-    if (idToken != null) {
-      _idToken = idToken;
+    try {
+      final tokenResponse = await _apiClient.sendTokenRequest(tokenRequest,
+          includeAccessToken: true);
+      final idToken = tokenResponse.idToken;
+      if (idToken != null) {
+        _idToken = idToken;
+      }
+    } catch (e) {
+      _handleInvalidGrantException(e);
+      rethrow;
     }
   }
 
@@ -354,9 +357,9 @@ class Authgear implements AuthgearHttpClientDelegate {
       final tokenResponse = await _apiClient.sendTokenRequest(tokenRequest);
       await _persistTokenResponse(
           tokenResponse, SessionStateChangeReason.foundToken);
-    } on OAuthException catch (e) {
-      if (e.error == "invalid_grant") {
-        await _clearSession(SessionStateChangeReason.invalid);
+    } catch (e) {
+      await _handleInvalidGrantException(e);
+      if (e is OAuthException && e.error == "invalid_grant") {
         return;
       }
       rethrow;
@@ -392,7 +395,7 @@ class Authgear implements AuthgearHttpClientDelegate {
       ios: ios,
       android: android,
     );
-    await _apiClient.sendSetupBiometricRequest(BiometricRequest(
+    await _sendSetupBiometricRequest(BiometricRequest(
       clientID: clientID,
       jwt: jwt,
     ));
@@ -719,6 +722,50 @@ class Authgear implements AuthgearHttpClientDelegate {
         .add(Duration(seconds: (expiresIn * _expiresInPercentage).toInt()));
 
     _setSessionState(SessionState.authenticated, reason);
+  }
+
+  Future<void> _handleInvalidGrantException(dynamic e) async {
+    bool clearSession = false;
+    if (e is OAuthException) {
+      if (e.error == "invalid_grant") {
+        clearSession = true;
+      }
+    } else if (e is ServerException) {
+      if (e.reason == "InvalidGrant") {
+        clearSession = true;
+      }
+    }
+    if (clearSession) {
+      await _clearSession(SessionStateChangeReason.invalid);
+    }
+  }
+
+  Future<AppSessionTokenResponse> _getAppSessionToken(
+      String refreshToken) async {
+    try {
+      return await _apiClient.getAppSessionToken(refreshToken);
+    } catch (e) {
+      await _handleInvalidGrantException(e);
+      rethrow;
+    }
+  }
+
+  Future<UserInfo> _getUserInfo() async {
+    try {
+      return await _apiClient.getUserInfo();
+    } catch (e) {
+      await _handleInvalidGrantException(e);
+      rethrow;
+    }
+  }
+
+  Future<void> _sendSetupBiometricRequest(BiometricRequest request) async {
+    try {
+      return await _apiClient.sendSetupBiometricRequest(request);
+    } catch (e) {
+      await _handleInvalidGrantException(e);
+      rethrow;
+    }
   }
 
   void _onWechatRedirectURI(Uri uri) {

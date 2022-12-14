@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
-  <meta name="description" content="API docs for the refreshIDToken method from the Authgear extension, for the Dart programming language.">
-  <title>refreshIDToken method - Authgear extension - authgear library - Dart API</title>
+  <meta name="description" content="API docs for the refreshIDToken method from the Authgear class, for the Dart programming language.">
+  <title>refreshIDToken method - Authgear class - authgear library - Dart API</title>
 
 
   
@@ -80,11 +80,16 @@
     accessToken: accessToken,
   );
 
-  final tokenResponse = await _apiClient.sendTokenRequest(tokenRequest,
-      includeAccessToken: true);
-  final idToken = tokenResponse.idToken;
-  if (idToken != null) {
-    _idToken = idToken;
+  try {
+    final tokenResponse = await _apiClient.sendTokenRequest(tokenRequest,
+        includeAccessToken: true);
+    final idToken = tokenResponse.idToken;
+    if (idToken != null) {
+      _idToken = idToken;
+    }
+  } catch (e) {
+    _handleInvalidGrantException(e);
+    rethrow;
   }
 }</code></pre>
 </section>

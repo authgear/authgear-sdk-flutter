@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
-  <meta name="description" content="API docs for the openURL method from the Authgear extension, for the Dart programming language.">
-  <title>openURL method - Authgear extension - authgear library - Dart API</title>
+  <meta name="description" content="API docs for the openURL method from the Authgear class, for the Dart programming language.">
+  <title>openURL method - Authgear class - authgear library - Dart API</title>
 
 
   
@@ -80,9 +80,7 @@
     throw Exception(&quot;openURL requires authenticated user&quot;);
   }
 
-  final appSessionTokenResp =
-      await _apiClient.getAppSessionToken(refreshToken);
-
+  final appSessionTokenResp = await _getAppSessionToken(refreshToken);
   final loginHint =
       Uri.parse(&quot;https:&#47;&#47;authgear.com&#47;login_hint&quot;).replace(queryParameters: {
     &quot;type&quot;: &quot;app_session_token&quot;,

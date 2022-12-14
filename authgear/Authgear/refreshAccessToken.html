@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
-  <meta name="description" content="API docs for the refreshAccessToken method from the Authgear extension, for the Dart programming language.">
-  <title>refreshAccessToken method - Authgear extension - authgear library - Dart API</title>
+  <meta name="description" content="API docs for the refreshAccessToken method from the Authgear class, for the Dart programming language.">
+  <title>refreshAccessToken method - Authgear class - authgear library - Dart API</title>
 
 
   
@@ -56,11 +56,11 @@
 
     <section class="multi-line-signature">
       
-<div>
-  <ol class="annotation-list">
-    <li>@<a href="https://api.flutter.dev/flutter/dart-core/override-constant.html">override</a></li>
-  </ol>
-</div>
+  <div>
+    <ol class="annotation-list">
+        <li>@<a href="https://api.flutter.dev/flutter/dart-core/override-constant.html">override</a></li>
+    </ol>
+  </div>
 
 <span class="returntype"><a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
 <span class="name ">refreshAccessToken</span>(<wbr>)
@@ -93,9 +93,9 @@ Future&lt;void&gt; refreshAccessToken() async {
     final tokenResponse = await _apiClient.sendTokenRequest(tokenRequest);
     await _persistTokenResponse(
         tokenResponse, SessionStateChangeReason.foundToken);
-  } on OAuthException catch (e) {
-    if (e.error == &quot;invalid_grant&quot;) {
-      await _clearSession(SessionStateChangeReason.invalid);
+  } catch (e) {
+    await _handleInvalidGrantException(e);
+    if (e is OAuthException &amp;&amp; e.error == &quot;invalid_grant&quot;) {
       return;
     }
     rethrow;

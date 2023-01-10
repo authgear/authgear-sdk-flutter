@@ -1,3 +1,9 @@
+## How to publish a new version
+
+Read https://dart.dev/tools/pub/publishing
+
+Basically you bump the version with a new commit, and then run `flutter pub publish`
+
 ## Known issue
 
 

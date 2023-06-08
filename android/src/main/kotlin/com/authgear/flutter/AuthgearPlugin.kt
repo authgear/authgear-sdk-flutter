@@ -300,9 +300,12 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
     )
 
     val contentResolver = context.contentResolver
-    var bluetoothName: String = Settings.Secure.getString(contentResolver, "bluetooth_name")
-    if (bluetoothName == null) {
-      bluetoothName = ""
+    var bluetoothName = ""
+    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S) {
+      bluetoothName = Settings.Secure.getString(contentResolver, "bluetooth_name")
+      if (bluetoothName == null) {
+        bluetoothName = ""
+      }
     }
     var deviceName = ""
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) {

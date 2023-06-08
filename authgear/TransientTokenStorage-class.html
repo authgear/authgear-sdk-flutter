@@ -39,18 +39,24 @@
   <div class="toggle" id="theme-button">
     <label for="theme">
       <input type="checkbox" id="theme" value="light-theme">
-      <span class="material-symbols-outlined">
+      <span id="dark-theme-button" class="material-symbols-outlined">
         brightness_4
+      </span>
+      <span id="light-theme-button" class="material-symbols-outlined">
+        brightness_5
       </span>
     </label>
   </div>
 </header>
 <main>
 
-  <div id="dartdoc-main-content" class="main-content">
+  <div
+      id="dartdoc-main-content"
+      class="main-content"
+      data-above-sidebar="authgear&#47;authgear-library-sidebar.html"
+      data-below-sidebar="authgear&#47;TransientTokenStorage-class-sidebar.html">
       <div>
 <h1><span class="kind-class">TransientTokenStorage</span> class 
-    <a href="https://dart.dev/null-safety" class="feature feature-null-safety" title="Supports the null safety language feature.">Null safety</a>
  
 </h1></div>
 
@@ -141,7 +147,7 @@
 
 </dt>
 <dd class="inherited">
-  Invoked when a non-existent method or property is accessed.
+  Invoked when a nonexistent method or property is accessed.
   <div class="features"><span class="feature">inherited</span></div>
 
 </dd>
@@ -203,90 +209,25 @@
   </div> <!-- /.main-content -->
 
   <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
-    <header id="header-search-sidebar" class="hidden-l">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
   <form class="search-sidebar" role="search">
     <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
   </form>
 </header>
 
 <ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
-  <li><a href="../index.html">flutter_authgear</a></li>
-  <li><a href="../authgear/authgear-library.html">authgear</a></li>
-  <li class="self-crumb">TransientTokenStorage class</li>
+    <li><a href="../index.html">flutter_authgear</a></li>
+    <li><a href="../authgear/authgear-library.html">authgear</a></li>
+    <li class="self-crumb">TransientTokenStorage class</li>
 </ol>
 
 
-    <h5>authgear library</h5>
-    <ol>
-      <li class="section-title"><a href="../authgear/authgear-library.html#classes">Classes</a></li>
-        <li><a href="../authgear/Authgear-class.html">Authgear</a></li>
-        <li><a href="../authgear/BiometricOptionsAndroid-class.html">BiometricOptionsAndroid</a></li>
-        <li><a href="../authgear/BiometricOptionsIOS-class.html">BiometricOptionsIOS</a></li>
-        <li><a href="../authgear/PersistentTokenStorage-class.html">PersistentTokenStorage</a></li>
-        <li><a href="../authgear/SessionStateChangeEvent-class.html">SessionStateChangeEvent</a></li>
-        <li><a href="../authgear/TokenStorage-class.html">TokenStorage</a></li>
-        <li><a href="../authgear/TransientTokenStorage-class.html">TransientTokenStorage</a></li>
-        <li><a href="../authgear/UserInfo-class.html">UserInfo</a></li>
-
-
-
-
-
-
-      <li class="section-title"><a href="../authgear/authgear-library.html#enums">Enums</a></li>
-        <li><a href="../authgear/AuthenticationPage.html">AuthenticationPage</a></li>
-        <li><a href="../authgear/BiometricAccessConstraintAndroid.html">BiometricAccessConstraintAndroid</a></li>
-        <li><a href="../authgear/BiometricAccessConstraintIOS.html">BiometricAccessConstraintIOS</a></li>
-        <li><a href="../authgear/BiometricLAPolicy.html">BiometricLAPolicy</a></li>
-        <li><a href="../authgear/ColorScheme.html">ColorScheme</a></li>
-        <li><a href="../authgear/PromptOption.html">PromptOption</a></li>
-        <li><a href="../authgear/SessionState.html">SessionState</a></li>
-        <li><a href="../authgear/SessionStateChangeReason.html">SessionStateChangeReason</a></li>
-        <li><a href="../authgear/SettingsPage.html">SettingsPage</a></li>
-
-
-      <li class="section-title"><a href="../authgear/authgear-library.html#exceptions">Exceptions</a></li>
-        <li><a href="../authgear/AuthgearException-class.html">AuthgearException</a></li>
-        <li><a href="../authgear/BiometricLockoutException-class.html">BiometricLockoutException</a></li>
-        <li><a href="../authgear/BiometricNoEnrollmentException-class.html">BiometricNoEnrollmentException</a></li>
-        <li><a href="../authgear/BiometricNoPasscodeException-class.html">BiometricNoPasscodeException</a></li>
-        <li><a href="../authgear/BiometricNotSupportedOrPermissionDeniedException-class.html">BiometricNotSupportedOrPermissionDeniedException</a></li>
-        <li><a href="../authgear/BiometricPrivateKeyNotFoundException-class.html">BiometricPrivateKeyNotFoundException</a></li>
-        <li><a href="../authgear/CancelException-class.html">CancelException</a></li>
-        <li><a href="../authgear/OAuthException-class.html">OAuthException</a></li>
-        <li><a href="../authgear/ServerException-class.html">ServerException</a></li>
-</ol>
-
+    <!--<h5>authgear library</h5>-->
+    <div id="dartdoc-sidebar-left-content"></div>
   </div>
 
   <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
-    <ol>
-
-        <li class="section-title"><a href="../authgear/TransientTokenStorage-class.html#constructors">Constructors</a></li>
-          <li><a href="../authgear/TransientTokenStorage/TransientTokenStorage.html">TransientTokenStorage</a></li>
-
-
-        <li class="section-title inherited">
-          <a href="../authgear/TransientTokenStorage-class.html#instance-properties">Properties</a>
-        </li>
-          <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/hashCode.html">hashCode</a></li>
-          <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/runtimeType.html">runtimeType</a></li>
-
-        <li class="section-title inherited"><a href="../authgear/TransientTokenStorage-class.html#instance-methods">Methods</a></li>
-          <li class="inherited"><a href="../authgear/TransientTokenStorage/delRefreshToken.html">delRefreshToken</a></li>
-          <li class="inherited"><a href="../authgear/TransientTokenStorage/getRefreshToken.html">getRefreshToken</a></li>
-          <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/noSuchMethod.html">noSuchMethod</a></li>
-          <li class="inherited"><a href="../authgear/TransientTokenStorage/setRefreshToken.html">setRefreshToken</a></li>
-          <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/toString.html">toString</a></li>
-
-        <li class="section-title inherited"><a href="../authgear/TransientTokenStorage-class.html#operators">Operators</a></li>
-          <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/operator_equals.html">operator ==</a></li>
-
-
-
-
-</ol>
-
   </div><!--/.sidebar-offcanvas-->
 
 </main>

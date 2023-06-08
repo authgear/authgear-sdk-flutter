@@ -38,19 +38,25 @@
   <div class="toggle" id="theme-button">
     <label for="theme">
       <input type="checkbox" id="theme" value="light-theme">
-      <span class="material-symbols-outlined">
+      <span id="dark-theme-button" class="material-symbols-outlined">
         brightness_4
+      </span>
+      <span id="light-theme-button" class="material-symbols-outlined">
+        brightness_5
       </span>
     </label>
   </div>
 </header>
 <main>
 
-  <div id="dartdoc-main-content" class="main-content">
-    
+  <div
+      id="dartdoc-main-content"
+      class="main-content"
+      data-above-sidebar=""
+      data-below-sidebar="authgear&#47;authgear-library-sidebar.html">
+      
       <div>
 <h1><span class="kind-library">authgear</span> library 
-    <a href="https://dart.dev/null-safety" class="feature feature-null-safety" title="Supports the null safety language feature.">Null safety</a>
  
 </h1></div>
 
@@ -63,7 +69,7 @@ You should use a single instance throughout the app.</p>
 subscribe to <a href="../authgear/Authgear/onSessionStateChange.html">Authgear.onSessionStateChange</a> to listen for any state change event.</p>
 <p>Use <a href="../authgear/Authgear/authenticate.html">Authgear.authenticate</a> to authenticate the end user.</p>
 <p>Use <a href="../authgear/Authgear/open.html">Authgear.open</a> to open the settings page to let the end-user to manage their account settings.</p>
-<p>Use <a href="../authgear/Authgear/wrapHttpClient.html">Authgear.wrapHttpClient</a> to make a <a href="https://pub.dev/documentation/http/0.13.5/http/Client-class.html">Client</a> capable of injecting access token into Authorization header.</p>
+<p>Use <a href="../authgear/Authgear/wrapHttpClient.html">Authgear.wrapHttpClient</a> to make a <a href="https://pub.dev/documentation/http/0.13.6/http/Client-class.html">Client</a> capable of injecting access token into Authorization header.</p>
 </section>
 
 
@@ -305,15 +311,16 @@ subscribe to <a href="../authgear/Authgear/onSessionStateChange.html">Authgear.o
   </div> <!-- /.main-content -->
 
   <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
-    <header id="header-search-sidebar" class="hidden-l">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
   <form class="search-sidebar" role="search">
     <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
   </form>
 </header>
 
 <ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
-  <li><a href="../index.html">flutter_authgear</a></li>
-  <li class="self-crumb">authgear library</li>
+    <li><a href="../index.html">flutter_authgear</a></li>
+    <li class="self-crumb">authgear library</li>
 </ol>
 
 
@@ -327,46 +334,6 @@ subscribe to <a href="../authgear/Authgear/onSessionStateChange.html">Authgear.o
 
   <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
     <h5>authgear library</h5>
-    <ol>
-      <li class="section-title"><a href="../authgear/authgear-library.html#classes">Classes</a></li>
-        <li><a href="../authgear/Authgear-class.html">Authgear</a></li>
-        <li><a href="../authgear/BiometricOptionsAndroid-class.html">BiometricOptionsAndroid</a></li>
-        <li><a href="../authgear/BiometricOptionsIOS-class.html">BiometricOptionsIOS</a></li>
-        <li><a href="../authgear/PersistentTokenStorage-class.html">PersistentTokenStorage</a></li>
-        <li><a href="../authgear/SessionStateChangeEvent-class.html">SessionStateChangeEvent</a></li>
-        <li><a href="../authgear/TokenStorage-class.html">TokenStorage</a></li>
-        <li><a href="../authgear/TransientTokenStorage-class.html">TransientTokenStorage</a></li>
-        <li><a href="../authgear/UserInfo-class.html">UserInfo</a></li>
-
-
-
-
-
-
-      <li class="section-title"><a href="../authgear/authgear-library.html#enums">Enums</a></li>
-        <li><a href="../authgear/AuthenticationPage.html">AuthenticationPage</a></li>
-        <li><a href="../authgear/BiometricAccessConstraintAndroid.html">BiometricAccessConstraintAndroid</a></li>
-        <li><a href="../authgear/BiometricAccessConstraintIOS.html">BiometricAccessConstraintIOS</a></li>
-        <li><a href="../authgear/BiometricLAPolicy.html">BiometricLAPolicy</a></li>
-        <li><a href="../authgear/ColorScheme.html">ColorScheme</a></li>
-        <li><a href="../authgear/PromptOption.html">PromptOption</a></li>
-        <li><a href="../authgear/SessionState.html">SessionState</a></li>
-        <li><a href="../authgear/SessionStateChangeReason.html">SessionStateChangeReason</a></li>
-        <li><a href="../authgear/SettingsPage.html">SettingsPage</a></li>
-
-
-      <li class="section-title"><a href="../authgear/authgear-library.html#exceptions">Exceptions</a></li>
-        <li><a href="../authgear/AuthgearException-class.html">AuthgearException</a></li>
-        <li><a href="../authgear/BiometricLockoutException-class.html">BiometricLockoutException</a></li>
-        <li><a href="../authgear/BiometricNoEnrollmentException-class.html">BiometricNoEnrollmentException</a></li>
-        <li><a href="../authgear/BiometricNoPasscodeException-class.html">BiometricNoPasscodeException</a></li>
-        <li><a href="../authgear/BiometricNotSupportedOrPermissionDeniedException-class.html">BiometricNotSupportedOrPermissionDeniedException</a></li>
-        <li><a href="../authgear/BiometricPrivateKeyNotFoundException-class.html">BiometricPrivateKeyNotFoundException</a></li>
-        <li><a href="../authgear/CancelException-class.html">CancelException</a></li>
-        <li><a href="../authgear/OAuthException-class.html">OAuthException</a></li>
-        <li><a href="../authgear/ServerException-class.html">ServerException</a></li>
-</ol>
-
   </div><!--/sidebar-offcanvas-right-->
 
 </main>

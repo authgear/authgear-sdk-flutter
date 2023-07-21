@@ -15,10 +15,6 @@ import flutter_authgear
       print("WeChatSDK: \(message)")
     }
     WXApi.registerApp("wxcplaceholder", universalLink: "https://authgear-demo-flutter.pandawork.com/wechat/")
-    WXApi.checkUniversalLinkReady { step, stepResult in
-      print("step: \(step)")
-      print("stepResult: \(stepResult)")
-    }
 
     let controller = window?.rootViewController as! FlutterViewController
     let channel = FlutterMethodChannel(name: "example", binaryMessenger: controller.binaryMessenger)

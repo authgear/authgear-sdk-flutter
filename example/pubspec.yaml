@@ -4,7 +4,8 @@ description: Demonstrates how to use flutter_authgear
 publish_to: 'none'
 
 environment:
-  sdk: ">=2.16.2 <3.0.0"
+  sdk: ^3.0.0
+  flutter: ^3.0.0
 
 dependencies:
   flutter:

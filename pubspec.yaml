@@ -6,15 +6,15 @@ repository: https://github.com/authgear/authgear-sdk-flutter
 documentation: https://authgear.github.io/authgear-sdk-flutter/
 
 environment:
-  sdk: ">=2.16.2 <3.0.0"
-  flutter: ">=2.5.0"
+  sdk: ^3.0.0
+  flutter: ^3.0.0
 
 dependencies:
   flutter:
     sdk: flutter
-  crypto: ">=3.0.1 <4.0.0"
+  crypto: ^3.0.3
   hex: ">=0.2.0 <0.3.0"
-  http: ">=0.13.4 <0.14.0"
+  http: ^1.1.0
 
 dev_dependencies:
   flutter_test:

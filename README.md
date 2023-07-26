@@ -6,7 +6,7 @@
 
 # Authgear SDK for Flutter
 
-With Authgear SDK for Flutter, you can easily integrate authentication features into your iOS apps.
+With Authgear SDK for Flutter, you can easily integrate authentication features into your Flutter apps.
 In most cases, it involves just **a few lines of code** to enable **multiple authentication methods**, such as [social logins](https://www.authgear.com/features/social-login), [passwordless](https://www.authgear.com/features/passwordless-authentication), [biometrics logins](https://www.authgear.com/features/biometric-authentication), [one-time-password (OTP)](https://www.authgear.com/features/whatsapp-otp) with SMS/WhatsApp, and multi-factor authentication (MFA).
 
 **Quick links** - 📚 [Documentation](#documentation) 🏁 [Getting Started](#getting-started) 🛠️ [Troubleshooting](#troubleshooting)

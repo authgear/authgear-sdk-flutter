@@ -255,12 +255,16 @@ class Authgear implements AuthgearHttpClientDelegate {
     );
   }
 
-  Future<void> open({
-    required SettingsPage page,
+  Future<void> _openAuthgearURL({
+    required String path,
     List<String>? uiLocales,
     ColorScheme? colorScheme,
     String? wechatRedirectURI,
   }) async {
+    final oidcConfig = await _apiClient.fetchOIDCConfiguration();
+    final endpoint = Uri.parse(oidcConfig.authorizationEndpoint);
+    final origin = Uri.parse(endpoint.origin);
+
     final Map<String, String> q = {};
     final uiLocalesString = uiLocales?.join(" ") ?? "";
     if (uiLocalesString != "") {
@@ -270,10 +274,21 @@ class Authgear implements AuthgearHttpClientDelegate {
       q["x_color_scheme"] = colorScheme.name;
     }
 
-    final url = Uri.parse(endpoint)
-        .replace(path: page.path, queryParameters: q)
-        .toString();
+    final url = origin.replace(path: path, queryParameters: q).toString();
     return openURL(url: url, wechatRedirectURI: wechatRedirectURI);
+  }
+
+  Future<void> open({
+    required SettingsPage page,
+    List<String>? uiLocales,
+    ColorScheme? colorScheme,
+    String? wechatRedirectURI,
+  }) async {
+    return _openAuthgearURL(
+        path: page.path,
+        uiLocales: uiLocales,
+        colorScheme: colorScheme,
+        wechatRedirectURI: wechatRedirectURI);
   }
 
   Future<void> refreshIDToken() async {

@@ -85,19 +85,11 @@
   ColorScheme? colorScheme,
   String? wechatRedirectURI,
 }) async {
-  final Map&lt;String, String&gt; q = {};
-  final uiLocalesString = uiLocales?.join(&quot; &quot;) ?? &quot;&quot;;
-  if (uiLocalesString != &quot;&quot;) {
-    q[&quot;ui_locales&quot;] = uiLocalesString;
-  }
-  if (colorScheme != null) {
-    q[&quot;x_color_scheme&quot;] = colorScheme.name;
-  }
-
-  final url = Uri.parse(endpoint)
-      .replace(path: page.path, queryParameters: q)
-      .toString();
-  return openURL(url: url, wechatRedirectURI: wechatRedirectURI);
+  return _openAuthgearURL(
+      path: page.path,
+      uiLocales: uiLocales,
+      colorScheme: colorScheme,
+      wechatRedirectURI: wechatRedirectURI);
 }</code></pre>
 </section>
 
@@ -121,6 +113,7 @@
 
 
     <h5>Authgear class</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
   </div><!--/.sidebar-offcanvas-->
 
   <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">

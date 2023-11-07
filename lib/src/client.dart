@@ -260,6 +260,13 @@ class APIClient {
     return newConfig;
   }
 
+  Future<Uri> _buildApiUrl(String path) async {
+    final config = await fetchOIDCConfiguration();
+    final endpoint = Uri.parse(config.authorizationEndpoint);
+    final origin = Uri.parse(endpoint.origin);
+    return origin.replace(path: path);
+  }
+
   Future<OIDCTokenResponse> sendTokenRequest(OIDCTokenRequest request,
       {bool includeAccessToken = false}) async {
     final config = await fetchOIDCConfiguration();
@@ -290,7 +297,7 @@ class APIClient {
 
   Future<AppSessionTokenResponse> getAppSessionToken(
       String refreshToken) async {
-    final url = Uri.parse(endpoint).replace(path: "/oauth2/app_session_token");
+    final url = await _buildApiUrl("/oauth2/app_session_token");
     final httpResponse = await _plainHttpClient.post(url,
         headers: {
           "content-type": "application/json; charset=UTF-8",
@@ -329,7 +336,7 @@ class APIClient {
   }
 
   Future<ChallengeResponse> getChallenge(String purpose) async {
-    final url = Uri.parse(endpoint).replace(path: "/oauth2/challenge");
+    final url = await _buildApiUrl("/oauth2/challenge");
     final httpResponse = await _plainHttpClient.post(
       url,
       headers: {
@@ -346,7 +353,7 @@ class APIClient {
     required String state,
     required String code,
   }) async {
-    final url = Uri.parse(endpoint).replace(path: "/sso/wechat/callback");
+    final url = await _buildApiUrl("/sso/wechat/callback");
     final httpResponse = await _plainHttpClient.post(
       url,
       body: {

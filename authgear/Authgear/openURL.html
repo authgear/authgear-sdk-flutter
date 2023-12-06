@@ -29,7 +29,7 @@
   <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
   <ol class="breadcrumbs gt-separated dark hidden-xs">
     <li><a href="../../index.html">flutter_authgear</a></li>
-    <li><a href="../../authgear/authgear-library.html">authgear</a></li>
+    <li><a href="../../authgear/authgear-library.html">flutter_authgear.dart</a></li>
     <li><a href="../../authgear/Authgear-class.html">Authgear</a></li>
     <li class="self-crumb">openURL method</li>
   </ol>
@@ -86,30 +86,10 @@
     throw Exception(&quot;openURL requires authenticated user&quot;);
   }
 
-  final appSessionTokenResp = await _getAppSessionToken(refreshToken);
-  final loginHint =
-      Uri.parse(&quot;https:&#47;&#47;authgear.com&#47;login_hint&quot;).replace(queryParameters: {
-    &quot;type&quot;: &quot;app_session_token&quot;,
-    &quot;app_session_token&quot;: appSessionTokenResp.appSessionToken,
-  }).toString();
-
-  final oidcRequest = OIDCAuthenticationRequest(
-    clientID: clientID,
+  final targetURL = await internalGenerateURL(
     redirectURI: url,
-    responseType: &quot;none&quot;,
-    scope: [
-      &quot;openid&quot;,
-      &quot;offline_access&quot;,
-      &quot;https:&#47;&#47;authgear.com&#47;scopes&#47;full-access&quot;,
-    ],
-    isSsoEnabled: isSsoEnabled,
-    prompt: [PromptOption.none],
-    loginHint: loginHint,
     wechatRedirectURI: wechatRedirectURI,
   );
-  final config = await _apiClient.fetchOIDCConfiguration();
-  final targetURL = Uri.parse(config.authorizationEndpoint)
-      .replace(queryParameters: oidcRequest.toQueryParameters());
   await native.openURL(
     url: targetURL.toString(),
     wechatRedirectURI: wechatRedirectURI,

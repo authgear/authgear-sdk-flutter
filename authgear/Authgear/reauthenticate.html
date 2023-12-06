@@ -29,7 +29,7 @@
   <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
   <ol class="breadcrumbs gt-separated dark hidden-xs">
     <li><a href="../../index.html">flutter_authgear</a></li>
-    <li><a href="../../authgear/authgear-library.html">authgear</a></li>
+    <li><a href="../../authgear/authgear-library.html">flutter_authgear.dart</a></li>
     <li><a href="../../authgear/Authgear-class.html">Authgear</a></li>
     <li class="self-crumb">reauthenticate method</li>
   </ol>
@@ -99,28 +99,26 @@
     );
   }
 
-  final codeVerifier = CodeVerifier(_rng);
-  final oidcRequest = OIDCAuthenticationRequest(
-    clientID: clientID,
+  final idTokenHint = this.idTokenHint;
+
+  if (idTokenHint == null) {
+    throw Exception(&quot;authenticated user required&quot;);
+  }
+
+  final options = ReauthenticateOptions(
     redirectURI: redirectURI,
-    responseType: &quot;code&quot;,
-    scope: [
-      &quot;openid&quot;,
-      &quot;https:&#47;&#47;authgear.com&#47;scopes&#47;full-access&quot;,
-    ],
     isSsoEnabled: isSsoEnabled,
-    codeChallenge: codeVerifier.codeChallenge,
     uiLocales: uiLocales,
     colorScheme: colorScheme,
-    idTokenHint: idTokenHint,
-    maxAge: maxAge,
     wechatRedirectURI: wechatRedirectURI,
+    maxAge: maxAge,
   );
-  final config = await _apiClient.fetchOIDCConfiguration();
-  final authenticationURL = Uri.parse(config.authorizationEndpoint)
-      .replace(queryParameters: oidcRequest.toQueryParameters());
+
+  final request =
+      await internalCreateReauthenticateRequest(idTokenHint, options);
+
   final resultURL = await native.authenticate(
-    url: authenticationURL.toString(),
+    url: request.url.toString(),
     redirectURI: redirectURI,
     preferEphemeral: !isSsoEnabled,
     wechatRedirectURI: wechatRedirectURI,
@@ -130,7 +128,7 @@
   return await _finishReauthentication(
       url: Uri.parse(resultURL),
       redirectURI: redirectURI,
-      codeVerifier: codeVerifier,
+      codeVerifier: request.verifier,
       xDeviceInfo: xDeviceInfo);
 }</code></pre>
 </section>

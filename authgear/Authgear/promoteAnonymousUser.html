@@ -29,7 +29,7 @@
   <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
   <ol class="breadcrumbs gt-separated dark hidden-xs">
     <li><a href="../../index.html">flutter_authgear</a></li>
-    <li><a href="../../authgear/authgear-library.html">authgear</a></li>
+    <li><a href="../../authgear/authgear-library.html">flutter_authgear.dart</a></li>
     <li><a href="../../authgear/Authgear-class.html">Authgear</a></li>
     <li class="self-crumb">promoteAnonymousUser method</li>
   </ol>
@@ -136,12 +136,10 @@
     onWechatRedirectURI: _onWechatRedirectURI,
     preferEphemeral: !isSsoEnabled,
   );
-  final xDeviceInfo = await _getXDeviceInfo();
-  final userInfo = await _finishAuthentication(
+  final userInfo = await internalFinishAuthentication(
       url: Uri.parse(resultURL),
       redirectURI: redirectURI,
-      codeVerifier: codeVerifier,
-      xDeviceInfo: xDeviceInfo);
+      codeVerifier: codeVerifier);
   await _disableAnonymous();
   await disableBiometric();
   return userInfo;

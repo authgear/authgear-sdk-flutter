@@ -10,6 +10,7 @@ import 'code_verifier.dart';
 import 'exception.dart';
 import 'base64.dart';
 import 'id_token.dart';
+import 'experimental.dart';
 import 'native.dart' as native;
 
 class SessionStateChangeEvent {
@@ -31,6 +32,102 @@ Future<String> _getXDeviceInfo() async {
   return xDeviceInfo;
 }
 
+class InternalAuthenticateRequest {
+  final Uri url;
+  final String redirectURI;
+  final CodeVerifier verifier;
+
+  InternalAuthenticateRequest(
+      {required this.url, required this.redirectURI, required this.verifier});
+}
+
+class AuthenticateOptions {
+  final String redirectURI;
+  final bool isSsoEnabled;
+  final String? state;
+  final List<PromptOption>? prompt;
+  final String? loginHint;
+  final List<String>? uiLocales;
+  final ColorScheme? colorScheme;
+  final String? wechatRedirectURI;
+  final AuthenticationPage? page;
+
+  AuthenticateOptions({
+    required this.redirectURI,
+    required this.isSsoEnabled,
+    this.state,
+    this.prompt,
+    this.loginHint,
+    this.uiLocales,
+    this.colorScheme,
+    this.wechatRedirectURI,
+    this.page,
+  });
+
+  OIDCAuthenticationRequest toRequest(String clientID, CodeVerifier verifier) {
+    return OIDCAuthenticationRequest(
+      clientID: clientID,
+      redirectURI: redirectURI,
+      responseType: "code",
+      scope: [
+        "openid",
+        "offline_access",
+        "https://authgear.com/scopes/full-access",
+      ],
+      isSsoEnabled: isSsoEnabled,
+      codeChallenge: verifier.codeChallenge,
+      prompt: prompt,
+      uiLocales: uiLocales,
+      colorScheme: colorScheme,
+      page: page,
+      state: state,
+      loginHint: loginHint,
+      wechatRedirectURI: wechatRedirectURI,
+    );
+  }
+}
+
+class ReauthenticateOptions {
+  final String redirectURI;
+  final bool isSsoEnabled;
+  final String? state;
+  final List<String>? uiLocales;
+  final ColorScheme? colorScheme;
+  final String? wechatRedirectURI;
+  final int? maxAge;
+
+  ReauthenticateOptions({
+    required this.redirectURI,
+    required this.isSsoEnabled,
+    this.state,
+    this.uiLocales,
+    this.colorScheme,
+    this.wechatRedirectURI,
+    this.maxAge,
+  });
+
+  OIDCAuthenticationRequest toRequest(
+      String clientID, String idTokenHint, CodeVerifier verifier) {
+    final oidcRequest = OIDCAuthenticationRequest(
+      clientID: clientID,
+      redirectURI: redirectURI,
+      responseType: "code",
+      scope: [
+        "openid",
+        "https://authgear.com/scopes/full-access",
+      ],
+      isSsoEnabled: isSsoEnabled,
+      codeChallenge: verifier.codeChallenge,
+      uiLocales: uiLocales,
+      colorScheme: colorScheme,
+      idTokenHint: idTokenHint,
+      maxAge: maxAge,
+      wechatRedirectURI: wechatRedirectURI,
+    );
+    return oidcRequest;
+  }
+}
+
 // It seems that dart's convention of iOS' delegate is individual property of write-only function
 // See https://api.dart.dev/stable/2.16.2/dart-io/HttpClient/authenticate.html
 class Authgear implements AuthgearHttpClientDelegate {
@@ -43,6 +140,7 @@ class Authgear implements AuthgearHttpClientDelegate {
   final TokenStorage _tokenStorage;
   final ContainerStorage _storage;
   late final APIClient _apiClient;
+  late final AuthgearExperimental experimental;
 
   SessionState _sessionStateRaw = SessionState.unknown;
   SessionState get sessionState => _sessionStateRaw;
@@ -99,6 +197,7 @@ class Authgear implements AuthgearHttpClientDelegate {
       plainHttpClient: plainHttpClient,
       authgearHttpClient: authgearHttpClient,
     );
+    experimental = AuthgearExperimental(this);
   }
 
   Future<void> configure() async {
@@ -115,48 +214,72 @@ class Authgear implements AuthgearHttpClientDelegate {
         .add(SessionStateChangeEvent(instance: this, reason: r));
   }
 
+  Future<Uri> internalBuildAuthorizationURL(
+      OIDCAuthenticationRequest oidcRequest) async {
+    final config = await _apiClient.fetchOIDCConfiguration();
+    final authenticationURL = Uri.parse(config.authorizationEndpoint)
+        .replace(queryParameters: oidcRequest.toQueryParameters());
+    return authenticationURL;
+  }
+
+  Future<InternalAuthenticateRequest> internalCreateAuthenticateRequest(
+      AuthenticateOptions options) async {
+    final codeVerifier = CodeVerifier(_rng);
+    final oidcRequest = options.toRequest(clientID, codeVerifier);
+    final url = await internalBuildAuthorizationURL(oidcRequest);
+
+    return InternalAuthenticateRequest(
+      url: url,
+      redirectURI: oidcRequest.redirectURI,
+      verifier: codeVerifier,
+    );
+  }
+
   Future<UserInfo> authenticate({
     required String redirectURI,
     List<PromptOption>? prompt,
     List<String>? uiLocales,
     ColorScheme? colorScheme,
     AuthenticationPage? page,
+    String? state,
     String? wechatRedirectURI,
   }) async {
-    final codeVerifier = CodeVerifier(_rng);
-    final oidcRequest = OIDCAuthenticationRequest(
-      clientID: clientID,
+    final authRequest =
+        await internalCreateAuthenticateRequest(AuthenticateOptions(
       redirectURI: redirectURI,
-      responseType: "code",
-      scope: [
-        "openid",
-        "offline_access",
-        "https://authgear.com/scopes/full-access",
-      ],
       isSsoEnabled: isSsoEnabled,
-      codeChallenge: codeVerifier.codeChallenge,
+      state: state,
       prompt: prompt,
       uiLocales: uiLocales,
       colorScheme: colorScheme,
-      page: page,
       wechatRedirectURI: wechatRedirectURI,
-    );
-    final config = await _apiClient.fetchOIDCConfiguration();
-    final authenticationURL = Uri.parse(config.authorizationEndpoint)
-        .replace(queryParameters: oidcRequest.toQueryParameters());
+      page: page,
+    ));
     final resultURL = await native.authenticate(
-      url: authenticationURL.toString(),
-      redirectURI: redirectURI,
+      url: authRequest.url.toString(),
+      redirectURI: authRequest.redirectURI,
       preferEphemeral: !isSsoEnabled,
       wechatRedirectURI: wechatRedirectURI,
       onWechatRedirectURI: _onWechatRedirectURI,
     );
-    final xDeviceInfo = await _getXDeviceInfo();
-    return await _finishAuthentication(
+    return await internalFinishAuthentication(
         url: Uri.parse(resultURL),
         redirectURI: redirectURI,
-        codeVerifier: codeVerifier,
-        xDeviceInfo: xDeviceInfo);
+        codeVerifier: authRequest.verifier);
+  }
+
+  Future<InternalAuthenticateRequest> internalCreateReauthenticateRequest(
+    String idTokenHint,
+    ReauthenticateOptions options,
+  ) async {
+    final codeVerifier = CodeVerifier(_rng);
+    final oidcRequest = options.toRequest(clientID, idTokenHint, codeVerifier);
+    final url = await internalBuildAuthorizationURL(oidcRequest);
+    return InternalAuthenticateRequest(
+      url: url,
+      redirectURI: oidcRequest.redirectURI,
+      verifier: codeVerifier,
+    );
   }
 
   Future<UserInfo> reauthenticate({
@@ -176,28 +299,26 @@ class Authgear implements AuthgearHttpClientDelegate {
       );
     }
 
-    final codeVerifier = CodeVerifier(_rng);
-    final oidcRequest = OIDCAuthenticationRequest(
-      clientID: clientID,
+    final idTokenHint = this.idTokenHint;
+
+    if (idTokenHint == null) {
+      throw Exception("authenticated user required");
+    }
+
+    final options = ReauthenticateOptions(
       redirectURI: redirectURI,
-      responseType: "code",
-      scope: [
-        "openid",
-        "https://authgear.com/scopes/full-access",
-      ],
       isSsoEnabled: isSsoEnabled,
-      codeChallenge: codeVerifier.codeChallenge,
       uiLocales: uiLocales,
       colorScheme: colorScheme,
-      idTokenHint: idTokenHint,
-      maxAge: maxAge,
       wechatRedirectURI: wechatRedirectURI,
+      maxAge: maxAge,
     );
-    final config = await _apiClient.fetchOIDCConfiguration();
-    final authenticationURL = Uri.parse(config.authorizationEndpoint)
-        .replace(queryParameters: oidcRequest.toQueryParameters());
+
+    final request =
+        await internalCreateReauthenticateRequest(idTokenHint, options);
+
     final resultURL = await native.authenticate(
-      url: authenticationURL.toString(),
+      url: request.url.toString(),
       redirectURI: redirectURI,
       preferEphemeral: !isSsoEnabled,
       wechatRedirectURI: wechatRedirectURI,
@@ -207,12 +328,50 @@ class Authgear implements AuthgearHttpClientDelegate {
     return await _finishReauthentication(
         url: Uri.parse(resultURL),
         redirectURI: redirectURI,
-        codeVerifier: codeVerifier,
+        codeVerifier: request.verifier,
         xDeviceInfo: xDeviceInfo);
   }
 
   Future<UserInfo> getUserInfo() async {
     return _getUserInfo();
+  }
+
+  Future<Uri> internalGenerateURL({
+    required String redirectURI,
+    List<String>? uiLocales,
+    ColorScheme? colorScheme,
+    String? wechatRedirectURI,
+  }) async {
+    final refreshToken = _refreshToken;
+    if (refreshToken == null) {
+      throw Exception("authenticated user required");
+    }
+    final appSessionTokenResp = await _getAppSessionToken(refreshToken);
+    final loginHint =
+        Uri.parse("https://authgear.com/login_hint").replace(queryParameters: {
+      "type": "app_session_token",
+      "app_session_token": appSessionTokenResp.appSessionToken,
+    }).toString();
+
+    final oidcRequest = OIDCAuthenticationRequest(
+      clientID: clientID,
+      redirectURI: redirectURI,
+      responseType: "none",
+      scope: [
+        "openid",
+        "offline_access",
+        "https://authgear.com/scopes/full-access",
+      ],
+      isSsoEnabled: isSsoEnabled,
+      prompt: [PromptOption.none],
+      loginHint: loginHint,
+      uiLocales: uiLocales,
+      colorScheme: colorScheme,
+      wechatRedirectURI: wechatRedirectURI,
+    );
+    final config = await _apiClient.fetchOIDCConfiguration();
+    return Uri.parse(config.authorizationEndpoint)
+        .replace(queryParameters: oidcRequest.toQueryParameters());
   }
 
   Future<void> openURL({
@@ -224,30 +383,10 @@ class Authgear implements AuthgearHttpClientDelegate {
       throw Exception("openURL requires authenticated user");
     }
 
-    final appSessionTokenResp = await _getAppSessionToken(refreshToken);
-    final loginHint =
-        Uri.parse("https://authgear.com/login_hint").replace(queryParameters: {
-      "type": "app_session_token",
-      "app_session_token": appSessionTokenResp.appSessionToken,
-    }).toString();
-
-    final oidcRequest = OIDCAuthenticationRequest(
-      clientID: clientID,
+    final targetURL = await internalGenerateURL(
       redirectURI: url,
-      responseType: "none",
-      scope: [
-        "openid",
-        "offline_access",
-        "https://authgear.com/scopes/full-access",
-      ],
-      isSsoEnabled: isSsoEnabled,
-      prompt: [PromptOption.none],
-      loginHint: loginHint,
       wechatRedirectURI: wechatRedirectURI,
     );
-    final config = await _apiClient.fetchOIDCConfiguration();
-    final targetURL = Uri.parse(config.authorizationEndpoint)
-        .replace(queryParameters: oidcRequest.toQueryParameters());
     await native.openURL(
       url: targetURL.toString(),
       wechatRedirectURI: wechatRedirectURI,
@@ -535,12 +674,10 @@ class Authgear implements AuthgearHttpClientDelegate {
       onWechatRedirectURI: _onWechatRedirectURI,
       preferEphemeral: !isSsoEnabled,
     );
-    final xDeviceInfo = await _getXDeviceInfo();
-    final userInfo = await _finishAuthentication(
+    final userInfo = await internalFinishAuthentication(
         url: Uri.parse(resultURL),
         redirectURI: redirectURI,
-        codeVerifier: codeVerifier,
-        xDeviceInfo: xDeviceInfo);
+        codeVerifier: codeVerifier);
     await _disableAnonymous();
     await disableBiometric();
     return userInfo;
@@ -675,12 +812,12 @@ class Authgear implements AuthgearHttpClientDelegate {
     return tokenResponse;
   }
 
-  Future<UserInfo> _finishAuthentication({
+  Future<UserInfo> internalFinishAuthentication({
     required Uri url,
     required String redirectURI,
     required CodeVerifier codeVerifier,
-    required String xDeviceInfo,
   }) async {
+    final xDeviceInfo = await _getXDeviceInfo();
     final tokenResponse = await _exchangeCode(
       url: url,
       redirectURI: redirectURI,

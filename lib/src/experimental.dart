@@ -41,6 +41,27 @@ class AuthgearExperimental {
     return AuthenticateRequest.fromInternal(request);
   }
 
+  Future<AuthenticateRequest> createReauthenticateRequest({
+    required String redirectURI,
+    required String idTokenHint,
+    String? state,
+    List<String>? uiLocales,
+    ColorScheme? colorScheme,
+    String? wechatRedirectURI,
+  }) async {
+    final options = ReauthenticateOptions(
+      redirectURI: redirectURI,
+      isSsoEnabled: authgear.isSsoEnabled,
+      state: state,
+      uiLocales: uiLocales,
+      colorScheme: colorScheme,
+      wechatRedirectURI: wechatRedirectURI,
+    );
+    final request = await authgear.internalCreateReauthenticateRequest(
+        idTokenHint, options);
+    return AuthenticateRequest.fromInternal(request);
+  }
+
   Future<UserInfo> finishAuthentication({
     required Uri url,
     required AuthenticateRequest request,

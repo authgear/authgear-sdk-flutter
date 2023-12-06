@@ -32,6 +32,7 @@ export 'src/type.dart'
 export 'src/storage.dart'
     show TokenStorage, TransientTokenStorage, PersistentTokenStorage;
 export 'src/container.dart' show SessionStateChangeEvent, Authgear;
+export 'src/experimental.dart' show AuthgearExperimental, AuthenticateRequest;
 export 'src/exception.dart'
     show
         AuthgearException,

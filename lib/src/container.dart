@@ -1,4 +1,3 @@
-import 'dart:ffi';
 import 'dart:math' show Random;
 import 'dart:async' show StreamController;
 import 'dart:convert' show jsonEncode, utf8;
@@ -11,6 +10,7 @@ import 'code_verifier.dart';
 import 'exception.dart';
 import 'base64.dart';
 import 'id_token.dart';
+import 'experimental.dart';
 import 'native.dart' as native;
 
 class SessionStateChangeEvent {
@@ -32,12 +32,12 @@ Future<String> _getXDeviceInfo() async {
   return xDeviceInfo;
 }
 
-class _AuthenticateRequest {
+class InternalAuthenticateRequest {
   final Uri url;
   final String redirectURI;
   final CodeVerifier verifier;
 
-  _AuthenticateRequest(
+  InternalAuthenticateRequest(
       {required this.url, required this.redirectURI, required this.verifier});
 }
 
@@ -99,6 +99,7 @@ class Authgear implements AuthgearHttpClientDelegate {
   final TokenStorage _tokenStorage;
   final ContainerStorage _storage;
   late final APIClient _apiClient;
+  late final AuthgearExperimental experimental;
 
   SessionState _sessionStateRaw = SessionState.unknown;
   SessionState get sessionState => _sessionStateRaw;
@@ -155,6 +156,7 @@ class Authgear implements AuthgearHttpClientDelegate {
       plainHttpClient: plainHttpClient,
       authgearHttpClient: authgearHttpClient,
     );
+    experimental = AuthgearExperimental(this);
   }
 
   Future<void> configure() async {
@@ -171,7 +173,7 @@ class Authgear implements AuthgearHttpClientDelegate {
         .add(SessionStateChangeEvent(instance: this, reason: r));
   }
 
-  Future<Uri> _buildAuthorizationURL(
+  Future<Uri> internalBuildAuthorizationURL(
       OIDCAuthenticationRequest oidcRequest) async {
     final config = await _apiClient.fetchOIDCConfiguration();
     final authenticationURL = Uri.parse(config.authorizationEndpoint)
@@ -179,13 +181,13 @@ class Authgear implements AuthgearHttpClientDelegate {
     return authenticationURL;
   }
 
-  Future<_AuthenticateRequest> _createAuthenticateRequest(
+  Future<InternalAuthenticateRequest> internalCreateAuthenticateRequest(
       AuthenticateOptions options) async {
     final codeVerifier = CodeVerifier(_rng);
     final oidcRequest = options.toRequest(clientID, codeVerifier);
-    final url = await _buildAuthorizationURL(oidcRequest);
+    final url = await internalBuildAuthorizationURL(oidcRequest);
 
-    return _AuthenticateRequest(
+    return InternalAuthenticateRequest(
       url: url,
       redirectURI: oidcRequest.redirectURI,
       verifier: codeVerifier,
@@ -201,7 +203,8 @@ class Authgear implements AuthgearHttpClientDelegate {
     String? state,
     String? wechatRedirectURI,
   }) async {
-    final authRequest = await _createAuthenticateRequest(AuthenticateOptions(
+    final authRequest =
+        await internalCreateAuthenticateRequest(AuthenticateOptions(
       redirectURI: redirectURI,
       isSsoEnabled: isSsoEnabled,
       state: state,

@@ -7,6 +7,15 @@ class AuthgearExperimental {
 
   AuthgearExperimental(this.authgear);
 
+  Future<Uri> generateURL({
+    required String redirectURI,
+  }) async {
+    final uri = await authgear.internalGenerateURL(
+      redirectURI: redirectURI,
+    );
+    return uri;
+  }
+
   Future<AuthenticateRequest> createAuthenticateRequest({
     required String redirectURI,
     String? state,

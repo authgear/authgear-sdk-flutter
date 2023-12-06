@@ -283,15 +283,16 @@ class Authgear implements AuthgearHttpClientDelegate {
     return _getUserInfo();
   }
 
-  Future<void> openURL({
-    required String url,
+  Future<Uri> internalGenerateURL({
+    required String redirectURI,
+    List<String>? uiLocales,
+    ColorScheme? colorScheme,
     String? wechatRedirectURI,
   }) async {
     final refreshToken = _refreshToken;
     if (refreshToken == null) {
-      throw Exception("openURL requires authenticated user");
+      throw Exception("authenticated user required");
     }
-
     final appSessionTokenResp = await _getAppSessionToken(refreshToken);
     final loginHint =
         Uri.parse("https://authgear.com/login_hint").replace(queryParameters: {
@@ -301,7 +302,7 @@ class Authgear implements AuthgearHttpClientDelegate {
 
     final oidcRequest = OIDCAuthenticationRequest(
       clientID: clientID,
-      redirectURI: url,
+      redirectURI: redirectURI,
       responseType: "none",
       scope: [
         "openid",
@@ -311,11 +312,28 @@ class Authgear implements AuthgearHttpClientDelegate {
       isSsoEnabled: isSsoEnabled,
       prompt: [PromptOption.none],
       loginHint: loginHint,
+      uiLocales: uiLocales,
+      colorScheme: colorScheme,
       wechatRedirectURI: wechatRedirectURI,
     );
     final config = await _apiClient.fetchOIDCConfiguration();
-    final targetURL = Uri.parse(config.authorizationEndpoint)
+    return Uri.parse(config.authorizationEndpoint)
         .replace(queryParameters: oidcRequest.toQueryParameters());
+  }
+
+  Future<void> openURL({
+    required String url,
+    String? wechatRedirectURI,
+  }) async {
+    final refreshToken = _refreshToken;
+    if (refreshToken == null) {
+      throw Exception("openURL requires authenticated user");
+    }
+
+    final targetURL = await internalGenerateURL(
+      redirectURI: url,
+      wechatRedirectURI: wechatRedirectURI,
+    );
     await native.openURL(
       url: targetURL.toString(),
       wechatRedirectURI: wechatRedirectURI,

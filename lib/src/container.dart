@@ -1,3 +1,4 @@
+import 'dart:ffi';
 import 'dart:math' show Random;
 import 'dart:async' show StreamController;
 import 'dart:convert' show jsonEncode, utf8;
@@ -29,6 +30,61 @@ Future<String> _getXDeviceInfo() async {
   final deviceInfoJSONBytes = utf8.encode(deviceInfoJSON);
   final xDeviceInfo = base64UrlEncode(deviceInfoJSONBytes);
   return xDeviceInfo;
+}
+
+class _AuthenticateRequest {
+  final Uri url;
+  final String redirectURI;
+  final CodeVerifier verifier;
+
+  _AuthenticateRequest(
+      {required this.url, required this.redirectURI, required this.verifier});
+}
+
+class AuthenticateOptions {
+  final String redirectURI;
+  final bool isSsoEnabled;
+  final String? state;
+  final List<PromptOption>? prompt;
+  final String? loginHint;
+  final List<String>? uiLocales;
+  final ColorScheme? colorScheme;
+  final String? wechatRedirectURI;
+  final AuthenticationPage? page;
+
+  AuthenticateOptions({
+    required this.redirectURI,
+    required this.isSsoEnabled,
+    this.state,
+    this.prompt,
+    this.loginHint,
+    this.uiLocales,
+    this.colorScheme,
+    this.wechatRedirectURI,
+    this.page,
+  });
+
+  OIDCAuthenticationRequest toRequest(String clientID, CodeVerifier verifier) {
+    return OIDCAuthenticationRequest(
+      clientID: clientID,
+      redirectURI: redirectURI,
+      responseType: "code",
+      scope: [
+        "openid",
+        "offline_access",
+        "https://authgear.com/scopes/full-access",
+      ],
+      isSsoEnabled: isSsoEnabled,
+      codeChallenge: verifier.codeChallenge,
+      prompt: prompt,
+      uiLocales: uiLocales,
+      colorScheme: colorScheme,
+      page: page,
+      state: state,
+      loginHint: loginHint,
+      wechatRedirectURI: wechatRedirectURI,
+    );
+  }
 }
 
 // It seems that dart's convention of iOS' delegate is individual property of write-only function
@@ -115,38 +171,49 @@ class Authgear implements AuthgearHttpClientDelegate {
         .add(SessionStateChangeEvent(instance: this, reason: r));
   }
 
+  Future<Uri> _buildAuthorizationURL(
+      OIDCAuthenticationRequest oidcRequest) async {
+    final config = await _apiClient.fetchOIDCConfiguration();
+    final authenticationURL = Uri.parse(config.authorizationEndpoint)
+        .replace(queryParameters: oidcRequest.toQueryParameters());
+    return authenticationURL;
+  }
+
+  Future<_AuthenticateRequest> _createAuthenticateRequest(
+      AuthenticateOptions options) async {
+    final codeVerifier = CodeVerifier(_rng);
+    final oidcRequest = options.toRequest(clientID, codeVerifier);
+    final url = await _buildAuthorizationURL(oidcRequest);
+
+    return _AuthenticateRequest(
+      url: url,
+      redirectURI: oidcRequest.redirectURI,
+      verifier: codeVerifier,
+    );
+  }
+
   Future<UserInfo> authenticate({
     required String redirectURI,
     List<PromptOption>? prompt,
     List<String>? uiLocales,
     ColorScheme? colorScheme,
     AuthenticationPage? page,
+    String? state,
     String? wechatRedirectURI,
   }) async {
-    final codeVerifier = CodeVerifier(_rng);
-    final oidcRequest = OIDCAuthenticationRequest(
-      clientID: clientID,
+    final authRequest = await _createAuthenticateRequest(AuthenticateOptions(
       redirectURI: redirectURI,
-      responseType: "code",
-      scope: [
-        "openid",
-        "offline_access",
-        "https://authgear.com/scopes/full-access",
-      ],
       isSsoEnabled: isSsoEnabled,
-      codeChallenge: codeVerifier.codeChallenge,
+      state: state,
       prompt: prompt,
       uiLocales: uiLocales,
       colorScheme: colorScheme,
-      page: page,
       wechatRedirectURI: wechatRedirectURI,
-    );
-    final config = await _apiClient.fetchOIDCConfiguration();
-    final authenticationURL = Uri.parse(config.authorizationEndpoint)
-        .replace(queryParameters: oidcRequest.toQueryParameters());
+      page: page,
+    ));
     final resultURL = await native.authenticate(
-      url: authenticationURL.toString(),
-      redirectURI: redirectURI,
+      url: authRequest.url.toString(),
+      redirectURI: authRequest.redirectURI,
       preferEphemeral: !isSsoEnabled,
       wechatRedirectURI: wechatRedirectURI,
       onWechatRedirectURI: _onWechatRedirectURI,
@@ -155,7 +222,7 @@ class Authgear implements AuthgearHttpClientDelegate {
     return await _finishAuthentication(
         url: Uri.parse(resultURL),
         redirectURI: redirectURI,
-        codeVerifier: codeVerifier,
+        codeVerifier: authRequest.verifier,
         xDeviceInfo: xDeviceInfo);
   }
 

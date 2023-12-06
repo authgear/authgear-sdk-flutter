@@ -221,12 +221,10 @@ class Authgear implements AuthgearHttpClientDelegate {
       wechatRedirectURI: wechatRedirectURI,
       onWechatRedirectURI: _onWechatRedirectURI,
     );
-    final xDeviceInfo = await _getXDeviceInfo();
-    return await _finishAuthentication(
+    return await internalFinishAuthentication(
         url: Uri.parse(resultURL),
         redirectURI: redirectURI,
-        codeVerifier: authRequest.verifier,
-        xDeviceInfo: xDeviceInfo);
+        codeVerifier: authRequest.verifier);
   }
 
   Future<UserInfo> reauthenticate({
@@ -605,12 +603,10 @@ class Authgear implements AuthgearHttpClientDelegate {
       onWechatRedirectURI: _onWechatRedirectURI,
       preferEphemeral: !isSsoEnabled,
     );
-    final xDeviceInfo = await _getXDeviceInfo();
-    final userInfo = await _finishAuthentication(
+    final userInfo = await internalFinishAuthentication(
         url: Uri.parse(resultURL),
         redirectURI: redirectURI,
-        codeVerifier: codeVerifier,
-        xDeviceInfo: xDeviceInfo);
+        codeVerifier: codeVerifier);
     await _disableAnonymous();
     await disableBiometric();
     return userInfo;
@@ -745,12 +741,12 @@ class Authgear implements AuthgearHttpClientDelegate {
     return tokenResponse;
   }
 
-  Future<UserInfo> _finishAuthentication({
+  Future<UserInfo> internalFinishAuthentication({
     required Uri url,
     required String redirectURI,
     required CodeVerifier codeVerifier,
-    required String xDeviceInfo,
   }) async {
+    final xDeviceInfo = await _getXDeviceInfo();
     final tokenResponse = await _exchangeCode(
       url: url,
       redirectURI: redirectURI,

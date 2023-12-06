@@ -31,6 +31,18 @@ class AuthgearExperimental {
     final request = await authgear.internalCreateAuthenticateRequest(options);
     return AuthenticateRequest.fromInternal(request);
   }
+
+  Future<UserInfo> finishAuthentication({
+    required Uri url,
+    required AuthenticateRequest request,
+  }) async {
+    final userInfo = await authgear.internalFinishAuthentication(
+      url: url,
+      redirectURI: request.redirectURI,
+      codeVerifier: request._verifier,
+    );
+    return userInfo;
+  }
 }
 
 class AuthenticateRequest {

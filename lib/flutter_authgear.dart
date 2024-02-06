@@ -47,4 +47,8 @@ export 'src/exception.dart'
 export 'src/webview.dart'
     show
         WebView,
-        DefaultWebView;
+        DefaultWebView,
+        ModalPresentationStyle,
+        PlatformWebViewOptions,
+        PlatformWebViewOptionsIOS,
+        PlatformWebView;

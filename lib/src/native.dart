@@ -48,6 +48,28 @@ Future<String> openAuthorizeURL({
   }
 }
 
+Future<String> openAuthorizeURLWithWebView({
+  required String url,
+  required String redirectURI,
+  String? modalPresentationStyle,
+  String? backgroundColor,
+  String? navigationBarBackgroundColor,
+  String? navigationBarButtonTintColor,
+}) async {
+  try {
+    return await _channel.invokeMethod("openAuthorizeURLWithWebView", {
+      "url": url,
+      "redirectURI": redirectURI,
+      "modalPresentationStyle": modalPresentationStyle,
+      "backgroundColor": backgroundColor,
+      "navigationBarBackgroundColor": navigationBarBackgroundColor,
+      "navigationBarButtonTintColor": navigationBarButtonTintColor,
+    });
+  } on PlatformException catch (e) {
+    throw wrapException(e);
+  }
+}
+
 Future<void> openURL({
   required String url,
 }) async {

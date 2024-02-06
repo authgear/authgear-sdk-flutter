@@ -231,6 +231,7 @@ class _MyAppState extends State<MyApp> {
   bool _loading = false;
   bool _useTransientTokenStorage = false;
   bool _isSsoEnabled = false;
+  bool _useWebKitWebView = false;
   bool _isBiometricEnabled = false;
   bool get _unconfigured {
     return _authgear.endpoint != _endpointController.text ||
@@ -384,6 +385,18 @@ class _MyAppState extends State<MyApp> {
                       onChanged: (newValue) {
                         setState(() {
                           _isSsoEnabled = newValue;
+                        });
+                      },
+                    )),
+                Container(
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    child: SwitchWithLabel(
+                      label: "Use WebKit WebView",
+                      value: _useWebKitWebView,
+                      onChanged: (newValue) {
+                        setState(() {
+                          _useWebKitWebView = newValue;
                         });
                       },
                     )),
@@ -739,6 +752,15 @@ class _MyAppState extends State<MyApp> {
       clientID: clientID,
       isSsoEnabled: _isSsoEnabled,
       tokenStorage: _useTransientTokenStorage ? TransientTokenStorage() : null,
+      webView: _useWebKitWebView
+          ? PlatformWebView(
+              options: PlatformWebViewOptions(
+                ios: PlatformWebViewOptionsIOS(
+                  modalPresentationStyle: ModalPresentationStyle.fullScreen,
+                ),
+              ),
+            )
+          : null,
       sendWechatAuthRequest: _sendWechatAuthRequest,
     );
     _sub?.cancel();

@@ -44,3 +44,7 @@ export 'src/exception.dart'
         BiometricNoPasscodeException,
         BiometricNoEnrollmentException,
         BiometricLockoutException;
+export 'src/webview.dart'
+    show
+        WebView,
+        DefaultWebView;

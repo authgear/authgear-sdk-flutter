@@ -12,12 +12,9 @@ String _getNextWechatMethodChannelName() {
   return "flutter_authgear:wechat:$counter";
 }
 
-Future<String> authenticate({
-  required String url,
-  required String redirectURI,
-  required bool preferEphemeral,
+Future<void> registerWechatRedirectURI({
   required void Function(Uri) onWechatRedirectURI,
-  required String? wechatRedirectURI,
+  required String wechatRedirectURI,
 }) async {
   try {
     final wechatMethodChannelName = _getNextWechatMethodChannelName();
@@ -26,10 +23,7 @@ Future<String> authenticate({
       final uri = Uri.parse(call.arguments);
       onWechatRedirectURI(uri);
     });
-    return await _channel.invokeMethod("authenticate", {
-      "url": url,
-      "redirectURI": redirectURI,
-      "preferEphemeral": preferEphemeral,
+    return await _channel.invokeMethod("registerWechatRedirectURI", {
       "wechatRedirectURI": wechatRedirectURI,
       "wechatMethodChannel": wechatMethodChannelName,
     });
@@ -38,22 +32,28 @@ Future<String> authenticate({
   }
 }
 
-Future<void> openURL({
+Future<String> authenticate({
   required String url,
-  required void Function(Uri) onWechatRedirectURI,
-  required String? wechatRedirectURI,
+  required String redirectURI,
+  required bool preferEphemeral,
 }) async {
   try {
-    final wechatMethodChannelName = _getNextWechatMethodChannelName();
-    final wechatMethodChannel = MethodChannel(wechatMethodChannelName);
-    wechatMethodChannel.setMethodCallHandler((call) async {
-      final uri = Uri.parse(call.arguments);
-      onWechatRedirectURI(uri);
+    return await _channel.invokeMethod("authenticate", {
+      "url": url,
+      "redirectURI": redirectURI,
+      "preferEphemeral": preferEphemeral,
     });
+  } on PlatformException catch (e) {
+    throw wrapException(e);
+  }
+}
+
+Future<void> openURL({
+  required String url,
+}) async {
+  try {
     await _channel.invokeMethod("openURL", {
       "url": url,
-      "wechatRedirectURI": wechatRedirectURI,
-      "wechatMethodChannel": wechatMethodChannelName,
     });
   } on PlatformException catch (e) {
     throw wrapException(e);

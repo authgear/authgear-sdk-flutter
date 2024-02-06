@@ -125,8 +125,11 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
   }
 
   override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
-    this.storeWechat(call)
     when (call.method) {
+      "registerWechatRedirectURI" -> {
+        this.storeWechat(call)
+        result.success(null)
+      }
       "authenticate" -> {
         val url = Uri.parse(call.argument("url"))
         val redirectURI = Uri.parse(call.argument("redirectURI"))

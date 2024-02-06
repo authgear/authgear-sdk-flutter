@@ -26,8 +26,10 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
   }
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-    self.storeWechat(arguments: call.arguments)
     switch call.method {
+    case "registerWechatRedirectURI":
+      self.storeWechat(arguments: call.arguments)
+      result(nil)
     case "authenticate":
       let arguments = call.arguments as! Dictionary<String, AnyObject>
       let urlString = arguments["url"] as! String

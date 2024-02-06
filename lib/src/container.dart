@@ -255,12 +255,17 @@ class Authgear implements AuthgearHttpClientDelegate {
       wechatRedirectURI: wechatRedirectURI,
       page: page,
     ));
+
+    if (wechatRedirectURI != null) {
+      await native.registerWechatRedirectURI(
+          onWechatRedirectURI: _onWechatRedirectURI,
+          wechatRedirectURI: wechatRedirectURI);
+    }
+
     final resultURL = await native.authenticate(
       url: authRequest.url.toString(),
       redirectURI: authRequest.redirectURI,
       preferEphemeral: !isSsoEnabled,
-      wechatRedirectURI: wechatRedirectURI,
-      onWechatRedirectURI: _onWechatRedirectURI,
     );
     return await internalFinishAuthentication(
         url: Uri.parse(resultURL),
@@ -317,12 +322,16 @@ class Authgear implements AuthgearHttpClientDelegate {
     final request =
         await internalCreateReauthenticateRequest(idTokenHint, options);
 
+    if (wechatRedirectURI != null) {
+      await native.registerWechatRedirectURI(
+          onWechatRedirectURI: _onWechatRedirectURI,
+          wechatRedirectURI: wechatRedirectURI);
+    }
+
     final resultURL = await native.authenticate(
       url: request.url.toString(),
       redirectURI: redirectURI,
       preferEphemeral: !isSsoEnabled,
-      wechatRedirectURI: wechatRedirectURI,
-      onWechatRedirectURI: _onWechatRedirectURI,
     );
     final xDeviceInfo = await _getXDeviceInfo();
     return await _finishReauthentication(
@@ -387,10 +396,15 @@ class Authgear implements AuthgearHttpClientDelegate {
       redirectURI: url,
       wechatRedirectURI: wechatRedirectURI,
     );
+
+    if (wechatRedirectURI != null) {
+      await native.registerWechatRedirectURI(
+          onWechatRedirectURI: _onWechatRedirectURI,
+          wechatRedirectURI: wechatRedirectURI);
+    }
+
     await native.openURL(
       url: targetURL.toString(),
-      wechatRedirectURI: wechatRedirectURI,
-      onWechatRedirectURI: _onWechatRedirectURI,
     );
   }
 
@@ -667,11 +681,16 @@ class Authgear implements AuthgearHttpClientDelegate {
     final config = await _apiClient.fetchOIDCConfiguration();
     final authenticationURL = Uri.parse(config.authorizationEndpoint)
         .replace(queryParameters: oidcRequest.toQueryParameters());
+
+    if (wechatRedirectURI != null) {
+      await native.registerWechatRedirectURI(
+          onWechatRedirectURI: _onWechatRedirectURI,
+          wechatRedirectURI: wechatRedirectURI);
+    }
+
     final resultURL = await native.authenticate(
       url: authenticationURL.toString(),
       redirectURI: redirectURI,
-      wechatRedirectURI: wechatRedirectURI,
-      onWechatRedirectURI: _onWechatRedirectURI,
       preferEphemeral: !isSsoEnabled,
     );
     final userInfo = await internalFinishAuthentication(

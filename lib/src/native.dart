@@ -55,6 +55,8 @@ Future<String> openAuthorizeURLWithWebView({
   String? backgroundColor,
   String? navigationBarBackgroundColor,
   String? navigationBarButtonTintColor,
+  String? actionBarBackgroundColor,
+  String? actionBarButtonTintColor,
 }) async {
   try {
     return await _channel.invokeMethod("openAuthorizeURLWithWebView", {
@@ -64,6 +66,8 @@ Future<String> openAuthorizeURLWithWebView({
       "backgroundColor": backgroundColor,
       "navigationBarBackgroundColor": navigationBarBackgroundColor,
       "navigationBarButtonTintColor": navigationBarButtonTintColor,
+      "actionBarBackgroundColor": actionBarBackgroundColor,
+      "actionBarButtonTintColor": actionBarButtonTintColor,
     });
   } on PlatformException catch (e) {
     throw wrapException(e);

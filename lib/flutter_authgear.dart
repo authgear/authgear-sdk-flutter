@@ -51,4 +51,5 @@ export 'src/webview.dart'
         ModalPresentationStyle,
         PlatformWebViewOptions,
         PlatformWebViewOptionsIOS,
+        PlatformWebViewOptionsAndroid,
         PlatformWebView;

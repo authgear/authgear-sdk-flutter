@@ -56,11 +56,23 @@ class PlatformWebViewOptionsIOS {
   });
 }
 
+class PlatformWebViewOptionsAndroid {
+  final int? actionBarBackgroundColor;
+  final int? actionBarButtonTintColor;
+
+  PlatformWebViewOptionsAndroid({
+    this.actionBarBackgroundColor,
+    this.actionBarButtonTintColor,
+  });
+}
+
 class PlatformWebViewOptions {
   final PlatformWebViewOptionsIOS? ios;
+  final PlatformWebViewOptionsAndroid? android;
 
   PlatformWebViewOptions({
     this.ios,
+    this.android,
   });
 }
 
@@ -86,6 +98,10 @@ class PlatformWebView implements WebView {
           options?.ios?.navigationBarBackgroundColor?.toRadixString(16),
       navigationBarButtonTintColor:
           options?.ios?.navigationBarButtonTintColor?.toRadixString(16),
+      actionBarBackgroundColor:
+          options?.android?.actionBarBackgroundColor?.toRadixString(16),
+      actionBarButtonTintColor:
+          options?.android?.actionBarButtonTintColor?.toRadixString(16),
     );
   }
 }

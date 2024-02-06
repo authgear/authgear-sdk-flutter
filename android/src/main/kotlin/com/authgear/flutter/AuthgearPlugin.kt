@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageInfo
+import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Handler
@@ -32,7 +33,7 @@ import io.flutter.plugin.common.PluginRegistry
 import org.json.JSONObject
 import java.security.*
 import java.security.interfaces.RSAPublicKey
-import java.util.UUID
+import java.util.*
 
 
 class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginRegistry.ActivityResultListener {
@@ -143,6 +144,24 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
         }
         OAuthRedirectActivity.registerRedirectURI(redirectURI)
         val intent = OAuthCoordinatorActivity.createAuthorizationIntent(activity, url)
+        activity.startActivityForResult(intent, requestCode)
+      }
+      "openAuthorizeURLWithWebView" -> {
+        val url = Uri.parse(call.argument("url"))
+        val redirectURI = Uri.parse(call.argument("redirectURI"))
+        val actionBarBackgroundColor = this.readColorInt(call, "actionBarBackgroundColor")
+        val actionBarButtonTintColor = this.readColorInt(call, "actionBarButtonTintColor")
+        val options = WebKitWebViewActivity.Options(url, redirectURI)
+        options.actionBarBackgroundColor = actionBarBackgroundColor
+        options.actionBarButtonTintColor = actionBarButtonTintColor
+
+        val requestCode = startActivityHandles.push(StartActivityHandle(TAG_AUTHENTICATION, result))
+        val activity = activityBinding?.activity
+        if (activity == null) {
+          result.noActivity()
+          return
+        }
+        val intent = WebKitWebViewActivity.createIntent(activity, options)
         activity.startActivityForResult(intent, requestCode)
       }
       "openURL" -> {
@@ -783,6 +802,19 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
     signature.update(strToSign.toByteArray(Charsets.UTF_8))
     val sig = signature.sign()
     return "$strToSign.${sig.base64URLEncode()}"
+  }
+
+  private fun readColorInt(call: MethodCall, key: String): Int? {
+    val s: String? = call.argument<String?>(key)
+    if (s != null) {
+      val l = s.toLong(16)
+      val a = (l shr 24 and 0xff).toInt()
+      val r = (l shr 16 and 0xff).toInt()
+      val g = (l shr 8 and 0xff).toInt()
+      val b = (l and 0xff).toInt()
+      return Color.argb(a, r, g, b)
+    }
+    return null
   }
 }
 

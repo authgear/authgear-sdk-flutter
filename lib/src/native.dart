@@ -32,13 +32,13 @@ Future<void> registerWechatRedirectURI({
   }
 }
 
-Future<String> authenticate({
+Future<String> openAuthorizeURL({
   required String url,
   required String redirectURI,
   required bool preferEphemeral,
 }) async {
   try {
-    return await _channel.invokeMethod("authenticate", {
+    return await _channel.invokeMethod("openAuthorizeURL", {
       "url": url,
       "redirectURI": redirectURI,
       "preferEphemeral": preferEphemeral,

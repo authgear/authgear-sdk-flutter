@@ -130,7 +130,7 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
         this.storeWechat(call)
         result.success(null)
       }
-      "authenticate" -> {
+      "openAuthorizeURL" -> {
         val url = Uri.parse(call.argument("url"))
         val redirectURI = Uri.parse(call.argument("redirectURI"))
         // Custom tabs do not support incognito mode for now.

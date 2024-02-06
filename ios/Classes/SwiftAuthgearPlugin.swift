@@ -30,14 +30,14 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     case "registerWechatRedirectURI":
       self.storeWechat(arguments: call.arguments)
       result(nil)
-    case "authenticate":
+    case "openAuthorizeURL":
       let arguments = call.arguments as! Dictionary<String, AnyObject>
       let urlString = arguments["url"] as! String
       let redirectURIString = arguments["redirectURI"] as! String
       let preferEphemeral = arguments["preferEphemeral"] as! Bool
       let url = URL(string: urlString)!
       let redirectURI = URL(string: redirectURIString)!
-      self.authenticate(url: url, redirectURI: redirectURI, preferEphemeral: preferEphemeral, result: result)
+      self.openAuthorizeURL(url: url, redirectURI: redirectURI, preferEphemeral: preferEphemeral, result: result)
     case "openURL":
       let arguments = call.arguments as! Dictionary<String, AnyObject>
       let urlString = arguments["url"] as! String
@@ -155,7 +155,7 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     return true
   }
 
-  private func authenticate(url: URL, redirectURI: URL, preferEphemeral: Bool, result: @escaping FlutterResult) {
+  private func openAuthorizeURL(url: URL, redirectURI: URL, preferEphemeral: Bool, result: @escaping FlutterResult) {
     var sessionToKeepAlive: Any? = nil
     let completionHandler = { (url: URL?, error: Error?) in
       sessionToKeepAlive = nil

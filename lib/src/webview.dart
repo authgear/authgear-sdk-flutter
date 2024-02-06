@@ -15,7 +15,7 @@ class DefaultWebView implements WebView {
     required bool shareCookiesWithDeviceBrowser,
   }) {
     final preferEphemeral = !shareCookiesWithDeviceBrowser;
-    return native.authenticate(
+    return native.openAuthorizeURL(
       url: url,
       redirectURI: redirectURI,
       preferEphemeral: preferEphemeral,

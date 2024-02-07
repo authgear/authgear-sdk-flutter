@@ -43,14 +43,12 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
       let url = URL(string: arguments["url"] as! String)!
       let redirectURI = URL(string: arguments["redirectURI"] as! String)!
       let modalPresentationStyle = UIModalPresentationStyle.from(string: arguments["modalPresentationStyle"] as? String)
-      let backgroundColor = UIColor(argb: arguments["backgroundColor"] as? String)
       let navigationBarBackgroundColor = UIColor(argb: arguments["navigationBarBackgroundColor"] as? String)
       let navigationBarButtonTintColor = UIColor(argb: arguments["navigationBarButtonTintColor"] as? String)
       self.openAuthorizeURLWithWebView(
         url: url,
         redirectURI: redirectURI,
         modalPresentationStyle: modalPresentationStyle,
-        backgroundColor: backgroundColor,
         navigationBarBackgroundColor: navigationBarBackgroundColor,
         navigationBarButtonTintColor: navigationBarButtonTintColor,
         result: result
@@ -218,7 +216,6 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     url: URL,
     redirectURI: URL,
     modalPresentationStyle: UIModalPresentationStyle,
-    backgroundColor: UIColor?,
     navigationBarBackgroundColor: UIColor?,
     navigationBarButtonTintColor: UIColor?,
     result: @escaping FlutterResult
@@ -243,7 +240,6 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
           result(FlutterError.unreachable)
           return
       }
-      controller.backgroundColor = backgroundColor
       controller.navigationBarBackgroundColor = navigationBarBackgroundColor
       controller.navigationBarButtonTintColor = navigationBarButtonTintColor
       controller.modalPresentationStyle = modalPresentationStyle

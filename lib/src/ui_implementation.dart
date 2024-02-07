@@ -44,13 +44,11 @@ extension ModalPresentationStyleExtension on ModalPresentationStyle {
 
 class WebKitWebViewUIImplementationOptionsIOS {
   final ModalPresentationStyle? modalPresentationStyle;
-  final int? backgroundColor;
   final int? navigationBarBackgroundColor;
   final int? navigationBarButtonTintColor;
 
   WebKitWebViewUIImplementationOptionsIOS({
     this.modalPresentationStyle,
-    this.backgroundColor,
     this.navigationBarBackgroundColor,
     this.navigationBarButtonTintColor,
   });
@@ -93,7 +91,6 @@ class WebKitWebViewUIImplementation implements UIImplementation {
       url: url,
       redirectURI: redirectURI,
       modalPresentationStyle: options?.ios?.modalPresentationStyle?.value,
-      backgroundColor: options?.ios?.backgroundColor?.toRadixString(16),
       navigationBarBackgroundColor:
           options?.ios?.navigationBarBackgroundColor?.toRadixString(16),
       navigationBarButtonTintColor:

@@ -12,7 +12,6 @@ protocol AGWKWebViewControllerPresentationContextProviding: AnyObject {
 class AGWKWebViewController: UIViewController, WKNavigationDelegate {
     typealias CompletionHandler = (URL?, Error?) -> Void
     weak var presentationContextProvider: AGWKWebViewControllerPresentationContextProviding?
-    var backgroundColor: UIColor?
     var navigationBarBackgroundColor: UIColor?
     var navigationBarButtonTintColor: UIColor?
 
@@ -21,20 +20,6 @@ class AGWKWebViewController: UIViewController, WKNavigationDelegate {
     private var completionHandler: CompletionHandler?
     private let webView: WKWebView
     private var result: URL?
-
-    private var defaultBackgroundColor: UIColor {
-        get {
-            if #available(iOS 12.0, *) {
-                switch (self.traitCollection.userInterfaceStyle) {
-                case .dark:
-                    return UIColor.black
-                default:
-                    return UIColor.white
-                }
-            }
-            return UIColor.white
-        }
-    }
 
     init(url: URL, redirectURI: URL, completionHandler: @escaping CompletionHandler) {
         self.url = url
@@ -57,13 +42,6 @@ class AGWKWebViewController: UIViewController, WKNavigationDelegate {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        // Configure background color
-        if let backgroundColor = self.backgroundColor {
-            self.view.backgroundColor = backgroundColor
-        } else {
-            self.view.backgroundColor = self.defaultBackgroundColor
-        }
 
         // Configure layout
         self.view.addSubview(self.webView)

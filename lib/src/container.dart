@@ -12,7 +12,8 @@ import 'base64.dart';
 import 'id_token.dart';
 import 'experimental.dart';
 import 'native.dart' as native;
-import 'webview.dart' show WebView, DefaultWebView;
+import 'ui_implementation.dart'
+    show UIImplementation, DeviceBrowserUIImplementation;
 
 class SessionStateChangeEvent {
   final SessionStateChangeReason reason;
@@ -140,7 +141,7 @@ class Authgear implements AuthgearHttpClientDelegate {
 
   final TokenStorage _tokenStorage;
   final ContainerStorage _storage;
-  final WebView _webView;
+  final UIImplementation _uiImplementation;
   late final APIClient _apiClient;
   late final AuthgearExperimental experimental;
 
@@ -190,9 +191,9 @@ class Authgear implements AuthgearHttpClientDelegate {
     this.isSsoEnabled = false,
     this.sendWechatAuthRequest,
     TokenStorage? tokenStorage,
-    WebView? webView,
+    UIImplementation? uiImplementation,
   })  : _tokenStorage = tokenStorage ?? PersistentTokenStorage(),
-        _webView = webView ?? DefaultWebView(),
+        _uiImplementation = uiImplementation ?? DeviceBrowserUIImplementation(),
         _storage = PersistentContainerStorage() {
     final plainHttpClient = Client();
     final authgearHttpClient = AuthgearHttpClient(this, plainHttpClient);
@@ -266,7 +267,7 @@ class Authgear implements AuthgearHttpClientDelegate {
           wechatRedirectURI: wechatRedirectURI);
     }
 
-    final resultURL = await _webView.openAuthorizationURL(
+    final resultURL = await _uiImplementation.openAuthorizationURL(
       url: authRequest.url.toString(),
       redirectURI: authRequest.redirectURI,
       shareCookiesWithDeviceBrowser: isSsoEnabled,
@@ -332,7 +333,7 @@ class Authgear implements AuthgearHttpClientDelegate {
           wechatRedirectURI: wechatRedirectURI);
     }
 
-    final resultURL = await _webView.openAuthorizationURL(
+    final resultURL = await _uiImplementation.openAuthorizationURL(
       url: request.url.toString(),
       redirectURI: redirectURI,
       shareCookiesWithDeviceBrowser: isSsoEnabled,
@@ -692,7 +693,7 @@ class Authgear implements AuthgearHttpClientDelegate {
           wechatRedirectURI: wechatRedirectURI);
     }
 
-    final resultURL = await _webView.openAuthorizationURL(
+    final resultURL = await _uiImplementation.openAuthorizationURL(
       url: authenticationURL.toString(),
       redirectURI: redirectURI,
       shareCookiesWithDeviceBrowser: isSsoEnabled,

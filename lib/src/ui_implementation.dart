@@ -1,13 +1,13 @@
 import 'native.dart' as native;
 
-abstract class WebView {
+abstract class UIImplementation {
   Future<String> openAuthorizationURL(
       {required String url,
       required String redirectURI,
       required bool shareCookiesWithDeviceBrowser});
 }
 
-class DefaultWebView implements WebView {
+class DeviceBrowserUIImplementation implements UIImplementation {
   @override
   Future<String> openAuthorizationURL({
     required String url,
@@ -42,13 +42,13 @@ extension ModalPresentationStyleExtension on ModalPresentationStyle {
   }
 }
 
-class PlatformWebViewOptionsIOS {
+class WebKitWebViewUIImplementationOptionsIOS {
   final ModalPresentationStyle? modalPresentationStyle;
   final int? backgroundColor;
   final int? navigationBarBackgroundColor;
   final int? navigationBarButtonTintColor;
 
-  PlatformWebViewOptionsIOS({
+  WebKitWebViewUIImplementationOptionsIOS({
     this.modalPresentationStyle,
     this.backgroundColor,
     this.navigationBarBackgroundColor,
@@ -56,30 +56,30 @@ class PlatformWebViewOptionsIOS {
   });
 }
 
-class PlatformWebViewOptionsAndroid {
+class WebKitWebViewUIImplementationOptionsAndroid {
   final int? actionBarBackgroundColor;
   final int? actionBarButtonTintColor;
 
-  PlatformWebViewOptionsAndroid({
+  WebKitWebViewUIImplementationOptionsAndroid({
     this.actionBarBackgroundColor,
     this.actionBarButtonTintColor,
   });
 }
 
-class PlatformWebViewOptions {
-  final PlatformWebViewOptionsIOS? ios;
-  final PlatformWebViewOptionsAndroid? android;
+class WebKitWebViewUIImplementationOptions {
+  final WebKitWebViewUIImplementationOptionsIOS? ios;
+  final WebKitWebViewUIImplementationOptionsAndroid? android;
 
-  PlatformWebViewOptions({
+  WebKitWebViewUIImplementationOptions({
     this.ios,
     this.android,
   });
 }
 
-class PlatformWebView implements WebView {
-  final PlatformWebViewOptions? options;
+class WebKitWebViewUIImplementation implements UIImplementation {
+  final WebKitWebViewUIImplementationOptions? options;
 
-  PlatformWebView({
+  WebKitWebViewUIImplementation({
     this.options,
   });
 

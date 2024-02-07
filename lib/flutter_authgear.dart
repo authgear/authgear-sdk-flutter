@@ -44,12 +44,12 @@ export 'src/exception.dart'
         BiometricNoPasscodeException,
         BiometricNoEnrollmentException,
         BiometricLockoutException;
-export 'src/webview.dart'
+export 'src/ui_implementation.dart'
     show
-        WebView,
-        DefaultWebView,
+        UIImplementation,
+        DeviceBrowserUIImplementation,
         ModalPresentationStyle,
-        PlatformWebViewOptions,
-        PlatformWebViewOptionsIOS,
-        PlatformWebViewOptionsAndroid,
-        PlatformWebView;
+        WebKitWebViewUIImplementation,
+        WebKitWebViewUIImplementationOptions,
+        WebKitWebViewUIImplementationOptionsIOS,
+        WebKitWebViewUIImplementationOptionsAndroid;

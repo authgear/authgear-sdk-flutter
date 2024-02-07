@@ -752,10 +752,10 @@ class _MyAppState extends State<MyApp> {
       clientID: clientID,
       isSsoEnabled: _isSsoEnabled,
       tokenStorage: _useTransientTokenStorage ? TransientTokenStorage() : null,
-      webView: _useWebKitWebView
-          ? PlatformWebView(
-              options: PlatformWebViewOptions(
-                ios: PlatformWebViewOptionsIOS(
+      uiImplementation: _useWebKitWebView
+          ? WebKitWebViewUIImplementation(
+              options: WebKitWebViewUIImplementationOptions(
+                ios: WebKitWebViewUIImplementationOptionsIOS(
                   modalPresentationStyle: ModalPresentationStyle.fullScreen,
                 ),
               ),

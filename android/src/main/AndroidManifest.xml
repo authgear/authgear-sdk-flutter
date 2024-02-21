@@ -16,8 +16,7 @@
         android:name=".WebKitWebViewActivity"
         android:exported="false"
         android:launchMode="singleTask"
-        android:theme="@style/AuthgearTheme"
-        android:configChanges="orientation|screenSize" />
+        android:theme="@style/AuthgearTheme" />
   </application>
   <queries>
     <package android:name="com.android.chrome" />

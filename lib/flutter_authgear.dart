@@ -44,3 +44,12 @@ export 'src/exception.dart'
         BiometricNoPasscodeException,
         BiometricNoEnrollmentException,
         BiometricLockoutException;
+export 'src/ui_implementation.dart'
+    show
+        UIImplementation,
+        DeviceBrowserUIImplementation,
+        ModalPresentationStyle,
+        WebKitWebViewUIImplementation,
+        WebKitWebViewUIImplementationOptions,
+        WebKitWebViewUIImplementationOptionsIOS,
+        WebKitWebViewUIImplementationOptionsAndroid;

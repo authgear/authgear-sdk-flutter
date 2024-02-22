@@ -12,6 +12,8 @@ import 'base64.dart';
 import 'id_token.dart';
 import 'experimental.dart';
 import 'native.dart' as native;
+import 'ui_implementation.dart'
+    show UIImplementation, DeviceBrowserUIImplementation;
 
 class SessionStateChangeEvent {
   final SessionStateChangeReason reason;
@@ -139,6 +141,7 @@ class Authgear implements AuthgearHttpClientDelegate {
 
   final TokenStorage _tokenStorage;
   final ContainerStorage _storage;
+  final UIImplementation _uiImplementation;
   late final APIClient _apiClient;
   late final AuthgearExperimental experimental;
 
@@ -188,7 +191,9 @@ class Authgear implements AuthgearHttpClientDelegate {
     this.isSsoEnabled = false,
     this.sendWechatAuthRequest,
     TokenStorage? tokenStorage,
+    UIImplementation? uiImplementation,
   })  : _tokenStorage = tokenStorage ?? PersistentTokenStorage(),
+        _uiImplementation = uiImplementation ?? DeviceBrowserUIImplementation(),
         _storage = PersistentContainerStorage() {
     final plainHttpClient = Client();
     final authgearHttpClient = AuthgearHttpClient(this, plainHttpClient);
@@ -255,12 +260,17 @@ class Authgear implements AuthgearHttpClientDelegate {
       wechatRedirectURI: wechatRedirectURI,
       page: page,
     ));
-    final resultURL = await native.authenticate(
+
+    if (wechatRedirectURI != null) {
+      await native.registerWechatRedirectURI(
+          onWechatRedirectURI: _onWechatRedirectURI,
+          wechatRedirectURI: wechatRedirectURI);
+    }
+
+    final resultURL = await _uiImplementation.openAuthorizationURL(
       url: authRequest.url.toString(),
       redirectURI: authRequest.redirectURI,
-      preferEphemeral: !isSsoEnabled,
-      wechatRedirectURI: wechatRedirectURI,
-      onWechatRedirectURI: _onWechatRedirectURI,
+      shareCookiesWithDeviceBrowser: isSsoEnabled,
     );
     return await internalFinishAuthentication(
         url: Uri.parse(resultURL),
@@ -317,12 +327,16 @@ class Authgear implements AuthgearHttpClientDelegate {
     final request =
         await internalCreateReauthenticateRequest(idTokenHint, options);
 
-    final resultURL = await native.authenticate(
+    if (wechatRedirectURI != null) {
+      await native.registerWechatRedirectURI(
+          onWechatRedirectURI: _onWechatRedirectURI,
+          wechatRedirectURI: wechatRedirectURI);
+    }
+
+    final resultURL = await _uiImplementation.openAuthorizationURL(
       url: request.url.toString(),
       redirectURI: redirectURI,
-      preferEphemeral: !isSsoEnabled,
-      wechatRedirectURI: wechatRedirectURI,
-      onWechatRedirectURI: _onWechatRedirectURI,
+      shareCookiesWithDeviceBrowser: isSsoEnabled,
     );
     final xDeviceInfo = await _getXDeviceInfo();
     return await _finishReauthentication(
@@ -387,10 +401,15 @@ class Authgear implements AuthgearHttpClientDelegate {
       redirectURI: url,
       wechatRedirectURI: wechatRedirectURI,
     );
+
+    if (wechatRedirectURI != null) {
+      await native.registerWechatRedirectURI(
+          onWechatRedirectURI: _onWechatRedirectURI,
+          wechatRedirectURI: wechatRedirectURI);
+    }
+
     await native.openURL(
       url: targetURL.toString(),
-      wechatRedirectURI: wechatRedirectURI,
-      onWechatRedirectURI: _onWechatRedirectURI,
     );
   }
 
@@ -667,12 +686,17 @@ class Authgear implements AuthgearHttpClientDelegate {
     final config = await _apiClient.fetchOIDCConfiguration();
     final authenticationURL = Uri.parse(config.authorizationEndpoint)
         .replace(queryParameters: oidcRequest.toQueryParameters());
-    final resultURL = await native.authenticate(
+
+    if (wechatRedirectURI != null) {
+      await native.registerWechatRedirectURI(
+          onWechatRedirectURI: _onWechatRedirectURI,
+          wechatRedirectURI: wechatRedirectURI);
+    }
+
+    final resultURL = await _uiImplementation.openAuthorizationURL(
       url: authenticationURL.toString(),
       redirectURI: redirectURI,
-      wechatRedirectURI: wechatRedirectURI,
-      onWechatRedirectURI: _onWechatRedirectURI,
-      preferEphemeral: !isSsoEnabled,
+      shareCookiesWithDeviceBrowser: isSsoEnabled,
     );
     final userInfo = await internalFinishAuthentication(
         url: Uri.parse(resultURL),

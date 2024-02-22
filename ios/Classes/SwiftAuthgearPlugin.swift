@@ -4,7 +4,7 @@ import AuthenticationServices
 import LocalAuthentication
 import CommonCrypto
 
-public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPresentationContextProviding {
+public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPresentationContextProviding, AGWKWebViewControllerPresentationContextProviding {
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "flutter_authgear", binaryMessenger: registrar.messenger())
     let instance = SwiftAuthgearPlugin(binaryMessenger: registrar.messenger())
@@ -26,16 +26,33 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
   }
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-    self.storeWechat(arguments: call.arguments)
     switch call.method {
-    case "authenticate":
+    case "registerWechatRedirectURI":
+      self.storeWechat(arguments: call.arguments)
+      result(nil)
+    case "openAuthorizeURL":
       let arguments = call.arguments as! Dictionary<String, AnyObject>
       let urlString = arguments["url"] as! String
       let redirectURIString = arguments["redirectURI"] as! String
       let preferEphemeral = arguments["preferEphemeral"] as! Bool
       let url = URL(string: urlString)!
       let redirectURI = URL(string: redirectURIString)!
-      self.authenticate(url: url, redirectURI: redirectURI, preferEphemeral: preferEphemeral, result: result)
+      self.openAuthorizeURL(url: url, redirectURI: redirectURI, preferEphemeral: preferEphemeral, result: result)
+    case "openAuthorizeURLWithWebView":
+      let arguments = call.arguments as! Dictionary<String, AnyObject>
+      let url = URL(string: arguments["url"] as! String)!
+      let redirectURI = URL(string: arguments["redirectURI"] as! String)!
+      let modalPresentationStyle = UIModalPresentationStyle.from(string: arguments["modalPresentationStyle"] as? String)
+      let navigationBarBackgroundColor = UIColor(argb: arguments["navigationBarBackgroundColor"] as? String)
+      let navigationBarButtonTintColor = UIColor(argb: arguments["navigationBarButtonTintColor"] as? String)
+      self.openAuthorizeURLWithWebView(
+        url: url,
+        redirectURI: redirectURI,
+        modalPresentationStyle: modalPresentationStyle,
+        navigationBarBackgroundColor: navigationBarBackgroundColor,
+        navigationBarButtonTintColor: navigationBarButtonTintColor,
+        result: result
+      )
     case "openURL":
       let arguments = call.arguments as! Dictionary<String, AnyObject>
       let urlString = arguments["url"] as! String
@@ -153,7 +170,7 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     return true
   }
 
-  private func authenticate(url: URL, redirectURI: URL, preferEphemeral: Bool, result: @escaping FlutterResult) {
+  private func openAuthorizeURL(url: URL, redirectURI: URL, preferEphemeral: Bool, result: @escaping FlutterResult) {
     var sessionToKeepAlive: Any? = nil
     let completionHandler = { (url: URL?, error: Error?) in
       sessionToKeepAlive = nil
@@ -193,6 +210,41 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     } else {
       result(FlutterError.unsupported)
     }
+  }
+
+  private func openAuthorizeURLWithWebView(
+    url: URL,
+    redirectURI: URL,
+    modalPresentationStyle: UIModalPresentationStyle,
+    navigationBarBackgroundColor: UIColor?,
+    navigationBarButtonTintColor: UIColor?,
+    result: @escaping FlutterResult
+  ) {
+      let controller = AGWKWebViewController(url: url, redirectURI: redirectURI) { resultURL, error in
+          if let error = error {
+              let nsError = error as NSError
+              if nsError.domain == AGWKWebViewControllerErrorDomain && nsError.code == AGWKWebViewControllerErrorCodeCanceledLogin {
+                  result(FlutterError.cancel)
+                  return
+              }
+
+              self.handleError(result: result, error: error)
+              return
+          }
+
+          if let resultURL = resultURL {
+            result(resultURL.absoluteString)
+            return
+          }
+
+          result(FlutterError.unreachable)
+          return
+      }
+      controller.navigationBarBackgroundColor = navigationBarBackgroundColor
+      controller.navigationBarButtonTintColor = navigationBarButtonTintColor
+      controller.modalPresentationStyle = modalPresentationStyle
+      controller.presentationContextProvider = self
+      controller.start()
   }
 
   private func openURL(url: URL, result: @escaping FlutterResult) {
@@ -766,6 +818,10 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     UIApplication.shared.windows.filter { $0.isKeyWindow }.first!
   }
 
+  func presentationAnchor(for: AGWKWebViewController) -> UIWindow {
+    UIApplication.shared.windows.filter { $0.isKeyWindow }.first!
+  }
+
   private func handleError(result: FlutterResult, error: Error) {
     let nsError = error as NSError
     result(FlutterError(
@@ -902,4 +958,38 @@ fileprivate extension UIUserInterfaceIdiom {
       return "unknown"
     }
   }
+}
+
+fileprivate extension UIModalPresentationStyle {
+    static func from(string: String?) -> UIModalPresentationStyle {
+        if let string = string {
+            switch string {
+            case "fullScreen":
+                return .fullScreen
+            case "pageSheet":
+                return .pageSheet
+            default:
+                break
+            }
+        }
+        if #available(iOS 13.0, *) {
+            return .automatic
+        } else {
+            return .fullScreen
+        }
+    }
+}
+
+fileprivate extension UIColor {
+    convenience init?(argb: String?) {
+        guard let argb = argb else {
+            return nil
+        }
+        let argbInt = UInt32(argb, radix: 16)!
+        let a = CGFloat((argbInt >> 24) & 0xFF) / 255.0
+        let r = CGFloat((argbInt >> 16) & 0xFF) / 255.0
+        let g = CGFloat((argbInt >> 8) & 0xFF) / 255.0
+        let b = CGFloat(argbInt & 0xFF) / 255.0
+        self.init(red: r, green: g, blue: b, alpha: a)
+    }
 }

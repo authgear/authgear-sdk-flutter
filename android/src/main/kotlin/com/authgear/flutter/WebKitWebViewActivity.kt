@@ -9,9 +9,12 @@ import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Message
 import android.view.Menu
 import android.view.MenuItem
 import android.webkit.*
+import android.webkit.WebView.HitTestResult.SRC_ANCHOR_TYPE
+import android.webkit.WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE
 import androidx.annotation.*
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
@@ -135,6 +138,35 @@ class WebKitWebViewActivity: AppCompatActivity() {
             this.activity.startActivityForResult(intent, requestCode)
             return true
         }
+
+        override fun onCreateWindow(
+            view: WebView?,
+            isDialog: Boolean,
+            isUserGesture: Boolean,
+            resultMsg: Message?
+        ): Boolean {
+            if (view == null) return false
+            val result = view.hitTestResult
+            return when (result.type) {
+                SRC_IMAGE_ANCHOR_TYPE -> {
+                    // ref: https://pacheco.dev/posts/android/webview-image-anchor/
+                    val handler = view.handler
+                    val message = handler.obtainMessage()
+                    view.requestFocusNodeHref(message)
+                    val url = message.data.getString("url") ?: return false
+                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                    view.context.startActivity(browserIntent)
+                    return true
+                }
+                SRC_ANCHOR_TYPE -> {
+                    val data = result.extra ?: return false
+                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(data))
+                    view.context.startActivity(browserIntent)
+                    return true
+                }
+                else -> false
+            }
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -163,6 +195,7 @@ class WebKitWebViewActivity: AppCompatActivity() {
 
         // Configure web view.
         this.mWebView = WebView(this)
+        this.mWebView.settings.setSupportMultipleWindows(true)
         this.setContentView(this.mWebView)
         this.mWebView.setWebViewClient(MyWebViewClient(this))
         this.mWebView.setWebChromeClient(MyWebChromeClient(this))

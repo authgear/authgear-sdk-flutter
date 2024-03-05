@@ -156,13 +156,13 @@ class WebKitWebViewActivity: AppCompatActivity() {
                     val url = message.data.getString("url") ?: return false
                     val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                     view.context.startActivity(browserIntent)
-                    return true
+                    return false
                 }
                 SRC_ANCHOR_TYPE -> {
                     val data = result.extra ?: return false
                     val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(data))
                     view.context.startActivity(browserIntent)
-                    return true
+                    return false
                 }
                 else -> false
             }

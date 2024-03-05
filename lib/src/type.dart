@@ -78,11 +78,19 @@ class UserInfoAddress {
         country = json["country"];
 }
 
+List<String>? parseRoles(dynamic roles) {
+  if (roles is List) {
+    return roles.cast<String>();
+  }
+  return null;
+}
+
 class UserInfo {
   final String sub;
   final bool isAnonymous;
   final bool isVerified;
   final bool canReauthenticate;
+  final List<String>? roles;
 
   final Map<String, dynamic> raw;
   final Map<String, dynamic> customAttributes;
@@ -112,6 +120,7 @@ class UserInfo {
         isVerified = json["https://authgear.com/claims/user/is_verified"],
         canReauthenticate =
             json["https://authgear.com/claims/user/can_reauthenticate"],
+        roles = parseRoles(json["https://authgear.com/claims/user/roles"]),
         raw = json,
         customAttributes = json["custom_attributes"] ?? {},
         email = json["email"],

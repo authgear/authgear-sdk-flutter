@@ -196,11 +196,11 @@ class WebKitWebViewActivity: AppCompatActivity() {
         // Configure web view.
         this.mWebView = WebView(this)
         this.mWebView.settings.setSupportMultipleWindows(true)
+        this.mWebView.settings.domStorageEnabled = true
+        this.mWebView.settings.javaScriptEnabled = true
         this.setContentView(this.mWebView)
         this.mWebView.setWebViewClient(MyWebViewClient(this))
         this.mWebView.setWebChromeClient(MyWebChromeClient(this))
-        val webSettings: WebSettings = this.mWebView.getSettings()
-        webSettings.javaScriptEnabled = true
 
         if (savedInstanceState == null) {
             this.mWebView.loadUrl(options.url.toString())

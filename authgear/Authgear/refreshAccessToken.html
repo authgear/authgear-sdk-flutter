@@ -90,7 +90,7 @@ Future&lt;void&gt; refreshAccessToken() async {
 
   final xDeviceInfo = await _getXDeviceInfo();
   final tokenRequest = OIDCTokenRequest(
-    grantType: &quot;refresh_token&quot;,
+    grantType: GrantType.refreshToken,
     clientID: clientID,
     refreshToken: refreshToken,
     xDeviceInfo: xDeviceInfo,

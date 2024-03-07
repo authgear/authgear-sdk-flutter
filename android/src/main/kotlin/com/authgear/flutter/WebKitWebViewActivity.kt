@@ -78,6 +78,21 @@ class WebKitWebViewActivity: AppCompatActivity() {
     private class MyWebViewClient constructor(private val activity: WebKitWebViewActivity) :
         WebViewClient() {
 
+        companion object {
+            private const val USERSCRIPT_USER_SELECT_NONE = "document.documentElement.style.webkitUserSelect='none';document.documentElement.style.userSelect='none';";
+        }
+
+        override fun onPageFinished(view: WebView?, url: String?) {
+            super.onPageFinished(view, url)
+            // android.webkit.view does not have WKUserContentController that allows us to inject userscript.
+            // onPageFinished will be called for each navigation.
+            // So it can be used as a replacement of WKUserContentController to allow us to
+            // run a script for every page.
+            // The caveat is that the script is run in the main frame only.
+            // But we do not actually use iframes so it does not matter.
+            view?.evaluateJavascript(USERSCRIPT_USER_SELECT_NONE, null);
+        }
+
         @TargetApi(Build.VERSION_CODES.N)
         override fun shouldOverrideUrlLoading(
             view: WebView?,

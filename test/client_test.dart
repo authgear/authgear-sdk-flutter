@@ -8,7 +8,7 @@ void main() {
     final r = OIDCAuthenticationRequest(
       clientID: "clientID",
       redirectURI: "http://host/path",
-      responseType: "code",
+      responseType: ResponseType.code,
       scope: ["openid", "email"],
       isSsoEnabled: false,
       codeChallenge: "codeChallenge",
@@ -30,7 +30,7 @@ void main() {
 
   test("OIDCTokenRequest", () {
     final r = OIDCTokenRequest(
-      grantType: "authorization_code",
+      grantType: GrantType.authorizationCode,
       clientID: "clientID",
       code: "code",
       redirectURI: "http://host/path",

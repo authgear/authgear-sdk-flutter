@@ -191,7 +191,7 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
         return
       }
 
-      result(FlutterError.unreachable)
+      result(FlutterError.cancel)
       return
     }
 
@@ -237,7 +237,7 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
             return
           }
 
-          result(FlutterError.unreachable)
+          result(FlutterError.cancel)
           return
       }
       controller.navigationBarBackgroundColor = navigationBarBackgroundColor
@@ -263,13 +263,13 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
         return
       }
 
-      result(FlutterError.unreachable)
+      result(FlutterError.cancel)
       return
     }
     if #available(iOS 12, *) {
       let session = ASWebAuthenticationSession(
         url: url,
-        callbackURLScheme: "nocallback",
+        callbackURLScheme: "authgearsdk",
         completionHandler: completionHandler
       )
       if #available(iOS 13, *) {
@@ -895,10 +895,6 @@ fileprivate extension NSError {
 }
 
 fileprivate extension FlutterError {
-  static var unreachable: FlutterError {
-    return FlutterError(code: "UNREACHABLE", message: "unreachable", details: nil)
-  }
-
   static var cancel: FlutterError {
     return FlutterError(code: "CANCEL", message: "cancel", details: nil)
   }

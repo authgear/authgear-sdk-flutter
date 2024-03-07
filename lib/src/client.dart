@@ -8,7 +8,7 @@ import 'type.dart';
 class OIDCAuthenticationRequest {
   final String clientID;
   final String redirectURI;
-  final String responseType;
+  final ResponseType responseType;
   final bool isSsoEnabled;
   final List<String> scope;
   final String? codeChallenge;
@@ -21,6 +21,7 @@ class OIDCAuthenticationRequest {
   final int? maxAge;
   final AuthenticationPage? page;
   final String? wechatRedirectURI;
+  final SettingsAction? settingsAction;
 
   OIDCAuthenticationRequest({
     required this.clientID,
@@ -38,11 +39,12 @@ class OIDCAuthenticationRequest {
     this.maxAge,
     this.page,
     this.wechatRedirectURI,
+    this.settingsAction,
   });
 
   Map<String, String> toQueryParameters() {
     final q = {
-      "response_type": responseType,
+      "response_type": responseType.value,
       "client_id": clientID,
       "redirect_uri": redirectURI,
       "scope": scope.join(" "),
@@ -115,12 +117,17 @@ class OIDCAuthenticationRequest {
       q["x_wechat_redirect_uri"] = wechatRedirectURI;
     }
 
+    final settingsAction = this.settingsAction;
+    if (settingsAction != null) {
+      q["x_settings_action"] = settingsAction.value;
+    }
+
     return q;
   }
 }
 
 class OIDCTokenRequest {
-  final String grantType;
+  final GrantType grantType;
   final String clientID;
   final String? code;
   final String? redirectURI;
@@ -145,7 +152,7 @@ class OIDCTokenRequest {
   Map<String, String> toQueryParameters() {
     final q = {
       "client_id": clientID,
-      "grant_type": grantType,
+      "grant_type": grantType.value,
     };
 
     final code = this.code;

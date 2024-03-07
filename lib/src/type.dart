@@ -50,6 +50,67 @@ enum ColorScheme {
   dark,
 }
 
+enum ResponseType {
+  code,
+  settingsAction,
+  none,
+}
+
+extension ResponseTypeExtension on ResponseType {
+  String get value {
+    switch (this) {
+      case ResponseType.code:
+        return "code";
+      case ResponseType.settingsAction:
+        return "urn:authgear:params:oauth:response-type:settings-action";
+      case ResponseType.none:
+        return "none";
+    }
+  }
+}
+
+enum GrantType {
+  authorizationCode,
+  refreshToken,
+  anonymous,
+  biometric,
+  idToken,
+  app2app,
+  settingsAction,
+}
+
+extension GrantTypeExtension on GrantType {
+  String get value {
+    switch (this) {
+      case GrantType.authorizationCode:
+        return "authorization_code";
+      case GrantType.refreshToken:
+        return "refresh_token";
+      case GrantType.anonymous:
+        return "urn:authgear:params:oauth:grant-type:anonymous-request";
+      case GrantType.biometric:
+        return "urn:authgear:params:oauth:grant-type:biometric-request";
+      case GrantType.idToken:
+        return "urn:authgear:params:oauth:grant-type:id-token";
+      case GrantType.app2app:
+        return "urn:authgear:params:oauth:grant-type:app2app-request";
+      case GrantType.settingsAction:
+        return "urn:authgear:params:oauth:grant-type:settings-action";
+    }
+  }
+}
+
+enum SettingsAction { changePassword }
+
+extension SettingsActionExtension on SettingsAction {
+  String get value {
+    switch (this) {
+      case SettingsAction.changePassword:
+        return "change_password";
+    }
+  }
+}
+
 extension SettingsPageExtension on SettingsPage {
   String get path {
     switch (this) {

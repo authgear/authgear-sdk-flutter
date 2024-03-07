@@ -518,6 +518,16 @@ class _MyAppState extends State<MyApp> {
                 SessionStateButton(
                   sessionState: _authgear.sessionState,
                   targetState: SessionState.authenticated,
+                  label: "Change Password",
+                  onPressed: _unconfigured || _loading
+                      ? null
+                      : () {
+                          _onPressChangePassword(context);
+                        },
+                ),
+                SessionStateButton(
+                  sessionState: _authgear.sessionState,
+                  targetState: SessionState.authenticated,
                   label: "Show auth_time",
                   onPressed: _unconfigured || _loading
                       ? null
@@ -796,6 +806,25 @@ class _MyAppState extends State<MyApp> {
       });
       await _authgear.open(
         page: SettingsPage.settings,
+        colorScheme: _getColorScheme(context),
+        wechatRedirectURI: wechatRedirectURI,
+      );
+    } catch (e) {
+      onError(context, e);
+    } finally {
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _onPressChangePassword(BuildContext context) async {
+    try {
+      setState(() {
+        _loading = true;
+      });
+      await _authgear.changePassword(
+        redirectURI: redirectURI,
         colorScheme: _getColorScheme(context),
         wechatRedirectURI: wechatRedirectURI,
       );

@@ -986,7 +986,6 @@ class Authgear implements AuthgearHttpClientDelegate {
       xDeviceInfo: xDeviceInfo,
       grantType: GrantType.settingsAction,
     );
-    await disableBiometric();
   }
 
   Future<UserInfo> _finishReauthentication({

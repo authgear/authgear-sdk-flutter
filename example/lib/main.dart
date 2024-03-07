@@ -7,7 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart'
 import 'package:flutter_authgear/flutter_authgear.dart';
 
 const redirectURI = "com.authgear.exampleapp.flutter://host/path";
-const settingsActionRedirectURI = "com.authgear.exampleapp.flutter://host/after-changing-password";
 var wechatRedirectURI = "";
 
 const _nativeMethodChannel = MethodChannel("example");
@@ -825,7 +824,7 @@ class _MyAppState extends State<MyApp> {
         _loading = true;
       });
       await _authgear.changePassword(
-        redirectURI: settingsActionRedirectURI,
+        redirectURI: redirectURI,
         colorScheme: _getColorScheme(context),
         wechatRedirectURI: wechatRedirectURI,
       );

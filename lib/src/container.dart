@@ -157,6 +157,7 @@ class SettingsActionOptions {
         "https://authgear.com/scopes/full-access",
       ],
       isSsoEnabled: false,
+      prompt: [PromptOption.none],
       codeChallenge: verifier.codeChallenge,
       uiLocales: uiLocales,
       colorScheme: colorScheme,

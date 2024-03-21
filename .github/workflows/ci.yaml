@@ -11,6 +11,51 @@ on:
     - '!gh-pages'
 
 jobs:
+  test-ios:
+    runs-on: macos-13
+    if: ${{ github.event_name == 'pull_request' }}
+    defaults:
+      run:
+        working-directory: "./example"
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 16
+    - uses: subosito/flutter-action@v2
+      with:
+        # Use the latest stable release
+        flutter-version: '3.x'
+        channel: 'stable'
+    - run: flutter pub get
+    - run: flutter test
+    - run: flutter analyze --no-fatal-infos
+    - run: dart format --set-exit-if-changed lib
+    - run: flutter build ipa --no-codesign
+
+  test-android:
+    runs-on: macos-12
+    if: ${{ github.event_name == 'pull_request' }}
+    defaults:
+      run:
+        working-directory: "./example"
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 16
+    - uses: subosito/flutter-action@v2
+      with:
+        # Use the latest stable release
+        flutter-version: '3.x'
+        channel: 'stable'
+    - run: echo "$ANDROID_HOME/tools/bin" >> $GITHUB_PATH
+    - run: flutter pub get
+    - run: flutter test
+    - run: flutter analyze --no-fatal-infos
+    - run: dart format --set-exit-if-changed lib
+    - run: flutter build apk --debug
+
   deploy:
     runs-on: ubuntu-22.04
     steps:
@@ -36,8 +81,9 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./doc/api
+
   deploy-ios:
-    runs-on: macos-12
+    runs-on: macos-13
     needs: "deploy"
     if: ${{ github.ref == 'refs/heads/main' }}
     defaults:

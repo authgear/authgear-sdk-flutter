@@ -11,6 +11,56 @@ on:
     - '!gh-pages'
 
 jobs:
+  test-ios:
+    runs-on: macos-13
+    if: ${{ github.event_name == 'pull_request' }}
+    defaults:
+      run:
+        working-directory: "./example"
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 16
+    - run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
+    - uses: subosito/flutter-action@v2
+      with:
+        # Use the latest stable release
+        flutter-version: '3.x'
+        channel: 'stable'
+    - run: flutter pub get
+    - run: flutter test
+    - run: flutter analyze --no-fatal-infos
+    - run: dart format --set-exit-if-changed lib
+    - run: flutter build ipa --no-codesign
+
+  test-android:
+    runs-on: macos-13
+    if: ${{ github.event_name == 'pull_request' }}
+    defaults:
+      run:
+        working-directory: "./example"
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 16
+    # https://github.com/actions/runner-images/blob/main/images/macos/macos-13-Readme.md#java
+    - name: Set java version
+      run: |
+        echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
+    - uses: subosito/flutter-action@v2
+      with:
+        # Use the latest stable release
+        flutter-version: '3.x'
+        channel: 'stable'
+    - run: echo "$ANDROID_HOME/tools/bin" >> $GITHUB_PATH
+    - run: flutter pub get
+    - run: flutter test
+    - run: flutter analyze --no-fatal-infos
+    - run: dart format --set-exit-if-changed lib
+    - run: flutter build apk --debug
+
   deploy:
     runs-on: ubuntu-22.04
     steps:
@@ -36,8 +86,9 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./doc/api
+
   deploy-ios:
-    runs-on: macos-12
+    runs-on: macos-13
     needs: "deploy"
     if: ${{ github.ref == 'refs/heads/main' }}
     defaults:
@@ -48,6 +99,7 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: 16
+    - run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
     - run: npm install -g appcenter-cli
     - uses: subosito/flutter-action@v2
       with:
@@ -89,7 +141,7 @@ jobs:
       run: appcenter distribute release --debug --silent --file "./build/ios/ipa/Authgear Flutter.ipa" --store "App Store Connect Users" --app "Oursky/Authgear-Demo-Flutter-iOS" --release-notes "no release notes"
 
   deploy-android:
-    runs-on: macos-12
+    runs-on: macos-13
     needs: "deploy"
     if: ${{ github.ref == 'refs/heads/main' }}
     defaults:
@@ -100,6 +152,10 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: 16
+    # https://github.com/actions/runner-images/blob/main/images/macos/macos-13-Readme.md#java
+    - name: Set java version
+      run: |
+        echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
     - run: npm install -g appcenter-cli
     - uses: subosito/flutter-action@v2
       with:

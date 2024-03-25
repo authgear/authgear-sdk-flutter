@@ -172,7 +172,7 @@ jobs:
       run: |
         KEY_STORE_PATH=./android/app/keystore.jks
 
-        echo -n "$ANDROID_KEY_STORE_BASE64" | base64 --decode --output "$KEY_STORE_PATH"
+        echo -n "$ANDROID_KEY_STORE_BASE64" | base64 --decode -o "$KEY_STORE_PATH"
     - name: Build .apk
       env:
         STORE_PASSWORD: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}

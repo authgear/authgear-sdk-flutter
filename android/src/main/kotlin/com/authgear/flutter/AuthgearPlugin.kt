@@ -249,7 +249,7 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
   }
 
   private fun getDeviceInfo(result: Result) {
-    var baseOS = ""
+    var baseOS: String? = ""
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
       if (Build.VERSION.BASE_OS != null) {
         baseOS = Build.VERSION.BASE_OS
@@ -261,21 +261,21 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
       previewSDKInt = Build.VERSION.PREVIEW_SDK_INT.toString()
     }
 
-    var releaseOrCodename = ""
+    var releaseOrCodename: String? = ""
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
       if (Build.VERSION.RELEASE_OR_CODENAME != null) {
         releaseOrCodename = Build.VERSION.RELEASE_OR_CODENAME
       }
     }
 
-    var securityPatch = ""
+    var securityPatch: String? = ""
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
       if (Build.VERSION.SECURITY_PATCH != null) {
         securityPatch = Build.VERSION.SECURITY_PATCH
       }
     }
 
-    val buildVersionMap = hashMapOf<String, String>(
+    val buildVersionMap = hashMapOf(
       "BASE_OS" to baseOS,
       "CODENAME" to Build.VERSION.CODENAME,
       "INCREMENTAL" to Build.VERSION.INCREMENTAL,
@@ -322,21 +322,21 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
     )
 
     val contentResolver = context.contentResolver
-    var bluetoothName = ""
+    var bluetoothName: String? = ""
     if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S) {
       bluetoothName = Settings.Secure.getString(contentResolver, "bluetooth_name")
       if (bluetoothName == null) {
         bluetoothName = ""
       }
     }
-    var deviceName = ""
+    var deviceName: String? = ""
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) {
       deviceName = Settings.Global.getString(contentResolver, Settings.Global.DEVICE_NAME)
       if (deviceName == null) {
         deviceName = ""
       }
     }
-    var androidID: String = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+    var androidID: String? = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
     if (androidID == null) {
       androidID = ""
     }
@@ -350,7 +350,7 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
       ),
     )
 
-    var applicationInfoLabel = context.applicationInfo.loadLabel(context.packageManager)
+    var applicationInfoLabel: CharSequence? = context.applicationInfo.loadLabel(context.packageManager)
     if (applicationInfoLabel == null) {
       applicationInfoLabel = ""
     }

@@ -54,6 +54,7 @@ Future<String> openAuthorizeURLWithWebView({
   String? modalPresentationStyle,
   String? navigationBarBackgroundColor,
   String? navigationBarButtonTintColor,
+  bool? iosIsInspectable,
   String? actionBarBackgroundColor,
   String? actionBarButtonTintColor,
 }) async {
@@ -64,6 +65,7 @@ Future<String> openAuthorizeURLWithWebView({
       "modalPresentationStyle": modalPresentationStyle,
       "navigationBarBackgroundColor": navigationBarBackgroundColor,
       "navigationBarButtonTintColor": navigationBarButtonTintColor,
+      "iosIsInspectable": iosIsInspectable,
       "actionBarBackgroundColor": actionBarBackgroundColor,
       "actionBarButtonTintColor": actionBarButtonTintColor,
     });

@@ -45,12 +45,14 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
       let modalPresentationStyle = UIModalPresentationStyle.from(string: arguments["modalPresentationStyle"] as? String)
       let navigationBarBackgroundColor = UIColor(argb: arguments["navigationBarBackgroundColor"] as? String)
       let navigationBarButtonTintColor = UIColor(argb: arguments["navigationBarButtonTintColor"] as? String)
+      let isInspectable = arguments["iosIsInspectable"] as? Bool
       self.openAuthorizeURLWithWebView(
         url: url,
         redirectURI: redirectURI,
         modalPresentationStyle: modalPresentationStyle,
         navigationBarBackgroundColor: navigationBarBackgroundColor,
         navigationBarButtonTintColor: navigationBarButtonTintColor,
+        isInspectable: isInspectable,
         result: result
       )
     case "openURL":
@@ -218,9 +220,10 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     modalPresentationStyle: UIModalPresentationStyle,
     navigationBarBackgroundColor: UIColor?,
     navigationBarButtonTintColor: UIColor?,
+    isInspectable: Bool?,
     result: @escaping FlutterResult
   ) {
-      let controller = AGWKWebViewController(url: url, redirectURI: redirectURI) { resultURL, error in
+      let controller = AGWKWebViewController(url: url, redirectURI: redirectURI, isInspectable: isInspectable ?? false) { resultURL, error in
           if let error = error {
               let nsError = error as NSError
               if nsError.domain == AGWKWebViewControllerErrorDomain && nsError.code == AGWKWebViewControllerErrorCodeCanceledLogin {

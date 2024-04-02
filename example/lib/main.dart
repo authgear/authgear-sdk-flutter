@@ -767,6 +767,7 @@ class _MyAppState extends State<MyApp> {
               options: WebKitWebViewUIImplementationOptions(
                 ios: WebKitWebViewUIImplementationOptionsIOS(
                   modalPresentationStyle: ModalPresentationStyle.fullScreen,
+                  isInspectable: true,
                 ),
               ),
             )

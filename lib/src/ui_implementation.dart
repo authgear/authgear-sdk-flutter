@@ -46,11 +46,13 @@ class WebKitWebViewUIImplementationOptionsIOS {
   final ModalPresentationStyle? modalPresentationStyle;
   final int? navigationBarBackgroundColor;
   final int? navigationBarButtonTintColor;
+  final bool? isInspectable;
 
   WebKitWebViewUIImplementationOptionsIOS({
     this.modalPresentationStyle,
     this.navigationBarBackgroundColor,
     this.navigationBarButtonTintColor,
+    this.isInspectable,
   });
 }
 
@@ -95,6 +97,7 @@ class WebKitWebViewUIImplementation implements UIImplementation {
           options?.ios?.navigationBarBackgroundColor?.toRadixString(16),
       navigationBarButtonTintColor:
           options?.ios?.navigationBarButtonTintColor?.toRadixString(16),
+      iosIsInspectable: options?.ios?.isInspectable,
       actionBarBackgroundColor:
           options?.android?.actionBarBackgroundColor?.toRadixString(16),
       actionBarButtonTintColor:

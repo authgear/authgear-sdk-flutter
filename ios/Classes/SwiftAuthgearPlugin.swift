@@ -788,15 +788,15 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
   private func signJWT(privateKey: SecKey, header: [String: Any], payload: [String: Any]) -> Result<String, Error> {
     let headerJSON = JSONSerialization.serialize(value: header)
     let payloadJSON = JSONSerialization.serialize(value: payload)
-    let headerString = headerJSON.base64EncodedString()
-    let payloadString = payloadJSON.base64EncodedString()
+    let headerString = headerJSON.base64urlEncodedString()
+    let payloadString = payloadJSON.base64urlEncodedString()
     let strToSign = "\(headerString).\(payloadString)"
     let dataToSign = strToSign.data(using: .utf8)!
     switch self.signData(privateKey: privateKey, data: dataToSign) {
     case .failure(let error):
       return .failure(error)
     case .success(let signature):
-      let signatureStr = signature.base64EncodedString()
+      let signatureStr = signature.base64urlEncodedString()
       let jwt = "\(strToSign).\(signatureStr)"
       return .success(jwt)
     }

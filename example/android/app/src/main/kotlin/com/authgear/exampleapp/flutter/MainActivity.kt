@@ -13,7 +13,7 @@ class MainActivity: FlutterFragmentActivity() {
     private val CHANNEL = "example"
 
     companion object {
-        internal val WECHAT_APP_ID = "wxcplaceholder"
+        internal val WECHAT_APP_ID = "wxe64ed6a7605b5021"
         private val wechat: HashMap<String, MethodChannel.Result> = hashMapOf()
 
         internal fun storeWechat(state: String, result: MethodChannel.Result) {

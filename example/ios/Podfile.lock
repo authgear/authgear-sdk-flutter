@@ -28,9 +28,9 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
   flutter_authgear: c50fc59b92c35dbc8bbd51b15413ce050f374892
-  shared_preferences_foundation: e2dae3258e06f44cc55f49d42024fd8dd03c590c
+  shared_preferences_foundation: b4c3b4cddf1c21f02770737f147a3f5da9d39695
   WechatOpenSDK: 6a4d1436c15b3b5fe2a0bd383f3046010186da44
 
 PODFILE CHECKSUM: b3d9b6e4d813ba8bb32aeeede8bc50763609a93e
 
-COCOAPODS: 1.11.3
+COCOAPODS: 1.15.2

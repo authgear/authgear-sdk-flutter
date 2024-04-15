@@ -6,9 +6,9 @@ void main() {
   test('CodeVerifier', () {
     final rng = Random(0);
     final codeVerifier = CodeVerifier(rng);
-    expect(codeVerifier.value,
-        "8f011cb37ec75e099969f72228b8337ec1ed809ddbef5e1d844a29f0bceafe7e");
+    expect(codeVerifier.value.runes.length, 43);
+    expect(codeVerifier.value, "jwEcs37HXgmZafciKLgzfsHtgJ3b714dhEop8Lzq_n4");
     expect(codeVerifier.codeChallenge,
-        "wwOl-gkE1Q8-wqEVWep4uYe2wYR7k73M9JMXUjtSx80");
+        "JO1aklO5DCWCdDvEvCWJIKSuZmfQ25kyrNIEeSiahz4");
   });
 }

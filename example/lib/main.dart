@@ -227,6 +227,8 @@ class _MyAppState extends State<MyApp> {
   late SharedPreferences _sharedPreferences;
   final TextEditingController _endpointController = TextEditingController();
   final TextEditingController _clientIDController = TextEditingController();
+  final TextEditingController _authenticationFlowGroupController =
+      TextEditingController();
   StreamSubscription<SessionStateChangeEvent>? _sub;
   bool _loading = false;
   bool _useTransientTokenStorage = false;
@@ -303,6 +305,15 @@ class _MyAppState extends State<MyApp> {
                   padding:
                       const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                   child: TextFieldWithLabel(
+                    label: "Client ID",
+                    hintText: "Enter client ID",
+                    controller: _clientIDController,
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  child: TextFieldWithLabel(
                     label: "Endpoint",
                     hintText: "Enter Authegar endpoint",
                     controller: _endpointController,
@@ -312,9 +323,9 @@ class _MyAppState extends State<MyApp> {
                   padding:
                       const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                   child: TextFieldWithLabel(
-                    label: "Client ID",
-                    hintText: "Enter client ID",
-                    controller: _clientIDController,
+                    label: "Authentication Flow Group",
+                    hintText: "Enter flow group",
+                    controller: _authenticationFlowGroupController,
                   ),
                 ),
                 RadioGroup<AuthenticationPage>(
@@ -570,6 +581,7 @@ class _MyAppState extends State<MyApp> {
         page: _page,
         colorScheme: _getColorScheme(context),
         wechatRedirectURI: wechatRedirectURI,
+        authenticationFlowGroup: _authenticationFlowGroupController.text,
       );
       setState(() {
         _userInfo = userInfo;
@@ -656,6 +668,7 @@ class _MyAppState extends State<MyApp> {
       final userInfo = await _authgear.reauthenticate(
         redirectURI: redirectURI,
         wechatRedirectURI: wechatRedirectURI,
+        authenticationFlowGroup: _authenticationFlowGroupController.text,
       );
       setState(() {
         _userInfo = userInfo;

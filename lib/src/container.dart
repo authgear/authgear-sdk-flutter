@@ -53,6 +53,7 @@ class AuthenticateOptions {
   final ColorScheme? colorScheme;
   final String? wechatRedirectURI;
   final AuthenticationPage? page;
+  final String? authenticationFlowGroup;
 
   AuthenticateOptions({
     required this.redirectURI,
@@ -64,6 +65,7 @@ class AuthenticateOptions {
     this.colorScheme,
     this.wechatRedirectURI,
     this.page,
+    this.authenticationFlowGroup,
   });
 
   OIDCAuthenticationRequest toRequest(String clientID, CodeVerifier verifier) {
@@ -85,6 +87,7 @@ class AuthenticateOptions {
       state: state,
       loginHint: loginHint,
       wechatRedirectURI: wechatRedirectURI,
+      authenticationFlowGroup: authenticationFlowGroup,
     );
   }
 }
@@ -97,6 +100,7 @@ class ReauthenticateOptions {
   final ColorScheme? colorScheme;
   final String? wechatRedirectURI;
   final int? maxAge;
+  final String? authenticationFlowGroup;
 
   ReauthenticateOptions({
     required this.redirectURI,
@@ -106,6 +110,7 @@ class ReauthenticateOptions {
     this.colorScheme,
     this.wechatRedirectURI,
     this.maxAge,
+    this.authenticationFlowGroup,
   });
 
   OIDCAuthenticationRequest toRequest(
@@ -125,6 +130,7 @@ class ReauthenticateOptions {
       idTokenHint: idTokenHint,
       maxAge: maxAge,
       wechatRedirectURI: wechatRedirectURI,
+      authenticationFlowGroup: authenticationFlowGroup,
     );
     return oidcRequest;
   }
@@ -287,6 +293,7 @@ class Authgear implements AuthgearHttpClientDelegate {
     AuthenticationPage? page,
     String? state,
     String? wechatRedirectURI,
+    String? authenticationFlowGroup,
   }) async {
     final authRequest =
         await internalCreateAuthenticateRequest(AuthenticateOptions(
@@ -298,6 +305,7 @@ class Authgear implements AuthgearHttpClientDelegate {
       colorScheme: colorScheme,
       wechatRedirectURI: wechatRedirectURI,
       page: page,
+      authenticationFlowGroup: authenticationFlowGroup,
     ));
 
     if (wechatRedirectURI != null) {
@@ -339,6 +347,7 @@ class Authgear implements AuthgearHttpClientDelegate {
     String? wechatRedirectURI,
     BiometricOptionsIOS? biometricIOS,
     BiometricOptionsAndroid? biometricAndroid,
+    String? authenticationFlowGroup,
   }) async {
     final biometricEnabled = await isBiometricEnabled();
     if (biometricEnabled && biometricIOS != null && biometricAndroid != null) {
@@ -361,6 +370,7 @@ class Authgear implements AuthgearHttpClientDelegate {
       colorScheme: colorScheme,
       wechatRedirectURI: wechatRedirectURI,
       maxAge: maxAge,
+      authenticationFlowGroup: authenticationFlowGroup,
     );
 
     final request =

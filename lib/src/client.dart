@@ -22,6 +22,7 @@ class OIDCAuthenticationRequest {
   final AuthenticationPage? page;
   final String? wechatRedirectURI;
   final SettingsAction? settingsAction;
+  final String? authenticationFlowGroup;
 
   OIDCAuthenticationRequest({
     required this.clientID,
@@ -40,6 +41,7 @@ class OIDCAuthenticationRequest {
     this.page,
     this.wechatRedirectURI,
     this.settingsAction,
+    this.authenticationFlowGroup,
   });
 
   Map<String, String> toQueryParameters() {
@@ -120,6 +122,11 @@ class OIDCAuthenticationRequest {
     final settingsAction = this.settingsAction;
     if (settingsAction != null) {
       q["x_settings_action"] = settingsAction.value;
+    }
+
+    final authenticationFlowGroup = this.authenticationFlowGroup;
+    if (authenticationFlowGroup != null) {
+      q["x_authentication_flow_group"] = authenticationFlowGroup;
     }
 
     return q;

@@ -71,6 +71,7 @@
 <li><span class="parameter" id="reauthenticate-param-wechatRedirectURI"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">wechatRedirectURI</span>, </span></li>
 <li><span class="parameter" id="reauthenticate-param-biometricIOS"><span class="type-annotation"><a href="../../authgear/BiometricOptionsIOS-class.html">BiometricOptionsIOS</a>?</span> <span class="parameter-name">biometricIOS</span>, </span></li>
 <li><span class="parameter" id="reauthenticate-param-biometricAndroid"><span class="type-annotation"><a href="../../authgear/BiometricOptionsAndroid-class.html">BiometricOptionsAndroid</a>?</span> <span class="parameter-name">biometricAndroid</span>, </span></li>
+<li><span class="parameter" id="reauthenticate-param-authenticationFlowGroup"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">authenticationFlowGroup</span>, </span></li>
 </ol>})
 
       
@@ -90,6 +91,7 @@
   String? wechatRedirectURI,
   BiometricOptionsIOS? biometricIOS,
   BiometricOptionsAndroid? biometricAndroid,
+  String? authenticationFlowGroup,
 }) async {
   final biometricEnabled = await isBiometricEnabled();
   if (biometricEnabled &amp;&amp; biometricIOS != null &amp;&amp; biometricAndroid != null) {
@@ -112,6 +114,7 @@
     colorScheme: colorScheme,
     wechatRedirectURI: wechatRedirectURI,
     maxAge: maxAge,
+    authenticationFlowGroup: authenticationFlowGroup,
   );
 
   final request =

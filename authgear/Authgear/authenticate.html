@@ -70,6 +70,7 @@
 <li><span class="parameter" id="authenticate-param-colorScheme"><span class="type-annotation"><a href="../../authgear/ColorScheme.html">ColorScheme</a>?</span> <span class="parameter-name">colorScheme</span>, </span></li>
 <li><span class="parameter" id="authenticate-param-page"><span class="type-annotation"><a href="../../authgear/AuthenticationPage.html">AuthenticationPage</a>?</span> <span class="parameter-name">page</span>, </span></li>
 <li><span class="parameter" id="authenticate-param-state"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">state</span>, </span></li>
+<li><span class="parameter" id="authenticate-param-oauthProviderAlias"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">oauthProviderAlias</span>, </span></li>
 <li><span class="parameter" id="authenticate-param-wechatRedirectURI"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">wechatRedirectURI</span>, </span></li>
 <li><span class="parameter" id="authenticate-param-authenticationFlowGroup"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">authenticationFlowGroup</span>, </span></li>
 </ol>})
@@ -90,6 +91,7 @@
   ColorScheme? colorScheme,
   AuthenticationPage? page,
   String? state,
+  String? oauthProviderAlias,
   String? wechatRedirectURI,
   String? authenticationFlowGroup,
 }) async {
@@ -101,6 +103,7 @@
     prompt: prompt,
     uiLocales: uiLocales,
     colorScheme: colorScheme,
+    oauthProviderAlias: oauthProviderAlias,
     wechatRedirectURI: wechatRedirectURI,
     page: page,
     authenticationFlowGroup: authenticationFlowGroup,

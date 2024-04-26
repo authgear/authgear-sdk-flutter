@@ -51,6 +51,7 @@ class AuthenticateOptions {
   final String? loginHint;
   final List<String>? uiLocales;
   final ColorScheme? colorScheme;
+  final String? oauthProviderAlias;
   final String? wechatRedirectURI;
   final AuthenticationPage? page;
   final String? authenticationFlowGroup;
@@ -63,6 +64,7 @@ class AuthenticateOptions {
     this.loginHint,
     this.uiLocales,
     this.colorScheme,
+    this.oauthProviderAlias,
     this.wechatRedirectURI,
     this.page,
     this.authenticationFlowGroup,
@@ -86,6 +88,7 @@ class AuthenticateOptions {
       page: page,
       state: state,
       loginHint: loginHint,
+      oauthProviderAlias: oauthProviderAlias,
       wechatRedirectURI: wechatRedirectURI,
       authenticationFlowGroup: authenticationFlowGroup,
     );
@@ -98,6 +101,7 @@ class ReauthenticateOptions {
   final String? state;
   final List<String>? uiLocales;
   final ColorScheme? colorScheme;
+  final String? oauthProviderAlias;
   final String? wechatRedirectURI;
   final int? maxAge;
   final String? authenticationFlowGroup;
@@ -108,6 +112,7 @@ class ReauthenticateOptions {
     this.state,
     this.uiLocales,
     this.colorScheme,
+    this.oauthProviderAlias,
     this.wechatRedirectURI,
     this.maxAge,
     this.authenticationFlowGroup,
@@ -129,6 +134,7 @@ class ReauthenticateOptions {
       colorScheme: colorScheme,
       idTokenHint: idTokenHint,
       maxAge: maxAge,
+      oauthProviderAlias: oauthProviderAlias,
       wechatRedirectURI: wechatRedirectURI,
       authenticationFlowGroup: authenticationFlowGroup,
     );
@@ -292,6 +298,7 @@ class Authgear implements AuthgearHttpClientDelegate {
     ColorScheme? colorScheme,
     AuthenticationPage? page,
     String? state,
+    String? oauthProviderAlias,
     String? wechatRedirectURI,
     String? authenticationFlowGroup,
   }) async {
@@ -303,6 +310,7 @@ class Authgear implements AuthgearHttpClientDelegate {
       prompt: prompt,
       uiLocales: uiLocales,
       colorScheme: colorScheme,
+      oauthProviderAlias: oauthProviderAlias,
       wechatRedirectURI: wechatRedirectURI,
       page: page,
       authenticationFlowGroup: authenticationFlowGroup,
@@ -344,6 +352,7 @@ class Authgear implements AuthgearHttpClientDelegate {
     int maxAge = 0,
     List<String>? uiLocales,
     ColorScheme? colorScheme,
+    String? oauthProviderAlias,
     String? wechatRedirectURI,
     BiometricOptionsIOS? biometricIOS,
     BiometricOptionsAndroid? biometricAndroid,
@@ -368,6 +377,7 @@ class Authgear implements AuthgearHttpClientDelegate {
       isSsoEnabled: isSsoEnabled,
       uiLocales: uiLocales,
       colorScheme: colorScheme,
+      oauthProviderAlias: oauthProviderAlias,
       wechatRedirectURI: wechatRedirectURI,
       maxAge: maxAge,
       authenticationFlowGroup: authenticationFlowGroup,

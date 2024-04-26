@@ -21,6 +21,7 @@ class OIDCAuthenticationRequest {
   final int? maxAge;
   final AuthenticationPage? page;
   final String? wechatRedirectURI;
+  final String? oauthProviderAlias;
   final SettingsAction? settingsAction;
   final String? authenticationFlowGroup;
 
@@ -40,6 +41,7 @@ class OIDCAuthenticationRequest {
     this.maxAge,
     this.page,
     this.wechatRedirectURI,
+    this.oauthProviderAlias,
     this.settingsAction,
     this.authenticationFlowGroup,
   });
@@ -113,6 +115,11 @@ class OIDCAuthenticationRequest {
     }
 
     q["x_sso_enabled"] = isSsoEnabled ? "true" : "false";
+
+    final oauthProviderAlias = this.oauthProviderAlias;
+    if (oauthProviderAlias != null) {
+      q["x_oauth_provider_alias"] = oauthProviderAlias;
+    }
 
     final wechatRedirectURI = this.wechatRedirectURI;
     if (wechatRedirectURI != null) {

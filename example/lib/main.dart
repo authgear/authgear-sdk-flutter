@@ -1,5 +1,6 @@
 import 'dart:async' show StreamSubscription;
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart' hide ColorScheme;
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart'
@@ -725,9 +726,8 @@ class _MyAppState extends State<MyApp> {
         builder: (BuildContext context) {
           return AlertDialog(
             title: const Text("User Info"),
-            content: Text(
-              "sub: ${userInfo.sub}\nisAnonymous: ${userInfo.isAnonymous}\nisVerified: ${userInfo.isVerified}",
-            ),
+            content:
+                Text(const JsonEncoder.withIndent("  ").convert(userInfo.raw)),
             actions: [
               TextButton(
                 child: const Text("OK"),

@@ -15,6 +15,7 @@ import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
 import android.util.Base64
+import android.util.Log
 import androidx.annotation.NonNull
 import androidx.annotation.RequiresApi
 import androidx.biometric.BiometricManager
@@ -22,6 +23,7 @@ import androidx.biometric.BiometricPrompt
 import androidx.fragment.app.FragmentActivity
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.google.crypto.tink.shaded.protobuf.InvalidProtocolBufferException
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -31,6 +33,8 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry
 import org.json.JSONObject
+import java.io.File
+import java.io.IOException
 import java.security.*
 import java.security.interfaces.RSAPublicKey
 import java.util.*
@@ -43,6 +47,8 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
   private val startActivityHandles = StartActivityHandles<Result>()
 
   companion object {
+    private const val LOGTAG = "AuthgearPlugin"
+    private const val ENCRYPTED_SHARED_PREFERENCES_NAME = "authgear_encrypted_shared_preferences"
     private const val TAG_AUTHENTICATION = 1
     private const val TAG_OPEN_URL = 2
 
@@ -367,17 +373,73 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
     result.success(root)
   }
 
+  private fun deleteSharedPreferences(context: Context, name: String) {
+    // NOTE(backup): Explanation on the backup problem.
+    // EncryptedSharedPreferences depends on a master key stored in AndroidKeyStore.
+    // The master key is not backed up.
+    // However, the EncryptedSharedPreferences is backed up.
+    // When the app is re-installed, and restored from a backup.
+    // A new master key is created, but it cannot decrypt the restored EncryptedSharedPreferences.
+    // This problem is persistence until the EncryptedSharedPreferences is deleted.
+    //
+    // The official documentation of EncryptedSharedPreferences tell us to
+    // exclude the EncryptedSharedPreferences from a backup.
+    // But defining a backup rule is not very appropriate in a SDK.
+    // So we try to fix this in our code instead.
+    //
+    // This fix is tested against security-crypto@1.1.0-alpha06 and tink-android@1.8.0
+    // Upgrading to newer versions may result in the library throwing a different exception that we fail to catch,
+    // making this fix buggy.
+    //
+    // To reproduce the problem, you have to follow the steps here https://developer.android.com/identity/data/testingbackup#TestingBackup
+    // The example app has been configured to back up the EncryptedSharedPreferences and nothing else.
+    // One reason is to reproduce the problem, and another reason is that some platform, some Flutter,
+    // store large files in the data directory. That will prevent the backup from working.
+    //
+    // The fix is to observe what exception was thrown by the underlying library
+    // when the problem was re-produced.
+    // When we catch the exception, we delete the EncryptedSharedPreferences and re-create it.
+    //
+    // Some references on how other fixed the problem.
+    // https://github.com/stytchauth/stytch-android/blob/0.23.0/0.1.0/sdk/src/main/java/com/stytch/sdk/common/EncryptionManager.kt#L50
+    // https://github.com/tink-crypto/tink-java/issues/23
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+      context.deleteSharedPreferences(name)
+    } else {
+      context.getSharedPreferences(name, Context.MODE_PRIVATE).edit().clear().apply()
+      val dir = File(context.applicationInfo.dataDir, "shared_prefs")
+      File(dir, "$name.xml").delete()
+    }
+  }
+
   private fun getSharePreferences(): SharedPreferences {
     val context = pluginBinding?.applicationContext!!
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
       val masterKey = MasterKey.Builder(context).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build()
-      return EncryptedSharedPreferences.create(
-        context,
-        "authgear_encrypted_shared_preferences",
-        masterKey,
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-      )
+      try {
+        return EncryptedSharedPreferences.create(
+          context,
+          ENCRYPTED_SHARED_PREFERENCES_NAME,
+          masterKey,
+          EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+          EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+      } catch (e: InvalidProtocolBufferException) {
+        // NOTE(backup): Please search NOTE(backup) to understand what is going on here.
+        Log.w(LOGTAG, "try to recover from backup problem in EncryptedSharedPreferences.create: $e")
+        deleteSharedPreferences(context, ENCRYPTED_SHARED_PREFERENCES_NAME)
+        return getSharePreferences()
+      } catch (e: GeneralSecurityException) {
+        // NOTE(backup): Please search NOTE(backup) to understand what is going on here.
+        Log.w(LOGTAG, "try to recover from backup problem in EncryptedSharedPreferences.create: $e")
+        deleteSharedPreferences(context, ENCRYPTED_SHARED_PREFERENCES_NAME)
+        return getSharePreferences()
+      } catch (e: IOException) {
+        // NOTE(backup): Please search NOTE(backup) to understand what is going on here.
+        Log.w(LOGTAG, "try to recover from backup problem in EncryptedSharedPreferences.create: $e")
+        deleteSharedPreferences(context, ENCRYPTED_SHARED_PREFERENCES_NAME)
+        return getSharePreferences()
+      }
     }
     return context.getSharedPreferences("authgear_shared_preferences", Context.MODE_PRIVATE)
   }
@@ -388,6 +450,15 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
       sharedPreferences.edit().putString(key, value).commit()
       result.success(null)
     } catch (e: Exception) {
+      // NOTE(backup): Please search NOTE(backup) to understand what is going on here.
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+        if (e is GeneralSecurityException) {
+          Log.w(LOGTAG, "try to recover from backup problem in storageSetItem: $e")
+          val context = pluginBinding?.applicationContext!!
+          deleteSharedPreferences(context, ENCRYPTED_SHARED_PREFERENCES_NAME)
+          return storageSetItem(key, value, result)
+        }
+      }
       result.exception(e)
     }
   }
@@ -398,6 +469,15 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
       val value = sharedPreferences.getString(key, null)
       result.success(value)
     } catch (e: Exception) {
+      // NOTE(backup): Please search NOTE(backup) to understand what is going on here.
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+        if (e is GeneralSecurityException) {
+          Log.w(LOGTAG, "try to recover from backup problem in storageGetItem: $e")
+          val context = pluginBinding?.applicationContext!!
+          deleteSharedPreferences(context, ENCRYPTED_SHARED_PREFERENCES_NAME)
+          return storageGetItem(key, result)
+        }
+      }
       result.exception(e)
     }
   }
@@ -408,6 +488,15 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
       sharedPreferences.edit().remove(key).commit()
       result.success(null)
     } catch (e: Exception) {
+      // NOTE(backup): Please search NOTE(backup) to understand what is going on here.
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+        if (e is GeneralSecurityException) {
+          Log.w(LOGTAG, "try to recover from backup problem in storageDeleteItem: $e")
+          val context = pluginBinding?.applicationContext!!
+          deleteSharedPreferences(context, ENCRYPTED_SHARED_PREFERENCES_NAME)
+          return storageDeleteItem(key, result)
+        }
+      }
       result.exception(e)
     }
   }

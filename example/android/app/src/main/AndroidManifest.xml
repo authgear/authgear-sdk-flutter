@@ -1,7 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.authgear.exampleapp.flutter">
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- NOTE(backup): Please search NOTE(backup) before you modify allowBackup, fullBackupContent, or dataExtractionRules -->
     <application
+        android:allowBackup="true"
+        android:fullBackupContent="@xml/full_backup_content"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:label="Authgear Flutter"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">

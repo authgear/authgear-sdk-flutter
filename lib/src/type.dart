@@ -100,13 +100,15 @@ extension GrantTypeExtension on GrantType {
   }
 }
 
-enum SettingsAction { changePassword }
+enum SettingsAction { changePassword, deleteAccount }
 
 extension SettingsActionExtension on SettingsAction {
   String get value {
     switch (this) {
       case SettingsAction.changePassword:
         return "change_password";
+      case SettingsAction.deleteAccount:
+        return "delete_account";
     }
   }
 }

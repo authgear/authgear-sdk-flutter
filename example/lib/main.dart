@@ -540,6 +540,16 @@ class _MyAppState extends State<MyApp> {
                 SessionStateButton(
                   sessionState: _authgear.sessionState,
                   targetState: SessionState.authenticated,
+                  label: "Delete Account",
+                  onPressed: _unconfigured || _loading
+                      ? null
+                      : () {
+                          _onPressDeleteAccount(context);
+                        },
+                ),
+                SessionStateButton(
+                  sessionState: _authgear.sessionState,
+                  targetState: SessionState.authenticated,
                   label: "Show auth_time",
                   onPressed: _unconfigured || _loading
                       ? null
@@ -838,6 +848,25 @@ class _MyAppState extends State<MyApp> {
         _loading = true;
       });
       await _authgear.changePassword(
+        redirectURI: redirectURI,
+        colorScheme: _getColorScheme(context),
+        wechatRedirectURI: wechatRedirectURI,
+      );
+    } catch (e) {
+      onError(context, e);
+    } finally {
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _onPressDeleteAccount(BuildContext context) async {
+    try {
+      setState(() {
+        _loading = true;
+      });
+      await _authgear.deleteAccount(
         redirectURI: redirectURI,
         colorScheme: _getColorScheme(context),
         wechatRedirectURI: wechatRedirectURI,

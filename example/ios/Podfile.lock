@@ -5,13 +5,13 @@ PODS:
   - shared_preferences_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
-  - WechatOpenSDK (1.8.7.1)
+  - WechatOpenSDK (2.0.4)
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
   - flutter_authgear (from `.symlinks/plugins/flutter_authgear/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
-  - WechatOpenSDK
+  - WechatOpenSDK (~> 2.0.4)
 
 SPEC REPOS:
   trunk:
@@ -29,8 +29,8 @@ SPEC CHECKSUMS:
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   flutter_authgear: c50fc59b92c35dbc8bbd51b15413ce050f374892
   shared_preferences_foundation: b4c3b4cddf1c21f02770737f147a3f5da9d39695
-  WechatOpenSDK: 6a4d1436c15b3b5fe2a0bd383f3046010186da44
+  WechatOpenSDK: 290989072e87b79d52225a01bb4e5e58f6f88593
 
-PODFILE CHECKSUM: b3d9b6e4d813ba8bb32aeeede8bc50763609a93e
+PODFILE CHECKSUM: 44c39e677e4deb4c81fcd3926dd89fe108a726c0
 
 COCOAPODS: 1.15.2

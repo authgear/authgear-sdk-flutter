@@ -214,13 +214,15 @@ class OIDCTokenResponse {
   final String? accessToken;
   final int? expiresIn;
   final String? refreshToken;
+  final String? deviceSecret;
 
   OIDCTokenResponse.fromJSON(dynamic json)
       : idToken = json["id_token"],
         tokenType = json["token_type"],
         accessToken = json["access_token"],
         expiresIn = json["expires_in"]?.toInt(),
-        refreshToken = json["refresh_token"];
+        refreshToken = json["refresh_token"],
+        deviceSecret = json["device_secret"];
 }
 
 class BiometricRequest {

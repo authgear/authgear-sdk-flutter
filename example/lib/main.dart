@@ -230,10 +230,15 @@ class _MyAppState extends State<MyApp> {
   final TextEditingController _clientIDController = TextEditingController();
   final TextEditingController _authenticationFlowGroupController =
       TextEditingController();
+  final TextEditingController _appInitiatedSSOToWebClientIDController =
+      TextEditingController();
+  final TextEditingController _appInitiatedSSOToWebRedirectURIController =
+      TextEditingController();
   StreamSubscription<SessionStateChangeEvent>? _sub;
   bool _loading = false;
   bool _useTransientTokenStorage = false;
   bool _isSsoEnabled = false;
+  bool _isAppInitiatedSSOToWebEnabled = false;
   bool _useWebKitWebView = false;
   bool _isBiometricEnabled = false;
   bool get _unconfigured {
@@ -413,6 +418,36 @@ class _MyAppState extends State<MyApp> {
                       },
                     )),
                 Container(
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    child: SwitchWithLabel(
+                      label: "App Initiated SSO To Web",
+                      value: _isAppInitiatedSSOToWebEnabled,
+                      onChanged: (newValue) {
+                        setState(() {
+                          _isAppInitiatedSSOToWebEnabled = newValue;
+                        });
+                      },
+                    )),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  child: TextFieldWithLabel(
+                    label: "App Initiated SSO To Web Client ID",
+                    hintText: "Enter Client ID",
+                    controller: _appInitiatedSSOToWebClientIDController,
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  child: TextFieldWithLabel(
+                    label: "App Initiated SSO To Web Redirect URI",
+                    hintText: "Enter Redirect URI",
+                    controller: _appInitiatedSSOToWebRedirectURIController,
+                  ),
+                ),
+                Container(
                   padding:
                       const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                   child: Text(
@@ -505,6 +540,18 @@ class _MyAppState extends State<MyApp> {
                       ? null
                       : () {
                           _onPressDisableBiometric(context);
+                        },
+                ),
+                SessionStateButton(
+                  sessionState: _authgear.sessionState,
+                  targetState: SessionState.authenticated,
+                  label: "App Initiated SSO To Web",
+                  onPressed: _unconfigured ||
+                          _loading ||
+                          !_isAppInitiatedSSOToWebEnabled
+                      ? null
+                      : () {
+                          _onPressAppInitiatedSSOToWeb(context);
                         },
                 ),
                 SessionStateButton(
@@ -784,6 +831,7 @@ class _MyAppState extends State<MyApp> {
       endpoint: endpoint,
       clientID: clientID,
       isSsoEnabled: _isSsoEnabled,
+      isAppInitiatedSSOToWebEnabled: _isAppInitiatedSSOToWebEnabled,
       tokenStorage: _useTransientTokenStorage ? TransientTokenStorage() : null,
       uiImplementation: _useWebKitWebView
           ? WebKitWebViewUIImplementation(
@@ -931,6 +979,87 @@ class _MyAppState extends State<MyApp> {
       });
       await _authgear.disableBiometric();
       await _syncAuthgearState();
+    } catch (e) {
+      onError(context, e);
+    } finally {
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _onPressAppInitiatedSSOToWeb(BuildContext context) async {
+    final clientID = _clientIDController.text;
+    final endpoint = _endpointController.text;
+    final appInitiatedSSOToWebRedirectURI =
+        _appInitiatedSSOToWebRedirectURIController.text;
+    final appInitiatedSSOToWebClientID =
+        _appInitiatedSSOToWebClientIDController.text;
+    final shouldUseAnotherBrowser = appInitiatedSSOToWebRedirectURI.isNotEmpty;
+    String targetRedirectURI = redirectURI;
+    String targetClientID = clientID;
+    if (appInitiatedSSOToWebRedirectURI.isNotEmpty) {
+      targetRedirectURI = appInitiatedSSOToWebRedirectURI;
+    }
+    if (appInitiatedSSOToWebClientID.isNotEmpty) {
+      targetClientID = appInitiatedSSOToWebClientID;
+    }
+    try {
+      setState(() {
+        _loading = true;
+      });
+      final url = await _authgear.makeAppInitiatedSSOToWebURL(
+        clientID: targetClientID,
+        redirectURI: targetRedirectURI,
+      );
+      final uiImpl = WebKitWebViewUIImplementation();
+      if (!shouldUseAnotherBrowser) {
+        // Use webkit webview to open the url and set the cookie
+        await uiImpl.openAuthorizationURL(
+          url: url.toString(),
+          redirectURI: redirectURI,
+          shareCookiesWithDeviceBrowser: true,
+        );
+        // Then start a auth to prove it is working
+        final newContainer = Authgear(
+          name: "appInitiatedSSOToWeb",
+          endpoint: endpoint,
+          clientID: targetClientID,
+          tokenStorage: TransientTokenStorage(),
+          isSsoEnabled: true,
+          uiImplementation: uiImpl,
+        );
+        await newContainer.authenticate(
+          redirectURI: redirectURI,
+        );
+        final _ = await newContainer.getUserInfo();
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text("Success"),
+              content: const Text("Logged in successfully"),
+              actions: [
+                TextButton(
+                  child: const Text("OK"),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      } else {
+        // This will be redirected to appInitiatedSSOToWebRedirectURI and never close,
+        // so we do not await
+        uiImpl.openAuthorizationURL(
+          url: url.toString(),
+          redirectURI: redirectURI,
+          shareCookiesWithDeviceBrowser: true,
+        );
+      }
     } catch (e) {
       onError(context, e);
     } finally {

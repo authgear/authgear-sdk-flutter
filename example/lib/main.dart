@@ -93,6 +93,9 @@ String _showError(dynamic e) {
   if (e is BiometricLockoutException) {
     return "The biometric is locked out due to too many failed attempts. The developer should handle this error by using normal authentication as a fallback. So normally you should not see this error";
   }
+  if (e is AuthgearException) {
+    return "AuthgearException: ${e.underlyingException}";
+  }
 
   return "$e";
 }

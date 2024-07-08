@@ -29,6 +29,7 @@ class AuthgearExperimental {
     final options = AuthenticateOptions(
       redirectURI: redirectURI,
       isSsoEnabled: authgear.isSsoEnabled,
+      isAppInitiatedSSOToWebEnabled: authgear.isAppInitiatedSSOToWebEnabled,
       state: state,
       prompt: prompt,
       loginHint: loginHint,

@@ -46,6 +46,7 @@ class InternalAuthenticateRequest {
 class AuthenticateOptions {
   final String redirectURI;
   final bool isSsoEnabled;
+  final bool? isAppInitiatedSSOToWebEnabled;
   final String? state;
   final List<PromptOption>? prompt;
   final String? loginHint;
@@ -59,6 +60,7 @@ class AuthenticateOptions {
   AuthenticateOptions({
     required this.redirectURI,
     required this.isSsoEnabled,
+    this.isAppInitiatedSSOToWebEnabled,
     this.state,
     this.prompt,
     this.loginHint,
@@ -75,11 +77,9 @@ class AuthenticateOptions {
       clientID: clientID,
       redirectURI: redirectURI,
       responseType: ResponseType.code,
-      scope: [
-        "openid",
-        "offline_access",
-        "https://authgear.com/scopes/full-access",
-      ],
+      scope: AuthenticateOptions.getScopes(
+          isAppInitiatedSSOToWebEnabled:
+              isAppInitiatedSSOToWebEnabled ?? false),
       isSsoEnabled: isSsoEnabled,
       codeChallenge: verifier.codeChallenge,
       prompt: prompt,
@@ -92,6 +92,21 @@ class AuthenticateOptions {
       wechatRedirectURI: wechatRedirectURI,
       authenticationFlowGroup: authenticationFlowGroup,
     );
+  }
+
+  static List<String> getScopes({required bool isAppInitiatedSSOToWebEnabled}) {
+    List<String> scopes = [
+      "openid",
+      "offline_access",
+      "https://authgear.com/scopes/full-access",
+    ];
+    if (isAppInitiatedSSOToWebEnabled) {
+      scopes.addAll([
+        "device_sso",
+        "https://authgear.com/scopes/app-initiated-sso-to-web"
+      ]);
+    }
+    return scopes;
   }
 }
 
@@ -124,6 +139,9 @@ class ReauthenticateOptions {
       clientID: clientID,
       redirectURI: redirectURI,
       responseType: ResponseType.code,
+      // offline_access is not needed because we don't want a new refresh token to be generated
+      // device_sso and app-initiated-sso-to-web is also not needed,
+      // because no new session should be generated so the scopes are not important.
       scope: [
         "openid",
         "https://authgear.com/scopes/full-access",
@@ -163,6 +181,8 @@ class SettingsActionOptions {
       clientID: clientID,
       redirectURI: redirectURI,
       responseType: ResponseType.settingsAction,
+      // device_sso and app-initiated-sso-to-web is not needed,
+      // because session for settings should not be used to perform SSO.
       scope: [
         "openid",
         "offline_access",
@@ -188,6 +208,7 @@ class Authgear implements AuthgearHttpClientDelegate {
   final String endpoint;
   final String name;
   final bool isSsoEnabled;
+  final bool isAppInitiatedSSOToWebEnabled;
   final Future<void> Function(String)? sendWechatAuthRequest;
 
   final TokenStorage _tokenStorage;
@@ -240,6 +261,7 @@ class Authgear implements AuthgearHttpClientDelegate {
     required this.endpoint,
     this.name = "default",
     this.isSsoEnabled = false,
+    this.isAppInitiatedSSOToWebEnabled = false,
     this.sendWechatAuthRequest,
     TokenStorage? tokenStorage,
     UIImplementation? uiImplementation,
@@ -306,6 +328,7 @@ class Authgear implements AuthgearHttpClientDelegate {
         await internalCreateAuthenticateRequest(AuthenticateOptions(
       redirectURI: redirectURI,
       isSsoEnabled: isSsoEnabled,
+      isAppInitiatedSSOToWebEnabled: isAppInitiatedSSOToWebEnabled,
       state: state,
       prompt: prompt,
       uiLocales: uiLocales,
@@ -823,6 +846,8 @@ class Authgear implements AuthgearHttpClientDelegate {
       clientID: clientID,
       redirectURI: redirectURI,
       responseType: ResponseType.code,
+      // device_sso and app-initiated-sso-to-web is also not needed,
+      // because anonymous users are not allowed to perform SSO.
       scope: [
         "openid",
         "offline_access",

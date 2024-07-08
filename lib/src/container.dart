@@ -632,10 +632,13 @@ class Authgear implements AuthgearHttpClientDelegate {
       await refreshAccessToken();
     }
 
+    String? deviceSecret = await _sharedStorage.getDeviceSecret(name);
+
     final tokenRequest = OIDCTokenRequest(
       grantType: GrantType.idToken,
       clientID: clientID,
       accessToken: accessToken,
+      deviceSecret: deviceSecret,
     );
 
     try {
@@ -644,6 +647,12 @@ class Authgear implements AuthgearHttpClientDelegate {
       final idToken = tokenResponse.idToken;
       if (idToken != null) {
         _idToken = idToken;
+        await _sharedStorage.setIDToken(name, idToken);
+      }
+
+      final deviceSecret = tokenResponse.deviceSecret;
+      if (deviceSecret != null) {
+        await _sharedStorage.setDeviceSecret(name, deviceSecret);
       }
     } catch (e) {
       _handleInvalidGrantException(e);
@@ -696,12 +705,15 @@ class Authgear implements AuthgearHttpClientDelegate {
       return;
     }
 
+    String? deviceSecret = await _sharedStorage.getDeviceSecret(name);
+
     final xDeviceInfo = await _getXDeviceInfo();
     final tokenRequest = OIDCTokenRequest(
       grantType: GrantType.refreshToken,
       clientID: clientID,
       refreshToken: refreshToken,
       xDeviceInfo: xDeviceInfo,
+      deviceSecret: deviceSecret,
     );
     try {
       final tokenResponse = await _apiClient.sendTokenRequest(tokenRequest);

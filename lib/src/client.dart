@@ -150,6 +150,7 @@ class OIDCTokenRequest {
   final String? accessToken;
   final String? jwt;
   final String? xDeviceInfo;
+  final String? deviceSecret;
 
   OIDCTokenRequest({
     required this.grantType,
@@ -161,6 +162,7 @@ class OIDCTokenRequest {
     this.accessToken,
     this.jwt,
     this.xDeviceInfo,
+    this.deviceSecret,
   });
 
   Map<String, String> toQueryParameters() {
@@ -202,6 +204,11 @@ class OIDCTokenRequest {
     final xDeviceInfo = this.xDeviceInfo;
     if (xDeviceInfo != null) {
       q["x_device_info"] = xDeviceInfo;
+    }
+
+    final deviceSecret = this.deviceSecret;
+    if (deviceSecret != null) {
+      q["device_secret"] = deviceSecret;
     }
 
     return q;

@@ -805,11 +805,14 @@ class Authgear implements AuthgearHttpClientDelegate {
         ios: ios,
         android: android,
       );
-      final tokenResponse =
-          await _apiClient.sendAuthenticateBiometricRequest(BiometricRequest(
-        clientID: clientID,
-        jwt: jwt,
-      ));
+      final tokenResponse = await _apiClient.sendAuthenticateBiometricRequest(
+        BiometricRequest(
+          clientID: clientID,
+          jwt: jwt,
+          scope: AuthenticateOptions.getScopes(
+              isAppInitiatedSSOToWebEnabled: isAppInitiatedSSOToWebEnabled),
+        ),
+      );
       await _persistTokenResponse(
           tokenResponse, SessionStateChangeReason.authenticated);
       final userInfo = await _apiClient.getUserInfo();

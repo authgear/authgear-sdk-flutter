@@ -235,15 +235,21 @@ class OIDCTokenResponse {
 class BiometricRequest {
   final String clientID;
   final String jwt;
+  final List<String>? scope;
 
-  BiometricRequest({required this.clientID, required this.jwt});
+  BiometricRequest({required this.clientID, required this.jwt, this.scope});
 
   Map<String, String> toQueryParameters() {
-    return {
+    Map<String, String> q = {
       "grant_type": "urn:authgear:params:oauth:grant-type:biometric-request",
       "client_id": clientID,
       "jwt": jwt,
     };
+    final scope = this.scope;
+    if (scope != null) {
+      q["scope"] = scope.join(" ");
+    }
+    return q;
   }
 }
 

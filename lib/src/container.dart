@@ -213,7 +213,7 @@ class Authgear implements AuthgearHttpClientDelegate {
 
   final TokenStorage _tokenStorage;
   final ContainerStorage _storage;
-  final SharedStorage _sharedStorage;
+  final InterAppSharedStorage _sharedStorage;
   final UIImplementation _uiImplementation;
   late final APIClient _apiClient;
   late final AuthgearExperimental experimental;
@@ -269,7 +269,7 @@ class Authgear implements AuthgearHttpClientDelegate {
   })  : _tokenStorage = tokenStorage ?? PersistentTokenStorage(),
         _uiImplementation = uiImplementation ?? DeviceBrowserUIImplementation(),
         _storage = PersistentContainerStorage(),
-        _sharedStorage = PersistentSharedStorage() {
+        _sharedStorage = PersistentInterAppSharedStorage() {
     final plainHttpClient = Client();
     final authgearHttpClient = AuthgearHttpClient(this, plainHttpClient);
     _apiClient = APIClient(

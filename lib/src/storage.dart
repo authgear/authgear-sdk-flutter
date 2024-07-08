@@ -6,7 +6,7 @@ abstract class TokenStorage {
   Future<void> delRefreshToken(String namespace);
 }
 
-abstract class SharedStorage {
+abstract class InterAppSharedStorage {
   Future<void> setIDToken(String namespace, String token);
   Future<String?> getIDToken(String namespace);
   Future<void> delIDToken(String namespace);
@@ -139,11 +139,11 @@ class PersistentTokenStorage extends AbstractTokenStorage {
         _keyMaker = _KeyMaker();
 }
 
-class PersistentSharedStorage extends SharedStorage {
+class PersistentInterAppSharedStorage extends InterAppSharedStorage {
   final _StorageDriver _driver;
   final _KeyMaker _keyMaker;
 
-  PersistentSharedStorage()
+  PersistentInterAppSharedStorage()
       : _driver = _PlatformStorageDriver(),
         _keyMaker = _KeyMaker();
 

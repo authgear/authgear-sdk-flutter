@@ -78,6 +78,25 @@ class BiometricLockoutException extends AuthgearException {
   const BiometricLockoutException() : super(null);
 }
 
+class AppInitiatedSSOToWebNotAllowedError extends AuthgearException {
+  const AppInitiatedSSOToWebNotAllowedError() : super(null);
+}
+
+class AppInitiatedSSOToWebInsufficientScopeError
+    extends AppInitiatedSSOToWebNotAllowedError {
+  const AppInitiatedSSOToWebInsufficientScopeError() : super();
+}
+
+class AppInitiatedSSOToWebIDTokenNotFoundError
+    extends AppInitiatedSSOToWebNotAllowedError {
+  const AppInitiatedSSOToWebIDTokenNotFoundError() : super();
+}
+
+class AppInitiatedSSOToWebDeviceSecretNotFoundError
+    extends AppInitiatedSSOToWebNotAllowedError {
+  const AppInitiatedSSOToWebDeviceSecretNotFoundError() : super();
+}
+
 const _cancelException = CancelException();
 const _biometricPrivateKeyNotFoundException =
     BiometricPrivateKeyNotFoundException();

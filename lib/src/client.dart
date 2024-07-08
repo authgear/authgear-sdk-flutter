@@ -10,7 +10,7 @@ class OIDCAuthenticationRequest {
   final String redirectURI;
   final ResponseType responseType;
   final bool isSsoEnabled;
-  final List<String> scope;
+  final List<String>? scope;
   final String? codeChallenge;
   final String? state;
   final List<PromptOption>? prompt;
@@ -24,13 +24,15 @@ class OIDCAuthenticationRequest {
   final String? oauthProviderAlias;
   final SettingsAction? settingsAction;
   final String? authenticationFlowGroup;
+  final ResponseMode? responseMode;
+  final String? xAppInitiatedSSOToWebToken;
 
   OIDCAuthenticationRequest({
     required this.clientID,
     required this.redirectURI,
     required this.responseType,
-    required this.scope,
-    required this.isSsoEnabled,
+    this.isSsoEnabled = false,
+    this.scope,
     this.codeChallenge,
     this.state,
     this.prompt,
@@ -44,6 +46,8 @@ class OIDCAuthenticationRequest {
     this.oauthProviderAlias,
     this.settingsAction,
     this.authenticationFlowGroup,
+    this.responseMode,
+    this.xAppInitiatedSSOToWebToken,
   });
 
   Map<String, String> toQueryParameters() {
@@ -51,8 +55,12 @@ class OIDCAuthenticationRequest {
       "response_type": responseType.value,
       "client_id": clientID,
       "redirect_uri": redirectURI,
-      "scope": scope.join(" "),
     };
+
+    final scope = this.scope;
+    if (scope != null) {
+      q["scope"] = scope.join(" ");
+    }
 
     if (Platform.isIOS) {
       q["x_platform"] = "ios";
@@ -136,6 +144,16 @@ class OIDCAuthenticationRequest {
       q["x_authentication_flow_group"] = authenticationFlowGroup;
     }
 
+    final responseMode = this.responseMode;
+    if (responseMode != null) {
+      q["response_mode"] = responseMode.value;
+    }
+
+    final xAppInitiatedSSOToWebToken = this.xAppInitiatedSSOToWebToken;
+    if (xAppInitiatedSSOToWebToken != null) {
+      q["x_app_initiated_sso_to_web_token"] = xAppInitiatedSSOToWebToken;
+    }
+
     return q;
   }
 }
@@ -151,6 +169,12 @@ class OIDCTokenRequest {
   final String? jwt;
   final String? xDeviceInfo;
   final String? deviceSecret;
+  final RequestedTokenType? requestedTokenType;
+  final String? audience;
+  final SubjectTokenType? subjectTokenType;
+  final String? subjectToken;
+  final ActorTokenType? actorTokenType;
+  final String? actorToken;
 
   OIDCTokenRequest({
     required this.grantType,
@@ -163,6 +187,12 @@ class OIDCTokenRequest {
     this.jwt,
     this.xDeviceInfo,
     this.deviceSecret,
+    this.requestedTokenType,
+    this.audience,
+    this.subjectTokenType,
+    this.subjectToken,
+    this.actorTokenType,
+    this.actorToken,
   });
 
   Map<String, String> toQueryParameters() {
@@ -209,6 +239,34 @@ class OIDCTokenRequest {
     final deviceSecret = this.deviceSecret;
     if (deviceSecret != null) {
       q["device_secret"] = deviceSecret;
+    }
+
+    final requestedTokenType = this.requestedTokenType;
+    if (requestedTokenType != null) {
+      q["requested_token_type"] = requestedTokenType.value;
+    }
+
+    final audience = this.audience;
+    if (audience != null) {
+      q["audience"] = audience;
+    }
+
+    final subjectTokenType = this.subjectTokenType;
+    if (subjectTokenType != null) {
+      q["subject_token_type"] = subjectTokenType.value;
+    }
+    final subjectToken = this.subjectToken;
+    if (subjectToken != null) {
+      q["subject_token"] = subjectToken;
+    }
+
+    final actorTokenType = this.actorTokenType;
+    if (actorTokenType != null) {
+      q["actor_token_type"] = actorTokenType.value;
+    }
+    final actorToken = this.actorToken;
+    if (actorToken != null) {
+      q["actor_token"] = actorToken;
     }
 
     return q;
@@ -301,6 +359,12 @@ class APIClient {
     final endpoint = Uri.parse(config.authorizationEndpoint);
     final origin = Uri.parse(endpoint.origin);
     return origin.replace(path: path);
+  }
+
+  Future<String> getApiOrigin() async {
+    final config = await fetchOIDCConfiguration();
+    final endpoint = Uri.parse(config.authorizationEndpoint);
+    return endpoint.origin;
   }
 
   Future<OIDCTokenResponse> sendTokenRequest(OIDCTokenRequest request,

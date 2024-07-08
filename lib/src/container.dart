@@ -910,6 +910,73 @@ class Authgear implements AuthgearHttpClientDelegate {
     return _authenticateAnonymouslyExisting(kid);
   }
 
+  Future<Uri> makeAppInitiatedSSOToWebURL({
+    required String clientID,
+    required String redirectURI,
+    String? state,
+  }) async {
+    if (!isAppInitiatedSSOToWebEnabled) {
+      throw AuthgearException(Exception(
+          "makeAppInitiatedSSOToWebURL requires isAppInitiatedSSOToWebEnabled to be true"));
+    }
+    if (!(sessionState == SessionState.authenticated)) {
+      throw AuthgearException(
+          Exception("makeAppInitiatedSSOToWebURL requires authenticated user"));
+    }
+    var idToken = await _sharedStorage.getIDToken(name);
+    if (idToken == null || idToken.isEmpty) {
+      throw const AppInitiatedSSOToWebIDTokenNotFoundError();
+    }
+    final deviceSecret = await _sharedStorage.getDeviceSecret(name);
+    if (deviceSecret == null || deviceSecret.isEmpty) {
+      throw const AppInitiatedSSOToWebDeviceSecretNotFoundError();
+    }
+    final tokenRequest = OIDCTokenRequest(
+      grantType: GrantType.tokenExchange,
+      clientID: clientID,
+      requestedTokenType: RequestedTokenType.appInitiatedSSOToWebToken,
+      audience: await _apiClient.getApiOrigin(),
+      subjectTokenType: SubjectTokenType.idToken,
+      subjectToken: idToken,
+      actorTokenType: ActorTokenType.deviceSecret,
+      actorToken: deviceSecret,
+    );
+    final tokenExchangeResult = await _apiClient.sendTokenRequest(tokenRequest);
+
+    // Here access_token is app-initiated-sso-to-web-token
+    final appInitiatedSSOToWebToken = tokenExchangeResult.accessToken;
+    final newDeviceSecret = tokenExchangeResult.deviceSecret;
+    final newIDToken = tokenExchangeResult.idToken;
+    if (appInitiatedSSOToWebToken == null) {
+      throw AuthgearException(
+        Exception("unexpected: access_token is not returned"),
+      );
+    }
+
+    if (newDeviceSecret != null) {
+      await _sharedStorage.setDeviceSecret(name, newDeviceSecret);
+    }
+
+    if (newIDToken != null) {
+      _idToken = newIDToken;
+      idToken = newIDToken;
+      await _sharedStorage.setIDToken(name, newIDToken);
+    }
+
+    return await internalBuildAuthorizationURL(
+      OIDCAuthenticationRequest(
+        responseType: ResponseType.appInitiatedSSOToWebToken,
+        responseMode: ResponseMode.cookie,
+        redirectURI: redirectURI,
+        clientID: clientID,
+        xAppInitiatedSSOToWebToken: appInitiatedSSOToWebToken,
+        idTokenHint: idToken,
+        prompt: [PromptOption.none],
+        state: state,
+      ),
+    );
+  }
+
   Future<void> wechatAuthCallback({
     required String state,
     required String code,

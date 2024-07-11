@@ -101,10 +101,8 @@ class AuthenticateOptions {
       "https://authgear.com/scopes/full-access",
     ];
     if (isAppInitiatedSSOToWebEnabled) {
-      scopes.addAll([
-        "device_sso",
-        "https://authgear.com/scopes/app-initiated-sso-to-web"
-      ]);
+      scopes.addAll(
+          ["device_sso", "https://authgear.com/scopes/pre-authenticated-url"]);
     }
     return scopes;
   }

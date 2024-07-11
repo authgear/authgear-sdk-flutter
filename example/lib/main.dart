@@ -233,15 +233,15 @@ class _MyAppState extends State<MyApp> {
   final TextEditingController _clientIDController = TextEditingController();
   final TextEditingController _authenticationFlowGroupController =
       TextEditingController();
-  final TextEditingController _appInitiatedSSOToWebClientIDController =
+  final TextEditingController _preAuthenticatedURLClientIDController =
       TextEditingController();
-  final TextEditingController _appInitiatedSSOToWebRedirectURIController =
+  final TextEditingController _preAuthenticatedURLRedirectURIController =
       TextEditingController();
   StreamSubscription<SessionStateChangeEvent>? _sub;
   bool _loading = false;
   bool _useTransientTokenStorage = false;
   bool _isSsoEnabled = false;
-  bool _isAppInitiatedSSOToWebEnabled = false;
+  bool _isPreAuthenticatedURLEnabled = false;
   bool _useWebKitWebView = false;
   bool _isBiometricEnabled = false;
   bool get _unconfigured {
@@ -424,11 +424,11 @@ class _MyAppState extends State<MyApp> {
                     padding:
                         const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                     child: SwitchWithLabel(
-                      label: "App Initiated SSO To Web",
-                      value: _isAppInitiatedSSOToWebEnabled,
+                      label: "Pre-Authenticated URL",
+                      value: _isPreAuthenticatedURLEnabled,
                       onChanged: (newValue) {
                         setState(() {
-                          _isAppInitiatedSSOToWebEnabled = newValue;
+                          _isPreAuthenticatedURLEnabled = newValue;
                         });
                       },
                     )),
@@ -436,18 +436,18 @@ class _MyAppState extends State<MyApp> {
                   padding:
                       const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                   child: TextFieldWithLabel(
-                    label: "App Initiated SSO To Web Client ID",
+                    label: "Pre-Authenticated URL Client ID",
                     hintText: "Enter Client ID",
-                    controller: _appInitiatedSSOToWebClientIDController,
+                    controller: _preAuthenticatedURLClientIDController,
                   ),
                 ),
                 Container(
                   padding:
                       const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                   child: TextFieldWithLabel(
-                    label: "App Initiated SSO To Web Redirect URI",
+                    label: "Pre-Authenticated URL Redirect URI",
                     hintText: "Enter Redirect URI",
-                    controller: _appInitiatedSSOToWebRedirectURIController,
+                    controller: _preAuthenticatedURLRedirectURIController,
                   ),
                 ),
                 Container(
@@ -548,13 +548,13 @@ class _MyAppState extends State<MyApp> {
                 SessionStateButton(
                   sessionState: _authgear.sessionState,
                   targetState: SessionState.authenticated,
-                  label: "App Initiated SSO To Web",
+                  label: "Pre-Authenticated URL",
                   onPressed: _unconfigured ||
                           _loading ||
-                          !_isAppInitiatedSSOToWebEnabled
+                          !_isPreAuthenticatedURLEnabled
                       ? null
                       : () {
-                          _onPressAppInitiatedSSOToWeb(context);
+                          _onPressPreAuthenticatedURL(context);
                         },
                 ),
                 SessionStateButton(
@@ -834,7 +834,7 @@ class _MyAppState extends State<MyApp> {
       endpoint: endpoint,
       clientID: clientID,
       isSsoEnabled: _isSsoEnabled,
-      preAuthenticatedURLEnabled: _isAppInitiatedSSOToWebEnabled,
+      preAuthenticatedURLEnabled: _isPreAuthenticatedURLEnabled,
       tokenStorage: _useTransientTokenStorage ? TransientTokenStorage() : null,
       uiImplementation: _useWebKitWebView
           ? WebKitWebViewUIImplementation(
@@ -991,21 +991,21 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  Future<void> _onPressAppInitiatedSSOToWeb(BuildContext context) async {
+  Future<void> _onPressPreAuthenticatedURL(BuildContext context) async {
     final clientID = _clientIDController.text;
     final endpoint = _endpointController.text;
-    final appInitiatedSSOToWebRedirectURI =
-        _appInitiatedSSOToWebRedirectURIController.text;
-    final appInitiatedSSOToWebClientID =
-        _appInitiatedSSOToWebClientIDController.text;
-    final shouldUseAnotherBrowser = appInitiatedSSOToWebRedirectURI.isNotEmpty;
+    final preAuthenticatedURLRedirectURI =
+        _preAuthenticatedURLRedirectURIController.text;
+    final preAuthenticatedURLClientID =
+        _preAuthenticatedURLClientIDController.text;
+    final shouldUseAnotherBrowser = preAuthenticatedURLRedirectURI.isNotEmpty;
     String targetRedirectURI = redirectURI;
     String targetClientID = clientID;
-    if (appInitiatedSSOToWebRedirectURI.isNotEmpty) {
-      targetRedirectURI = appInitiatedSSOToWebRedirectURI;
+    if (preAuthenticatedURLRedirectURI.isNotEmpty) {
+      targetRedirectURI = preAuthenticatedURLRedirectURI;
     }
-    if (appInitiatedSSOToWebClientID.isNotEmpty) {
-      targetClientID = appInitiatedSSOToWebClientID;
+    if (preAuthenticatedURLClientID.isNotEmpty) {
+      targetClientID = preAuthenticatedURLClientID;
     }
     try {
       setState(() {
@@ -1025,7 +1025,7 @@ class _MyAppState extends State<MyApp> {
         );
         // Then start a auth to prove it is working
         final newContainer = Authgear(
-          name: "appInitiatedSSOToWeb",
+          name: "preAuthenticatedURL",
           endpoint: endpoint,
           clientID: targetClientID,
           tokenStorage: TransientTokenStorage(),
@@ -1055,7 +1055,7 @@ class _MyAppState extends State<MyApp> {
           },
         );
       } else {
-        // This will be redirected to appInitiatedSSOToWebRedirectURI and never close,
+        // This will be redirected to preAuthenticatedURLRedirectURI and never close,
         // so we do not await
         uiImpl.openAuthorizationURL(
           url: url.toString(),

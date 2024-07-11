@@ -137,7 +137,7 @@ class ReauthenticateOptions {
       redirectURI: redirectURI,
       responseType: ResponseType.code,
       // offline_access is not needed because we don't want a new refresh token to be generated
-      // device_sso and app-initiated-sso-to-web is also not needed,
+      // device_sso and pre-authentictated-url is also not needed,
       // because no new session should be generated so the scopes are not important.
       scope: [
         "openid",
@@ -178,7 +178,7 @@ class SettingsActionOptions {
       clientID: clientID,
       redirectURI: redirectURI,
       responseType: ResponseType.settingsAction,
-      // device_sso and app-initiated-sso-to-web is not needed,
+      // device_sso and pre-authentictated-url is not needed,
       // because session for settings should not be used to perform SSO.
       scope: [
         "openid",
@@ -860,7 +860,7 @@ class Authgear implements AuthgearHttpClientDelegate {
       clientID: clientID,
       redirectURI: redirectURI,
       responseType: ResponseType.code,
-      // device_sso and app-initiated-sso-to-web is also not needed,
+      // device_sso and pre-authentictated-url is also not needed,
       // because anonymous users are not allowed to perform SSO.
       scope: [
         "openid",
@@ -922,11 +922,11 @@ class Authgear implements AuthgearHttpClientDelegate {
     }
     var idToken = await _sharedStorage.getIDToken(name);
     if (idToken == null || idToken.isEmpty) {
-      throw const AppInitiatedSSOToWebIDTokenNotFoundError();
+      throw const PreAuthenticatedURLIDTokenNotFoundError();
     }
     final deviceSecret = await _sharedStorage.getDeviceSecret(name);
     if (deviceSecret == null || deviceSecret.isEmpty) {
-      throw const AppInitiatedSSOToWebDeviceSecretNotFoundError();
+      throw const PreAuthenticatedURLDeviceSecretNotFoundError();
     }
     final tokenRequest = OIDCTokenRequest(
       grantType: GrantType.tokenExchange,

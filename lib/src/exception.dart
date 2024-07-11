@@ -78,23 +78,23 @@ class BiometricLockoutException extends AuthgearException {
   const BiometricLockoutException() : super(null);
 }
 
-class AppInitiatedSSOToWebNotAllowedError extends AuthgearException {
-  const AppInitiatedSSOToWebNotAllowedError() : super(null);
+class PreAuthenticatedURLNotAllowedError extends AuthgearException {
+  const PreAuthenticatedURLNotAllowedError() : super(null);
 }
 
-class AppInitiatedSSOToWebInsufficientScopeError
-    extends AppInitiatedSSOToWebNotAllowedError {
-  const AppInitiatedSSOToWebInsufficientScopeError() : super();
+class PreAuthenticatedURLInsufficientScopeError
+    extends PreAuthenticatedURLNotAllowedError {
+  const PreAuthenticatedURLInsufficientScopeError() : super();
 }
 
-class AppInitiatedSSOToWebIDTokenNotFoundError
-    extends AppInitiatedSSOToWebNotAllowedError {
-  const AppInitiatedSSOToWebIDTokenNotFoundError() : super();
+class PreAuthenticatedURLIDTokenNotFoundError
+    extends PreAuthenticatedURLNotAllowedError {
+  const PreAuthenticatedURLIDTokenNotFoundError() : super();
 }
 
-class AppInitiatedSSOToWebDeviceSecretNotFoundError
-    extends AppInitiatedSSOToWebNotAllowedError {
-  const AppInitiatedSSOToWebDeviceSecretNotFoundError() : super();
+class PreAuthenticatedURLDeviceSecretNotFoundError
+    extends PreAuthenticatedURLNotAllowedError {
+  const PreAuthenticatedURLDeviceSecretNotFoundError() : super();
 }
 
 const _cancelException = CancelException();

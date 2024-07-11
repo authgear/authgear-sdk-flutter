@@ -908,8 +908,8 @@ class Authgear implements AuthgearHttpClientDelegate {
   }
 
   Future<Uri> makePreAuthenticatedURL({
-    required String clientID,
-    required String redirectURI,
+    required String webApplicationClientID,
+    required String webApplicationURI,
     String? state,
   }) async {
     if (!preAuthenticatedURLEnabled) {
@@ -930,7 +930,7 @@ class Authgear implements AuthgearHttpClientDelegate {
     }
     final tokenRequest = OIDCTokenRequest(
       grantType: GrantType.tokenExchange,
-      clientID: clientID,
+      clientID: webApplicationClientID,
       requestedTokenType: RequestedTokenType.preAuthenticatedURLToken,
       audience: await _apiClient.getApiOrigin(),
       subjectTokenType: SubjectTokenType.idToken,
@@ -964,8 +964,8 @@ class Authgear implements AuthgearHttpClientDelegate {
       OIDCAuthenticationRequest(
         responseType: ResponseType.preAuthenticatedURLToken,
         responseMode: ResponseMode.cookie,
-        redirectURI: redirectURI,
-        clientID: clientID,
+        redirectURI: webApplicationURI,
+        clientID: webApplicationClientID,
         xPreAuthenticatedURLToken: preAuthenticatedURLToken,
         idTokenHint: idToken,
         prompt: [PromptOption.none],

@@ -1012,8 +1012,8 @@ class _MyAppState extends State<MyApp> {
         _loading = true;
       });
       final url = await _authgear.makePreAuthenticatedURL(
-        clientID: targetClientID,
-        redirectURI: targetRedirectURI,
+        webApplicationClientID: targetClientID,
+        webApplicationURI: targetRedirectURI,
       );
       final uiImpl = WebKitWebViewUIImplementation();
       if (!shouldUseAnotherBrowser) {

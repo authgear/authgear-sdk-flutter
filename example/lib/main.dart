@@ -1011,7 +1011,7 @@ class _MyAppState extends State<MyApp> {
       setState(() {
         _loading = true;
       });
-      final url = await _authgear.makeAppInitiatedSSOToWebURL(
+      final url = await _authgear.makePreAuthenticatedURL(
         clientID: targetClientID,
         redirectURI: targetRedirectURI,
       );

@@ -907,18 +907,18 @@ class Authgear implements AuthgearHttpClientDelegate {
     return _authenticateAnonymouslyExisting(kid);
   }
 
-  Future<Uri> makeAppInitiatedSSOToWebURL({
+  Future<Uri> makePreAuthenticatedURL({
     required String clientID,
     required String redirectURI,
     String? state,
   }) async {
     if (!preAuthenticatedURLEnabled) {
       throw AuthgearException(Exception(
-          "makeAppInitiatedSSOToWebURL requires preAuthenticatedURLEnabled to be true"));
+          "makePreAuthenticatedURL requires preAuthenticatedURLEnabled to be true"));
     }
     if (!(sessionState == SessionState.authenticated)) {
       throw AuthgearException(
-          Exception("makeAppInitiatedSSOToWebURL requires authenticated user"));
+          Exception("makePreAuthenticatedURL requires authenticated user"));
     }
     var idToken = await _sharedStorage.getIDToken(name);
     if (idToken == null || idToken.isEmpty) {

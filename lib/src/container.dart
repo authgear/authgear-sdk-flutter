@@ -46,7 +46,7 @@ class InternalAuthenticateRequest {
 class AuthenticateOptions {
   final String redirectURI;
   final bool isSsoEnabled;
-  final bool? isAppInitiatedSSOToWebEnabled;
+  final bool? preAuthenticatedURLEnabled;
   final String? state;
   final List<PromptOption>? prompt;
   final String? loginHint;
@@ -60,7 +60,7 @@ class AuthenticateOptions {
   AuthenticateOptions({
     required this.redirectURI,
     required this.isSsoEnabled,
-    this.isAppInitiatedSSOToWebEnabled,
+    this.preAuthenticatedURLEnabled,
     this.state,
     this.prompt,
     this.loginHint,
@@ -78,8 +78,7 @@ class AuthenticateOptions {
       redirectURI: redirectURI,
       responseType: ResponseType.code,
       scope: AuthenticateOptions.getScopes(
-          isAppInitiatedSSOToWebEnabled:
-              isAppInitiatedSSOToWebEnabled ?? false),
+          preAuthenticatedURLEnabled: preAuthenticatedURLEnabled ?? false),
       isSsoEnabled: isSsoEnabled,
       codeChallenge: verifier.codeChallenge,
       prompt: prompt,
@@ -94,13 +93,13 @@ class AuthenticateOptions {
     );
   }
 
-  static List<String> getScopes({required bool isAppInitiatedSSOToWebEnabled}) {
+  static List<String> getScopes({required bool preAuthenticatedURLEnabled}) {
     List<String> scopes = [
       "openid",
       "offline_access",
       "https://authgear.com/scopes/full-access",
     ];
-    if (isAppInitiatedSSOToWebEnabled) {
+    if (preAuthenticatedURLEnabled) {
       scopes.addAll(
           ["device_sso", "https://authgear.com/scopes/pre-authenticated-url"]);
     }
@@ -206,7 +205,7 @@ class Authgear implements AuthgearHttpClientDelegate {
   final String endpoint;
   final String name;
   final bool isSsoEnabled;
-  final bool isAppInitiatedSSOToWebEnabled;
+  final bool preAuthenticatedURLEnabled;
   final Future<void> Function(String)? sendWechatAuthRequest;
 
   final TokenStorage _tokenStorage;
@@ -260,7 +259,7 @@ class Authgear implements AuthgearHttpClientDelegate {
     required this.endpoint,
     this.name = "default",
     this.isSsoEnabled = false,
-    this.isAppInitiatedSSOToWebEnabled = false,
+    this.preAuthenticatedURLEnabled = false,
     this.sendWechatAuthRequest,
     TokenStorage? tokenStorage,
     UIImplementation? uiImplementation,
@@ -328,7 +327,7 @@ class Authgear implements AuthgearHttpClientDelegate {
         await internalCreateAuthenticateRequest(AuthenticateOptions(
       redirectURI: redirectURI,
       isSsoEnabled: isSsoEnabled,
-      isAppInitiatedSSOToWebEnabled: isAppInitiatedSSOToWebEnabled,
+      preAuthenticatedURLEnabled: preAuthenticatedURLEnabled,
       state: state,
       prompt: prompt,
       uiLocales: uiLocales,
@@ -808,7 +807,7 @@ class Authgear implements AuthgearHttpClientDelegate {
           clientID: clientID,
           jwt: jwt,
           scope: AuthenticateOptions.getScopes(
-              isAppInitiatedSSOToWebEnabled: isAppInitiatedSSOToWebEnabled),
+              preAuthenticatedURLEnabled: preAuthenticatedURLEnabled),
         ),
       );
       await _persistTokenResponse(
@@ -913,9 +912,9 @@ class Authgear implements AuthgearHttpClientDelegate {
     required String redirectURI,
     String? state,
   }) async {
-    if (!isAppInitiatedSSOToWebEnabled) {
+    if (!preAuthenticatedURLEnabled) {
       throw AuthgearException(Exception(
-          "makeAppInitiatedSSOToWebURL requires isAppInitiatedSSOToWebEnabled to be true"));
+          "makeAppInitiatedSSOToWebURL requires preAuthenticatedURLEnabled to be true"));
     }
     if (!(sessionState == SessionState.authenticated)) {
       throw AuthgearException(

@@ -834,7 +834,7 @@ class _MyAppState extends State<MyApp> {
       endpoint: endpoint,
       clientID: clientID,
       isSsoEnabled: _isSsoEnabled,
-      isAppInitiatedSSOToWebEnabled: _isAppInitiatedSSOToWebEnabled,
+      preAuthenticatedURLEnabled: _isAppInitiatedSSOToWebEnabled,
       tokenStorage: _useTransientTokenStorage ? TransientTokenStorage() : null,
       uiImplementation: _useWebKitWebView
           ? WebKitWebViewUIImplementation(

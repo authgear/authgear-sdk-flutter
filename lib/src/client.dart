@@ -25,7 +25,7 @@ class OIDCAuthenticationRequest {
   final SettingsAction? settingsAction;
   final String? authenticationFlowGroup;
   final ResponseMode? responseMode;
-  final String? xAppInitiatedSSOToWebToken;
+  final String? xPreAuthenticatedURLToken;
 
   OIDCAuthenticationRequest({
     required this.clientID,
@@ -47,7 +47,7 @@ class OIDCAuthenticationRequest {
     this.settingsAction,
     this.authenticationFlowGroup,
     this.responseMode,
-    this.xAppInitiatedSSOToWebToken,
+    this.xPreAuthenticatedURLToken,
   });
 
   Map<String, String> toQueryParameters() {
@@ -149,9 +149,9 @@ class OIDCAuthenticationRequest {
       q["response_mode"] = responseMode.value;
     }
 
-    final xAppInitiatedSSOToWebToken = this.xAppInitiatedSSOToWebToken;
-    if (xAppInitiatedSSOToWebToken != null) {
-      q["x_app_initiated_sso_to_web_token"] = xAppInitiatedSSOToWebToken;
+    final xPreAuthenticatedURLToken = this.xPreAuthenticatedURLToken;
+    if (xPreAuthenticatedURLToken != null) {
+      q["x_pre_authenticated_url_token"] = xPreAuthenticatedURLToken;
     }
 
     return q;

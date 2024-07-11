@@ -54,7 +54,7 @@ enum ResponseType {
   code,
   settingsAction,
   none,
-  appInitiatedSSOToWebToken,
+  preAuthenticatedURLToken,
 }
 
 extension ResponseTypeExtension on ResponseType {
@@ -66,8 +66,8 @@ extension ResponseTypeExtension on ResponseType {
         return "urn:authgear:params:oauth:response-type:settings-action";
       case ResponseType.none:
         return "none";
-      case ResponseType.appInitiatedSSOToWebToken:
-        return "urn:authgear:params:oauth:response-type:app_initiated_sso_to_web token";
+      case ResponseType.preAuthenticatedURLToken:
+        return "urn:authgear:params:oauth:response-type:pre-authenticated-url token";
     }
   }
 }
@@ -120,14 +120,14 @@ extension GrantTypeExtension on GrantType {
 }
 
 enum RequestedTokenType {
-  appInitiatedSSOToWebToken,
+  preAuthenticatedURLToken,
 }
 
 extension RequestedTokenTypeExtension on RequestedTokenType {
   String get value {
     switch (this) {
-      case RequestedTokenType.appInitiatedSSOToWebToken:
-        return "urn:authgear:params:oauth:token-type:app-initiated-sso-to-web-token";
+      case RequestedTokenType.preAuthenticatedURLToken:
+        return "urn:authgear:params:oauth:token-type:pre-authenticated-url-token";
     }
   }
 }

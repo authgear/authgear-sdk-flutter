@@ -932,7 +932,7 @@ class Authgear implements AuthgearHttpClientDelegate {
     final tokenRequest = OIDCTokenRequest(
       grantType: GrantType.tokenExchange,
       clientID: clientID,
-      requestedTokenType: RequestedTokenType.appInitiatedSSOToWebToken,
+      requestedTokenType: RequestedTokenType.preAuthenticatedURLToken,
       audience: await _apiClient.getApiOrigin(),
       subjectTokenType: SubjectTokenType.idToken,
       subjectToken: idToken,
@@ -941,11 +941,11 @@ class Authgear implements AuthgearHttpClientDelegate {
     );
     final tokenExchangeResult = await _apiClient.sendTokenRequest(tokenRequest);
 
-    // Here access_token is app-initiated-sso-to-web-token
-    final appInitiatedSSOToWebToken = tokenExchangeResult.accessToken;
+    // Here access_token is pre-authenticated-url-token
+    final preAuthenticatedURLToken = tokenExchangeResult.accessToken;
     final newDeviceSecret = tokenExchangeResult.deviceSecret;
     final newIDToken = tokenExchangeResult.idToken;
-    if (appInitiatedSSOToWebToken == null) {
+    if (preAuthenticatedURLToken == null) {
       throw AuthgearException(
         Exception("unexpected: access_token is not returned"),
       );
@@ -963,11 +963,11 @@ class Authgear implements AuthgearHttpClientDelegate {
 
     return await internalBuildAuthorizationURL(
       OIDCAuthenticationRequest(
-        responseType: ResponseType.appInitiatedSSOToWebToken,
+        responseType: ResponseType.preAuthenticatedURLToken,
         responseMode: ResponseMode.cookie,
         redirectURI: redirectURI,
         clientID: clientID,
-        xAppInitiatedSSOToWebToken: appInitiatedSSOToWebToken,
+        xPreAuthenticatedURLToken: preAuthenticatedURLToken,
         idTokenHint: idToken,
         prompt: [PromptOption.none],
         state: state,

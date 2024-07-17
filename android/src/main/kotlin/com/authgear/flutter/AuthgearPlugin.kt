@@ -35,9 +35,11 @@ import io.flutter.plugin.common.PluginRegistry
 import org.json.JSONObject
 import java.io.File
 import java.io.IOException
+import java.math.BigInteger
 import java.security.*
 import java.security.interfaces.RSAPublicKey
 import java.util.*
+import kotlin.math.ceil
 
 
 class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginRegistry.ActivityResultListener {
@@ -235,6 +237,23 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
         val kid = call.argument<String>("kid")!!
         val payload = call.argument<Map<String, Any>>("payload")!!
         this.signWithAnonymousPrivateKey(kid, payload, result)
+      }
+      "createDPoPPrivateKey" -> {
+        val kid = call.argument<String>("kid")!!
+        this.createDPoPPrivateKey(kid, result)
+      }
+      "signWithDPoPPrivateKey" -> {
+        val kid = call.argument<String>("kid")!!
+        val payload = call.argument<Map<String, Any>>("payload")!!
+        this.signWithDPoPPrivateKey(kid, payload, result)
+      }
+      "checkDPoPPrivateKey" -> {
+        val kid = call.argument<String>("kid")!!
+        this.checkDPoPPrivateKey(kid, result)
+      }
+      "computeDPoPJKT" -> {
+        val kid = call.argument<String>("kid")!!
+        this.computeDPoPJKT(kid, result)
       }
       else -> result.notImplemented()
     }
@@ -635,6 +654,21 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
     removePrivateKey(alias, result)
   }
 
+  private fun createDPoPPrivateKey(kid: String, result: Result) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+      result.success(null)
+      return
+    }
+    val alias = getDPoPKeyAlias(kid)
+    val spec = makeDPoPKeyPairSpec(alias)
+    try {
+      createKeyPair(spec)
+      result.success(null)
+    } catch (e: Exception) {
+      result.exception(e)
+    }
+  }
+
   private fun removePrivateKey(alias: String, result: Result) {
     try {
       val keyStore = KeyStore.getInstance("AndroidKeyStore")
@@ -681,6 +715,57 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
     try {
       val keyPair = getKeyPair(alias)
       signAnonymousJWT(keyPair, kid, payload, result)
+    } catch (e: Exception) {
+      result.exception(e)
+    }
+  }
+
+  private fun getDPoPKeyAlias(kid: String): String {
+    return "com.authgear.keys.dpop.$kid"
+  }
+
+  private fun signWithDPoPPrivateKey(kid: String, payload: Map<String, Any>, result: Result) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+      result.success("")
+      return
+    }
+
+    val alias = getDPoPKeyAlias(kid)
+    try {
+      val keyPair = getKeyPair(alias)
+      signDPoPJWT(keyPair, kid, payload, result)
+    } catch (e: Exception) {
+      result.exception(e)
+    }
+  }
+
+  private fun checkDPoPPrivateKey(kid: String, result: Result) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+      result.success(false)
+      return
+    }
+
+    val alias = getDPoPKeyAlias(kid)
+    try {
+      getKeyPair(alias)
+      result.success(true)
+    } catch (e: Exception) {
+      result.exception(e)
+    }
+  }
+
+  private fun computeDPoPJKT(kid: String, result: Result) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+      result.success("")
+      return
+    }
+
+    val alias = getDPoPKeyAlias(kid)
+    try {
+      val keypair = getKeyPair(alias)
+      val jwk = getJWK(keypair, kid)
+      val jkt = jwk.toSHA256Thumbprint()
+      result.success(jkt)
     } catch (e: Exception) {
       result.exception(e)
     }
@@ -746,6 +831,19 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
 
   @RequiresApi(Build.VERSION_CODES.M)
   private fun makeAnonymousKeyPairSpec(alias: String): KeyGenParameterSpec {
+    val builder = KeyGenParameterSpec.Builder(
+      alias,
+      KeyProperties.PURPOSE_SIGN or KeyProperties.PURPOSE_VERIFY
+    )
+    builder.setKeySize(2048)
+    builder.setDigests(KeyProperties.DIGEST_SHA256)
+    builder.setSignaturePaddings(KeyProperties.SIGNATURE_PADDING_RSA_PKCS1)
+
+    return builder.build()
+  }
+
+  @RequiresApi(Build.VERSION_CODES.M)
+  private fun makeDPoPKeyPairSpec(alias: String): KeyGenParameterSpec {
     val builder = KeyGenParameterSpec.Builder(
       alias,
       KeyProperties.PURPOSE_SIGN or KeyProperties.PURPOSE_VERIFY
@@ -845,6 +943,18 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
     }
   }
 
+  private fun signDPoPJWT(keyPair: KeyPair, kid: String, payload: Map<String, Any>, result: Result) {
+    val jwk = getJWK(keyPair, kid)
+    val header = makeDPoPJWTHeader(jwk)
+    try {
+      val signature = makeSignature(keyPair.private)
+      val jwt = signJWT(signature, header, payload)
+      result.success(jwt)
+    } catch (e: Exception) {
+      result.exception(e)
+    }
+  }
+
   private fun getJWK(keyPair: KeyPair, kid: String): Map<String, Any> {
     val publicKey = keyPair.public
     val rsaPublicKey = publicKey as RSAPublicKey
@@ -852,8 +962,8 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
       "kid" to kid,
       "alg" to "RS256",
       "kty" to "RSA",
-      "n" to rsaPublicKey.modulus.toByteArray().base64URLEncode(),
-      "e" to rsaPublicKey.publicExponent.toByteArray().base64URLEncode(),
+      "n" to rsaPublicKey.modulus.toUnsignedByteArray().base64URLEncode(),
+      "e" to rsaPublicKey.publicExponent.toUnsignedByteArray().base64URLEncode(),
     )
     return jwk
   }
@@ -870,6 +980,15 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
   private fun makeAnonymousJWTHeader(jwk: Map<String, Any>): Map<String, Any> {
     return hashMapOf(
       "typ" to "vnd.authgear.anonymous-request",
+      "kid" to jwk["kid"]!!,
+      "alg" to jwk["alg"]!!,
+      "jwk" to jwk,
+    )
+  }
+
+  private fun makeDPoPJWTHeader(jwk: Map<String, Any>): Map<String, Any> {
+    return hashMapOf(
+      "typ" to "dpop+jwt",
       "kid" to jwk["kid"]!!,
       "alg" to jwk["alg"]!!,
       "jwk" to jwk,
@@ -937,4 +1056,15 @@ internal fun Result.exception(e: Exception) {
 
 internal fun ByteArray.base64URLEncode(): String {
   return Base64.encodeToString(this, Base64.NO_WRAP or Base64.URL_SAFE or Base64.NO_PADDING)
+}
+
+internal fun BigInteger.toUnsignedByteArray(): ByteArray {
+  // BigInteger always include a bit to represent the sign
+  // So the array length is ceil((this.bitLength() + 1)/8)
+  // This sign bit causes an extra byte to be added to the ByteArray when bitLength is just divisible by 8
+  // We want to exclude that extra byte in some cases, such as sending the bytes in a JWK as Base64urlUInt
+  val expectedLength = ceil(this.bitLength() / 8.0).toInt()
+  val bytes = this.toByteArray()
+  val startIdx = bytes.size - expectedLength
+  return bytes.sliceArray(IntRange(startIdx, bytes.size - 1))
 }

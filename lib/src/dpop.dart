@@ -27,6 +27,7 @@ class DefaultDPoPProvider implements DPoPProvider {
     } else {
       kid = await native.generateUUID();
       await native.createDPoPPrivateKey(kid: kid);
+      await sharedStorage.setDPoPKeyID(namespace, kid);
     }
     final now = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
     final payload = {
@@ -45,6 +46,7 @@ class DefaultDPoPProvider implements DPoPProvider {
       // Generate a new key if the original key cannot be used for any reason
       kid = await native.generateUUID();
       await native.createDPoPPrivateKey(kid: kid);
+      await sharedStorage.setDPoPKeyID(namespace, kid);
       return await native.signWithDPoPPrivateKey(
         kid: kid,
         payload: payload,

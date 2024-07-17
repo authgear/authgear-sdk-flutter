@@ -15,7 +15,7 @@ abstract class InterAppSharedStorage {
   Future<String?> getDeviceSecret(String namespace);
   Future<void> delDeviceSecret(String namespace);
 
-  Future<void> setDPoPKeyID(String namespace, String kidD);
+  Future<void> setDPoPKeyID(String namespace, String kid);
   Future<String?> getDPoPKeyID(String namespace);
   Future<void> delDPoPKeyID(String namespace);
 

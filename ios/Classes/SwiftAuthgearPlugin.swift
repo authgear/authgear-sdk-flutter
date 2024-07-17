@@ -112,6 +112,14 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
       let kid = arguments["kid"] as! String
       let payload = arguments["payload"] as! [String: Any]
       self.signWithDPoPPrivateKey(kid: kid, payload: payload, result: result)
+    case "checkDPoPPrivateKey":
+      let arguments = call.arguments as! Dictionary<String, AnyObject>
+      let kid = arguments["kid"] as! String
+      self.checkDPoPPrivateKey(kid: kid, result: result)
+    case "computeDPoPJKT":
+      let arguments = call.arguments as! Dictionary<String, AnyObject>
+      let kid = arguments["kid"] as! String
+      self.computeDPoPJKT(kid: kid, result: result)
     default:
       result(FlutterMethodNotImplemented)
     }
@@ -660,6 +668,37 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     }
   }
 
+  private func checkDPoPPrivateKey(kid: String, result: FlutterResult) {
+    if #unavailable(iOS 11.3) {
+      result(false)
+      return
+    }
+    switch self.getDPoPPrivateKey(kid: kid) {
+    case .failure(_):
+      result(false)
+    case .success(_):
+      result(true)
+    }
+  }
+
+  private func computeDPoPJKT(kid: String, result: FlutterResult) {
+    if #unavailable(iOS 11.3) {
+      result("")
+      return
+    }
+    switch self.getDPoPPrivateKey(kid: kid) {
+    case .failure(let error):
+      result(FlutterError(error: error))
+    case .success(let privateKey):
+      switch self.computeDPoPJKTByPrivateKey(privateKey: privateKey, kid: kid) {
+      case .failure(let error):
+        result(FlutterError(error: error))
+      case .success(let jkt):
+        result(jkt)
+      }
+    }
+  }
+
   @available(iOS 11.3, *)
   private func generatePrivateKey() -> Result<SecKey, Error> {
     var error: Unmanaged<CFError>?
@@ -825,6 +864,31 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     return signJWT(privateKey: privateKey, header: header, payload: payload)
   }
 
+  private func computeDPoPJKTByPrivateKey(privateKey: SecKey, kid: String) -> Result<String, Error> {
+    var jwk: [String: Any] = [:]
+    jwk["kid"] = kid
+
+    if let error = getJWKFromPrivateKey(privateKey: privateKey, jwk: &jwk) {
+      return .failure(error)
+    }
+
+    var thumbprintParameters: [String: Any?] = [
+      "kty": jwk["kty"],
+      "n": jwk["n"],
+      "e": jwk["e"]
+    ]
+
+    guard let json = try? JSONSerialization.data(withJSONObject: thumbprintParameters, options: .sortedKeys) else {
+      return .failure(AuthgearError.runtimeError(AuthgearRuntimeError(message: "unable to get thumbprint parameters")))
+    }
+      
+    guard let thumbprint = try? Thumbprint.calculate(from: json, algorithm: .SHA256) else {
+        return .failure(AuthgearError.runtimeError(AuthgearRuntimeError(message:"unable to compute jwk thumbprint")))
+    }
+
+    return .success(thumbprint)
+  }
+
   @available(iOS 10.0, *)
   private func getJWKFromPrivateKey(privateKey: SecKey, jwk: inout [String: Any]) -> Error? {
     var error: Unmanaged<CFError>?
@@ -932,7 +996,7 @@ fileprivate extension JSONSerialization {
   }
 }
 
-fileprivate extension Data {
+internal extension Data {
   func base64urlEncodedString() -> String {
     base64EncodedString()
       .replacingOccurrences(of: "+", with: "-")

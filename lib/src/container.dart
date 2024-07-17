@@ -73,7 +73,8 @@ class AuthenticateOptions {
     this.authenticationFlowGroup,
   });
 
-  OIDCAuthenticationRequest toRequest(String clientID, CodeVerifier verifier) {
+  OIDCAuthenticationRequest toRequest(
+      String clientID, CodeVerifier verifier, String dpopJKT) {
     return OIDCAuthenticationRequest(
       clientID: clientID,
       redirectURI: redirectURI,
@@ -91,6 +92,7 @@ class AuthenticateOptions {
       oauthProviderAlias: oauthProviderAlias,
       wechatRedirectURI: wechatRedirectURI,
       authenticationFlowGroup: authenticationFlowGroup,
+      dpopJKT: dpopJKT,
     );
   }
 }
@@ -214,6 +216,7 @@ class Authgear implements AuthgearHttpClientDelegate {
   final ContainerStorage _storage;
   final InterAppSharedStorage _sharedStorage;
   final UIImplementation _uiImplementation;
+  late final DPoPProvider _dpopProvider;
   late final APIClient _apiClient;
   late final AuthgearExperimental experimental;
 
@@ -269,7 +272,7 @@ class Authgear implements AuthgearHttpClientDelegate {
         _uiImplementation = uiImplementation ?? DeviceBrowserUIImplementation(),
         _storage = PersistentContainerStorage(),
         _sharedStorage = PersistentInterAppSharedStorage() {
-    final dpopProvider = DefaultDPoPProvider(
+    _dpopProvider = DefaultDPoPProvider(
       namespace: name,
       sharedStorage: _sharedStorage,
     );
@@ -279,7 +282,7 @@ class Authgear implements AuthgearHttpClientDelegate {
       endpoint: endpoint,
       plainHttpClient: plainHttpClient,
       authgearHttpClient: authgearHttpClient,
-      dpopProvider: dpopProvider,
+      dpopProvider: _dpopProvider,
     );
     experimental = AuthgearExperimental(this);
   }
@@ -309,7 +312,8 @@ class Authgear implements AuthgearHttpClientDelegate {
   Future<InternalAuthenticateRequest> internalCreateAuthenticateRequest(
       AuthenticateOptions options) async {
     final codeVerifier = CodeVerifier(_rng);
-    final oidcRequest = options.toRequest(clientID, codeVerifier);
+    final dpopJKT = await _dpopProvider.computeJKT();
+    final oidcRequest = options.toRequest(clientID, codeVerifier, dpopJKT);
     final url = await internalBuildAuthorizationURL(oidcRequest);
 
     return InternalAuthenticateRequest(

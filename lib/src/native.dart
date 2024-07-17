@@ -256,3 +256,27 @@ Future<String> signWithDPoPPrivateKey({
     throw wrapException(e);
   }
 }
+
+Future<bool> checkDPoPPrivateKey({
+  required String kid,
+}) async {
+  try {
+    return await _channel.invokeMethod("checkDPoPPrivateKey", {
+      "kid": kid,
+    });
+  } on PlatformException catch (e) {
+    throw wrapException(e);
+  }
+}
+
+Future<String> computeDPoPJKT({
+  required String kid,
+}) async {
+  try {
+    return await _channel.invokeMethod("computeDPoPJKT", {
+      "kid": kid,
+    });
+  } on PlatformException catch (e) {
+    throw wrapException(e);
+  }
+}

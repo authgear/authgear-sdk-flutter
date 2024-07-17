@@ -27,6 +27,7 @@ class OIDCAuthenticationRequest {
   final String? authenticationFlowGroup;
   final ResponseMode? responseMode;
   final String? xPreAuthenticatedURLToken;
+  final String? dpopJKT;
 
   OIDCAuthenticationRequest({
     required this.clientID,
@@ -49,6 +50,7 @@ class OIDCAuthenticationRequest {
     this.authenticationFlowGroup,
     this.responseMode,
     this.xPreAuthenticatedURLToken,
+    this.dpopJKT,
   });
 
   Map<String, String> toQueryParameters() {
@@ -155,6 +157,11 @@ class OIDCAuthenticationRequest {
     final xPreAuthenticatedURLToken = this.xPreAuthenticatedURLToken;
     if (xPreAuthenticatedURLToken != null) {
       q["x_pre_authenticated_url_token"] = xPreAuthenticatedURLToken;
+    }
+
+    final dpopJKT = this.dpopJKT;
+    if (dpopJKT != null) {
+      q["dpop_jkt"] = dpopJKT;
     }
 
     return q;

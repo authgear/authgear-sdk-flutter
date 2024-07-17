@@ -55,8 +55,21 @@ class DefaultDPoPProvider implements DPoPProvider {
   }
 
   @override
-  Future<String> computeJKT() {
-    // TODO: implement computeJKT
-    throw UnimplementedError();
+  Future<String> computeJKT() async {
+    final existingKeyId = await sharedStorage.getDPoPKeyID(namespace);
+    String? kid;
+    if (existingKeyId != null) {
+      final existingKeyOK =
+          await native.checkDPoPPrivateKey(kid: existingKeyId);
+      if (existingKeyOK) {
+        kid = existingKeyId;
+      }
+    }
+    if (kid == null) {
+      kid = await native.generateUUID();
+      await native.createDPoPPrivateKey(kid: kid);
+      await sharedStorage.setDPoPKeyID(namespace, kid);
+    }
+    return await native.computeDPoPJKT(kid: kid);
   }
 }

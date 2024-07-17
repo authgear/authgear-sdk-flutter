@@ -387,7 +387,7 @@ class APIClient {
   Future<UserInfo> getUserInfo() async {
     final config = await fetchOIDCConfiguration();
     final url = Uri.parse(config.userinfoEndpoint);
-    final httpResponse = await _get(_plainHttpClient, url);
+    final httpResponse = await _get(_authgearHttpClient, url);
     return _decodeOIDCResponseJSON(httpResponse, UserInfo.fromJSON);
   }
 

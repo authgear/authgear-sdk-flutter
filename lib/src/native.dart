@@ -230,3 +230,29 @@ Future<String> signWithAnonymousPrivateKey({
     throw wrapException(e);
   }
 }
+
+Future<void> createDPoPPrivateKey({
+  required String kid,
+}) async {
+  try {
+    return await _channel.invokeMethod("createDPoPPrivateKey", {
+      "kid": kid,
+    });
+  } on PlatformException catch (e) {
+    throw wrapException(e);
+  }
+}
+
+Future<String> signWithDPoPPrivateKey({
+  required String kid,
+  required Map<String, dynamic> payload,
+}) async {
+  try {
+    return await _channel.invokeMethod("signWithDPoPPrivateKey", {
+      "kid": kid,
+      "payload": payload,
+    });
+  } on PlatformException catch (e) {
+    throw wrapException(e);
+  }
+}

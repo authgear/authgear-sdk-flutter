@@ -1,6 +1,7 @@
 import 'dart:math' show Random;
 import 'dart:async' show StreamController;
 import 'dart:convert' show jsonEncode, utf8;
+import 'package:flutter_authgear/src/dpop.dart';
 import 'package:http/http.dart' show Client;
 
 import 'storage.dart';
@@ -268,12 +269,17 @@ class Authgear implements AuthgearHttpClientDelegate {
         _uiImplementation = uiImplementation ?? DeviceBrowserUIImplementation(),
         _storage = PersistentContainerStorage(),
         _sharedStorage = PersistentInterAppSharedStorage() {
+    final dpopProvider = DefaultDPoPProvider(
+      namespace: name,
+      sharedStorage: _sharedStorage,
+    );
     final plainHttpClient = Client();
     final authgearHttpClient = AuthgearHttpClient(this, plainHttpClient);
     _apiClient = APIClient(
       endpoint: endpoint,
       plainHttpClient: plainHttpClient,
       authgearHttpClient: authgearHttpClient,
+      dpopProvider: dpopProvider,
     );
     experimental = AuthgearExperimental(this);
   }

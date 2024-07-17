@@ -1,5 +1,6 @@
 import 'dart:io' show Platform;
 import 'dart:convert' show utf8, jsonDecode, jsonEncode;
+import 'package:flutter_authgear/src/dpop.dart';
 import 'package:http/http.dart'
     show Client, Response, BaseClient, BaseRequest, StreamedResponse;
 import 'exception.dart';
@@ -332,14 +333,17 @@ class APIClient {
   final String endpoint;
   final Client _plainHttpClient;
   final AuthgearHttpClient _authgearHttpClient;
+  final DPoPProvider _dpopProvider;
   OIDCConfiguration? _config;
 
   APIClient({
     required this.endpoint,
     required Client plainHttpClient,
     required AuthgearHttpClient authgearHttpClient,
+    required DPoPProvider dpopProvider,
   })  : _plainHttpClient = plainHttpClient,
-        _authgearHttpClient = authgearHttpClient;
+        _authgearHttpClient = authgearHttpClient,
+        _dpopProvider = dpopProvider;
 
   Future<OIDCConfiguration> fetchOIDCConfiguration() async {
     final config = _config;
@@ -349,7 +353,7 @@ class APIClient {
 
     final url =
         Uri.parse(endpoint).replace(path: "/.well-known/openid-configuration");
-    final resp = await _plainHttpClient.get(url);
+    final resp = await _get(_plainHttpClient, url);
     final json = jsonDecode(utf8.decode(resp.bodyBytes));
     final newConfig = OIDCConfiguration.fromJSON(json);
     _config = newConfig;
@@ -376,14 +380,14 @@ class APIClient {
     final clientToUse =
         includeAccessToken ? _authgearHttpClient : _plainHttpClient;
     final httpResponse =
-        await clientToUse.post(url, body: request.toQueryParameters());
+        await _post(clientToUse, url, body: request.toQueryParameters());
     return _decodeOIDCResponseJSON(httpResponse, OIDCTokenResponse.fromJSON);
   }
 
   Future<UserInfo> getUserInfo() async {
     final config = await fetchOIDCConfiguration();
     final url = Uri.parse(config.userinfoEndpoint);
-    final httpResponse = await _authgearHttpClient.get(url);
+    final httpResponse = await _get(_plainHttpClient, url);
     return _decodeOIDCResponseJSON(httpResponse, UserInfo.fromJSON);
   }
 
@@ -393,14 +397,14 @@ class APIClient {
     final body = {
       "token": refreshToken,
     };
-    final httpResponse = await _plainHttpClient.post(url, body: body);
+    final httpResponse = await _post(_plainHttpClient, url, body: body);
     return _decodeOIDCResponse(httpResponse);
   }
 
   Future<AppSessionTokenResponse> getAppSessionToken(
       String refreshToken) async {
     final url = await _buildApiUrl("/oauth2/app_session_token");
-    final httpResponse = await _plainHttpClient.post(url,
+    final httpResponse = await _post(_plainHttpClient, url,
         headers: {
           "content-type": "application/json; charset=UTF-8",
         },
@@ -414,8 +418,8 @@ class APIClient {
   Future<void> sendSetupBiometricRequest(BiometricRequest request) async {
     final config = await fetchOIDCConfiguration();
     final url = Uri.parse(config.tokenEndpoint);
-    final httpResponse =
-        await _authgearHttpClient.post(url, body: request.toQueryParameters());
+    final httpResponse = await _post(_authgearHttpClient, url,
+        body: request.toQueryParameters());
     return _decodeOIDCResponse(httpResponse);
   }
 
@@ -423,8 +427,8 @@ class APIClient {
       BiometricRequest request) async {
     final config = await fetchOIDCConfiguration();
     final url = Uri.parse(config.tokenEndpoint);
-    final httpResponse =
-        await _authgearHttpClient.post(url, body: request.toQueryParameters());
+    final httpResponse = await _post(_authgearHttpClient, url,
+        body: request.toQueryParameters());
     return _decodeOIDCResponseJSON(httpResponse, OIDCTokenResponse.fromJSON);
   }
 
@@ -433,13 +437,14 @@ class APIClient {
     final config = await fetchOIDCConfiguration();
     final url = Uri.parse(config.tokenEndpoint);
     final httpResponse =
-        await _plainHttpClient.post(url, body: request.toQueryParameters());
+        await _post(_plainHttpClient, url, body: request.toQueryParameters());
     return _decodeOIDCResponseJSON(httpResponse, OIDCTokenResponse.fromJSON);
   }
 
   Future<ChallengeResponse> getChallenge(String purpose) async {
     final url = await _buildApiUrl("/oauth2/challenge");
-    final httpResponse = await _plainHttpClient.post(
+    final httpResponse = await _post(
+      _plainHttpClient,
       url,
       headers: {
         "content-type": "application/json; charset=UTF-8",
@@ -456,7 +461,8 @@ class APIClient {
     required String code,
   }) async {
     final url = await _buildApiUrl("/sso/wechat/callback");
-    final httpResponse = await _plainHttpClient.post(
+    final httpResponse = await _post(
+      _plainHttpClient,
       url,
       body: {
         "state": state,
@@ -464,6 +470,27 @@ class APIClient {
       },
     );
     return _decodeAPIResponse(httpResponse);
+  }
+
+  Future<Map<String, String>> _composeRequestHeaders(
+      Uri url, String method, Map<String, String> headers) async {
+    final dpopProof =
+        await _dpopProvider.generateDPoPProof(htm: "POST", htu: url.toString());
+    Map<String, String> h = Map.from(headers);
+    h["DPoP"] = dpopProof;
+    return h;
+  }
+
+  Future<Response> _post(Client client, Uri url,
+      {Map<String, String>? headers, Object? body}) async {
+    final h = await _composeRequestHeaders(url, "POST", headers ?? {});
+    return await client.post(url, headers: h, body: body);
+  }
+
+  Future<Response> _get(Client client, Uri url,
+      {Map<String, String>? headers}) async {
+    final h = await _composeRequestHeaders(url, "GET", headers ?? {});
+    return await client.get(url, headers: h);
   }
 
   void _decodeOIDCResponse(Response resp) {

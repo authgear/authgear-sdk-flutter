@@ -103,6 +103,15 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
       let kid = arguments["kid"] as! String
       let payload = arguments["payload"] as! [String: Any]
       self.signWithAnonymousPrivateKey(kid: kid, payload: payload, result: result)
+    case "createDPoPPrivateKey":
+      let arguments = call.arguments as! Dictionary<String, AnyObject>
+      let kid = arguments["kid"] as! String
+      self.createDPoPPrivateKey(kid: kid, result: result)
+    case "signWithDPoPPrivateKey":
+      let arguments = call.arguments as! Dictionary<String, AnyObject>
+      let kid = arguments["kid"] as! String
+      let payload = arguments["payload"] as! [String: Any]
+      self.signWithDPoPPrivateKey(kid: kid, payload: payload, result: result)
     default:
       result(FlutterMethodNotImplemented)
     }
@@ -517,6 +526,25 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     removePrivateKey(tag: tag, result: result)
   }
 
+  private func createDPoPPrivateKey(kid: String, result: FlutterResult) {
+    if #unavailable(iOS 11.3) {
+      result(nil)
+      return
+    }
+    let tag: String = "com.authgear.keys.dpop.\(kid)"
+    switch self.generatePrivateKey() {
+    case .failure(let error):
+      result(FlutterError(error: error))
+      return
+    case .success(let secKey):
+      if let error = self.addDPoPPrivateKey(privateKey: secKey, tag: tag) {
+        result(FlutterError(error: error))
+        return
+      }
+      result(nil)
+    }
+  }
+
   private func removePrivateKey(tag: String, result: FlutterResult) {
     let query: [String: Any] = [
       kSecClass as String: kSecClassKey,
@@ -614,6 +642,24 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     }
   }
 
+  private func signWithDPoPPrivateKey(kid: String, payload: [String: Any], result: FlutterResult) {
+    if #unavailable(iOS 11.3) {
+      result("")
+      return
+    }
+    switch self.getDPoPPrivateKey(kid: kid) {
+    case .failure(let error):
+      result(FlutterError(error: error))
+    case .success(let privateKey):
+      switch self.signDPoPJWT(privateKey: privateKey, kid: kid, payload: payload) {
+      case .failure(let error):
+        result(FlutterError(error: error))
+      case .success(let jwt):
+        result(jwt)
+      }
+    }
+  }
+
   @available(iOS 11.3, *)
   private func generatePrivateKey() -> Result<SecKey, Error> {
     var error: Unmanaged<CFError>?
@@ -645,6 +691,23 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
       kSecAttrApplicationTag as String: tag,
       kSecAttrAccessControl as String: accessControl,
       kSecUseAuthenticationContext as String: laContext,
+    ]
+
+    let status = SecItemAdd(query as CFDictionary, nil)
+    guard status == errSecSuccess else {
+      return NSError(osStatus: status)
+    }
+
+    return nil
+  }
+
+  private func addDPoPPrivateKey(privateKey: SecKey, tag: String) -> Error? {
+    var error: Unmanaged<CFError>?
+
+    let query: [String: Any] = [
+      kSecValueRef as String: privateKey,
+      kSecClass as String: kSecClassKey,
+      kSecAttrApplicationTag as String: tag,
     ]
 
     let status = SecItemAdd(query as CFDictionary, nil)
@@ -697,6 +760,12 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     return getPrivateKey(tag: tag)
   }
 
+  private func getDPoPPrivateKey(kid: String) -> Result<SecKey, Error> {
+    let tag = "com.authgear.keys.dpop.\(kid)"
+    return getPrivateKey(tag: tag)
+  }
+
+
   private func getPrivateKey(tag: String) -> Result<SecKey, Error> {
     let query: [String: Any] = [
       kSecClass as String: kSecClassKey,
@@ -744,6 +813,18 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     return signJWT(privateKey: privateKey, header: header, payload: payload)
   }
 
+  private func signDPoPJWT(privateKey: SecKey, kid: String, payload: [String: Any]) -> Result<String, Error> {
+    var jwk: [String: Any] = [:]
+    jwk["kid"] = kid
+
+    if let error = getJWKFromPrivateKey(privateKey: privateKey, jwk: &jwk) {
+      return .failure(error)
+    }
+
+    let header = makeDPoPJWTHeader(jwk: jwk)
+    return signJWT(privateKey: privateKey, header: header, payload: payload)
+  }
+
   @available(iOS 10.0, *)
   private func getJWKFromPrivateKey(privateKey: SecKey, jwk: inout [String: Any]) -> Error? {
     var error: Unmanaged<CFError>?
@@ -778,6 +859,15 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
   private func makeAnonymousJWTHeader(jwk: [String: Any]) -> [String: Any] {
     return [
       "typ": "vnd.authgear.anonymous-request",
+      "kid": jwk["kid"]!,
+      "alg": jwk["alg"]!,
+      "jwk": jwk,
+    ]
+  }
+
+  private func makeDPoPJWTHeader(jwk: [String: Any]) -> [String: Any] {
+    return [
+      "typ": "dpop+jwt",
       "kid": jwk["kid"]!,
       "alg": jwk["alg"]!,
       "jwk": jwk,

@@ -77,7 +77,7 @@ class AuthenticateOptions {
       clientID: clientID,
       redirectURI: redirectURI,
       responseType: ResponseType.code,
-      scope: AuthenticateOptions.getScopes(
+      scope: _getAuthenticationScopes(
           preAuthenticatedURLEnabled: preAuthenticatedURLEnabled ?? false),
       isSsoEnabled: isSsoEnabled,
       codeChallenge: verifier.codeChallenge,
@@ -92,19 +92,20 @@ class AuthenticateOptions {
       authenticationFlowGroup: authenticationFlowGroup,
     );
   }
+}
 
-  static List<String> getScopes({required bool preAuthenticatedURLEnabled}) {
-    List<String> scopes = [
-      "openid",
-      "offline_access",
-      "https://authgear.com/scopes/full-access",
-    ];
-    if (preAuthenticatedURLEnabled) {
-      scopes.addAll(
-          ["device_sso", "https://authgear.com/scopes/pre-authenticated-url"]);
-    }
-    return scopes;
+List<String> _getAuthenticationScopes(
+    {required bool preAuthenticatedURLEnabled}) {
+  List<String> scopes = [
+    "openid",
+    "offline_access",
+    "https://authgear.com/scopes/full-access",
+  ];
+  if (preAuthenticatedURLEnabled) {
+    scopes.addAll(
+        ["device_sso", "https://authgear.com/scopes/pre-authenticated-url"]);
   }
+  return scopes;
 }
 
 class ReauthenticateOptions {
@@ -806,7 +807,7 @@ class Authgear implements AuthgearHttpClientDelegate {
         BiometricRequest(
           clientID: clientID,
           jwt: jwt,
-          scope: AuthenticateOptions.getScopes(
+          scope: _getAuthenticationScopes(
               preAuthenticatedURLEnabled: preAuthenticatedURLEnabled),
         ),
       );

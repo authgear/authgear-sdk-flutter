@@ -78,6 +78,25 @@ class BiometricLockoutException extends AuthgearException {
   const BiometricLockoutException() : super(null);
 }
 
+class PreAuthenticatedURLNotAllowedError extends AuthgearException {
+  const PreAuthenticatedURLNotAllowedError() : super(null);
+}
+
+class PreAuthenticatedURLInsufficientScopeError
+    extends PreAuthenticatedURLNotAllowedError {
+  const PreAuthenticatedURLInsufficientScopeError() : super();
+}
+
+class PreAuthenticatedURLIDTokenNotFoundError
+    extends PreAuthenticatedURLNotAllowedError {
+  const PreAuthenticatedURLIDTokenNotFoundError() : super();
+}
+
+class PreAuthenticatedURLDeviceSecretNotFoundError
+    extends PreAuthenticatedURLNotAllowedError {
+  const PreAuthenticatedURLDeviceSecretNotFoundError() : super();
+}
+
 const _cancelException = CancelException();
 const _biometricPrivateKeyNotFoundException =
     BiometricPrivateKeyNotFoundException();

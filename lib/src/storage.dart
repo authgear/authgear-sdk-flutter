@@ -6,6 +6,18 @@ abstract class TokenStorage {
   Future<void> delRefreshToken(String namespace);
 }
 
+abstract class InterAppSharedStorage {
+  Future<void> setIDToken(String namespace, String token);
+  Future<String?> getIDToken(String namespace);
+  Future<void> delIDToken(String namespace);
+
+  Future<void> setDeviceSecret(String namespace, String deviceSecret);
+  Future<String?> getDeviceSecret(String namespace);
+  Future<void> delDeviceSecret(String namespace);
+
+  Future<void> onLogout(String namespace);
+}
+
 abstract class ContainerStorage {
   Future<void> setAnonymousKeyID(String namespace, String kid);
   Future<String?> getAnonymousKeyID(String namespace);
@@ -29,6 +41,14 @@ class _KeyMaker {
 
   String keyRefreshToken(String namespace) {
     return scopedKey("${namespace}_refreshToken");
+  }
+
+  String keyIDToken(String namespace) {
+    return scopedKey("${namespace}_idToken");
+  }
+
+  String keyDeviceSecret(String namespace) {
+    return scopedKey("${namespace}_deviceSecret");
   }
 
   String keyAnonymousKeyID(String namespace) {
@@ -119,6 +139,51 @@ class PersistentTokenStorage extends AbstractTokenStorage {
   PersistentTokenStorage()
       : _driver = _PlatformStorageDriver(),
         _keyMaker = _KeyMaker();
+}
+
+class PersistentInterAppSharedStorage extends InterAppSharedStorage {
+  final _StorageDriver _driver;
+  final _KeyMaker _keyMaker;
+
+  PersistentInterAppSharedStorage()
+      : _driver = _PlatformStorageDriver(),
+        _keyMaker = _KeyMaker();
+
+  @override
+  Future<void> setDeviceSecret(String namespace, String deviceSecret) {
+    return _driver.set(_keyMaker.keyDeviceSecret(namespace), deviceSecret);
+  }
+
+  @override
+  Future<String?> getDeviceSecret(String namespace) {
+    return _driver.get(_keyMaker.keyDeviceSecret(namespace));
+  }
+
+  @override
+  Future<void> delDeviceSecret(String namespace) {
+    return _driver.del(_keyMaker.keyDeviceSecret(namespace));
+  }
+
+  @override
+  Future<void> setIDToken(String namespace, String token) {
+    return _driver.set(_keyMaker.keyIDToken(namespace), token);
+  }
+
+  @override
+  Future<String?> getIDToken(String namespace) {
+    return _driver.get(_keyMaker.keyIDToken(namespace));
+  }
+
+  @override
+  Future<void> delIDToken(String namespace) {
+    return _driver.del(_keyMaker.keyIDToken(namespace));
+  }
+
+  @override
+  Future<void> onLogout(String namespace) async {
+    await delDeviceSecret(namespace);
+    await delIDToken(namespace);
+  }
 }
 
 class PersistentContainerStorage implements ContainerStorage {

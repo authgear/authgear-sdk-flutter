@@ -46,6 +46,7 @@ class InternalAuthenticateRequest {
 class AuthenticateOptions {
   final String redirectURI;
   final bool isSsoEnabled;
+  final bool? preAuthenticatedURLEnabled;
   final String? state;
   final List<PromptOption>? prompt;
   final String? loginHint;
@@ -59,6 +60,7 @@ class AuthenticateOptions {
   AuthenticateOptions({
     required this.redirectURI,
     required this.isSsoEnabled,
+    this.preAuthenticatedURLEnabled,
     this.state,
     this.prompt,
     this.loginHint,
@@ -75,11 +77,8 @@ class AuthenticateOptions {
       clientID: clientID,
       redirectURI: redirectURI,
       responseType: ResponseType.code,
-      scope: [
-        "openid",
-        "offline_access",
-        "https://authgear.com/scopes/full-access",
-      ],
+      scope: _getAuthenticationScopes(
+          preAuthenticatedURLEnabled: preAuthenticatedURLEnabled ?? false),
       isSsoEnabled: isSsoEnabled,
       codeChallenge: verifier.codeChallenge,
       prompt: prompt,
@@ -93,6 +92,20 @@ class AuthenticateOptions {
       authenticationFlowGroup: authenticationFlowGroup,
     );
   }
+}
+
+List<String> _getAuthenticationScopes(
+    {required bool preAuthenticatedURLEnabled}) {
+  List<String> scopes = [
+    "openid",
+    "offline_access",
+    "https://authgear.com/scopes/full-access",
+  ];
+  if (preAuthenticatedURLEnabled) {
+    scopes.addAll(
+        ["device_sso", "https://authgear.com/scopes/pre-authenticated-url"]);
+  }
+  return scopes;
 }
 
 class ReauthenticateOptions {
@@ -124,6 +137,9 @@ class ReauthenticateOptions {
       clientID: clientID,
       redirectURI: redirectURI,
       responseType: ResponseType.code,
+      // offline_access is not needed because we don't want a new refresh token to be generated
+      // device_sso and pre-authentictated-url is also not needed,
+      // because no new session should be generated so the scopes are not important.
       scope: [
         "openid",
         "https://authgear.com/scopes/full-access",
@@ -163,6 +179,8 @@ class SettingsActionOptions {
       clientID: clientID,
       redirectURI: redirectURI,
       responseType: ResponseType.settingsAction,
+      // device_sso and pre-authentictated-url is not needed,
+      // because session for settings should not be used to perform SSO.
       scope: [
         "openid",
         "offline_access",
@@ -188,10 +206,12 @@ class Authgear implements AuthgearHttpClientDelegate {
   final String endpoint;
   final String name;
   final bool isSsoEnabled;
+  final bool preAuthenticatedURLEnabled;
   final Future<void> Function(String)? sendWechatAuthRequest;
 
   final TokenStorage _tokenStorage;
   final ContainerStorage _storage;
+  final InterAppSharedStorage _sharedStorage;
   final UIImplementation _uiImplementation;
   late final APIClient _apiClient;
   late final AuthgearExperimental experimental;
@@ -240,12 +260,14 @@ class Authgear implements AuthgearHttpClientDelegate {
     required this.endpoint,
     this.name = "default",
     this.isSsoEnabled = false,
+    this.preAuthenticatedURLEnabled = false,
     this.sendWechatAuthRequest,
     TokenStorage? tokenStorage,
     UIImplementation? uiImplementation,
   })  : _tokenStorage = tokenStorage ?? PersistentTokenStorage(),
         _uiImplementation = uiImplementation ?? DeviceBrowserUIImplementation(),
-        _storage = PersistentContainerStorage() {
+        _storage = PersistentContainerStorage(),
+        _sharedStorage = PersistentInterAppSharedStorage() {
     final plainHttpClient = Client();
     final authgearHttpClient = AuthgearHttpClient(this, plainHttpClient);
     _apiClient = APIClient(
@@ -306,6 +328,7 @@ class Authgear implements AuthgearHttpClientDelegate {
         await internalCreateAuthenticateRequest(AuthenticateOptions(
       redirectURI: redirectURI,
       isSsoEnabled: isSsoEnabled,
+      preAuthenticatedURLEnabled: preAuthenticatedURLEnabled,
       state: state,
       prompt: prompt,
       uiLocales: uiLocales,
@@ -607,10 +630,13 @@ class Authgear implements AuthgearHttpClientDelegate {
       await refreshAccessToken();
     }
 
+    String? deviceSecret = await _sharedStorage.getDeviceSecret(name);
+
     final tokenRequest = OIDCTokenRequest(
       grantType: GrantType.idToken,
       clientID: clientID,
       accessToken: accessToken,
+      deviceSecret: deviceSecret,
     );
 
     try {
@@ -619,6 +645,12 @@ class Authgear implements AuthgearHttpClientDelegate {
       final idToken = tokenResponse.idToken;
       if (idToken != null) {
         _idToken = idToken;
+        await _sharedStorage.setIDToken(name, idToken);
+      }
+
+      final deviceSecret = tokenResponse.deviceSecret;
+      if (deviceSecret != null) {
+        await _sharedStorage.setDeviceSecret(name, deviceSecret);
       }
     } catch (e) {
       _handleInvalidGrantException(e);
@@ -671,12 +703,15 @@ class Authgear implements AuthgearHttpClientDelegate {
       return;
     }
 
+    String? deviceSecret = await _sharedStorage.getDeviceSecret(name);
+
     final xDeviceInfo = await _getXDeviceInfo();
     final tokenRequest = OIDCTokenRequest(
       grantType: GrantType.refreshToken,
       clientID: clientID,
       refreshToken: refreshToken,
       xDeviceInfo: xDeviceInfo,
+      deviceSecret: deviceSecret,
     );
     try {
       final tokenResponse = await _apiClient.sendTokenRequest(tokenRequest);
@@ -768,11 +803,14 @@ class Authgear implements AuthgearHttpClientDelegate {
         ios: ios,
         android: android,
       );
-      final tokenResponse =
-          await _apiClient.sendAuthenticateBiometricRequest(BiometricRequest(
-        clientID: clientID,
-        jwt: jwt,
-      ));
+      final tokenResponse = await _apiClient.sendAuthenticateBiometricRequest(
+        BiometricRequest(
+          clientID: clientID,
+          jwt: jwt,
+          scope: _getAuthenticationScopes(
+              preAuthenticatedURLEnabled: preAuthenticatedURLEnabled),
+        ),
+      );
       await _persistTokenResponse(
           tokenResponse, SessionStateChangeReason.authenticated);
       final userInfo = await _apiClient.getUserInfo();
@@ -823,6 +861,8 @@ class Authgear implements AuthgearHttpClientDelegate {
       clientID: clientID,
       redirectURI: redirectURI,
       responseType: ResponseType.code,
+      // device_sso and pre-authentictated-url is also not needed,
+      // because anonymous users are not allowed to perform SSO.
       scope: [
         "openid",
         "offline_access",
@@ -866,6 +906,73 @@ class Authgear implements AuthgearHttpClientDelegate {
       return _authenticateAnonymouslyCreate();
     }
     return _authenticateAnonymouslyExisting(kid);
+  }
+
+  Future<Uri> makePreAuthenticatedURL({
+    required String webApplicationClientID,
+    required String webApplicationURI,
+    String? state,
+  }) async {
+    if (!preAuthenticatedURLEnabled) {
+      throw AuthgearException(Exception(
+          "makePreAuthenticatedURL requires preAuthenticatedURLEnabled to be true"));
+    }
+    if (!(sessionState == SessionState.authenticated)) {
+      throw AuthgearException(
+          Exception("makePreAuthenticatedURL requires authenticated user"));
+    }
+    var idToken = await _sharedStorage.getIDToken(name);
+    if (idToken == null || idToken.isEmpty) {
+      throw const PreAuthenticatedURLIDTokenNotFoundError();
+    }
+    final deviceSecret = await _sharedStorage.getDeviceSecret(name);
+    if (deviceSecret == null || deviceSecret.isEmpty) {
+      throw const PreAuthenticatedURLDeviceSecretNotFoundError();
+    }
+    final tokenRequest = OIDCTokenRequest(
+      grantType: GrantType.tokenExchange,
+      clientID: webApplicationClientID,
+      requestedTokenType: RequestedTokenType.preAuthenticatedURLToken,
+      audience: await _apiClient.getApiOrigin(),
+      subjectTokenType: SubjectTokenType.idToken,
+      subjectToken: idToken,
+      actorTokenType: ActorTokenType.deviceSecret,
+      actorToken: deviceSecret,
+    );
+    final tokenExchangeResult = await _apiClient.sendTokenRequest(tokenRequest);
+
+    // Here access_token is pre-authenticated-url-token
+    final preAuthenticatedURLToken = tokenExchangeResult.accessToken;
+    final newDeviceSecret = tokenExchangeResult.deviceSecret;
+    final newIDToken = tokenExchangeResult.idToken;
+    if (preAuthenticatedURLToken == null) {
+      throw AuthgearException(
+        Exception("unexpected: access_token is not returned"),
+      );
+    }
+
+    if (newDeviceSecret != null) {
+      await _sharedStorage.setDeviceSecret(name, newDeviceSecret);
+    }
+
+    if (newIDToken != null) {
+      _idToken = newIDToken;
+      idToken = newIDToken;
+      await _sharedStorage.setIDToken(name, newIDToken);
+    }
+
+    return await internalBuildAuthorizationURL(
+      OIDCAuthenticationRequest(
+        responseType: ResponseType.preAuthenticatedURLToken,
+        responseMode: ResponseMode.cookie,
+        redirectURI: webApplicationURI,
+        clientID: webApplicationClientID,
+        xPreAuthenticatedURLToken: preAuthenticatedURLToken,
+        idTokenHint: idToken,
+        prompt: [PromptOption.none],
+        state: state,
+      ),
+    );
   }
 
   Future<void> wechatAuthCallback({
@@ -942,6 +1049,7 @@ class Authgear implements AuthgearHttpClientDelegate {
 
   Future<void> _clearSession(SessionStateChangeReason reason) async {
     await _tokenStorage.delRefreshToken(name);
+    await _sharedStorage.onLogout(name);
     _idToken = null;
     _accessToken = null;
     _refreshToken = null;
@@ -1049,6 +1157,12 @@ class Authgear implements AuthgearHttpClientDelegate {
     final idToken = tokenResponse.idToken;
     if (idToken != null) {
       _idToken = idToken;
+      await _sharedStorage.setIDToken(name, idToken);
+    }
+
+    final deviceSecret = tokenResponse.deviceSecret;
+    if (deviceSecret != null) {
+      await _sharedStorage.setDeviceSecret(name, deviceSecret);
     }
 
     final accessToken = tokenResponse.accessToken!;

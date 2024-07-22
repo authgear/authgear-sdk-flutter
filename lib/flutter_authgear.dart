@@ -43,7 +43,11 @@ export 'src/exception.dart'
         BiometricNotSupportedOrPermissionDeniedException,
         BiometricNoPasscodeException,
         BiometricNoEnrollmentException,
-        BiometricLockoutException;
+        BiometricLockoutException,
+        PreAuthenticatedURLNotAllowedError,
+        PreAuthenticatedURLDeviceSecretNotFoundError,
+        PreAuthenticatedURLIDTokenNotFoundError,
+        PreAuthenticatedURLInsufficientScopeError;
 export 'src/ui_implementation.dart'
     show
         UIImplementation,

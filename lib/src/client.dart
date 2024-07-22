@@ -9,8 +9,8 @@ class OIDCAuthenticationRequest {
   final String clientID;
   final String redirectURI;
   final ResponseType responseType;
-  final bool isSsoEnabled;
-  final List<String> scope;
+  final bool? isSsoEnabled;
+  final List<String>? scope;
   final String? codeChallenge;
   final String? state;
   final List<PromptOption>? prompt;
@@ -24,13 +24,15 @@ class OIDCAuthenticationRequest {
   final String? oauthProviderAlias;
   final SettingsAction? settingsAction;
   final String? authenticationFlowGroup;
+  final ResponseMode? responseMode;
+  final String? xPreAuthenticatedURLToken;
 
   OIDCAuthenticationRequest({
     required this.clientID,
     required this.redirectURI,
     required this.responseType,
-    required this.scope,
-    required this.isSsoEnabled,
+    this.isSsoEnabled,
+    this.scope,
     this.codeChallenge,
     this.state,
     this.prompt,
@@ -44,6 +46,8 @@ class OIDCAuthenticationRequest {
     this.oauthProviderAlias,
     this.settingsAction,
     this.authenticationFlowGroup,
+    this.responseMode,
+    this.xPreAuthenticatedURLToken,
   });
 
   Map<String, String> toQueryParameters() {
@@ -51,8 +55,12 @@ class OIDCAuthenticationRequest {
       "response_type": responseType.value,
       "client_id": clientID,
       "redirect_uri": redirectURI,
-      "scope": scope.join(" "),
     };
+
+    final scope = this.scope;
+    if (scope != null) {
+      q["scope"] = scope.join(" ");
+    }
 
     if (Platform.isIOS) {
       q["x_platform"] = "ios";
@@ -114,7 +122,9 @@ class OIDCAuthenticationRequest {
       q["x_suppress_idp_session_cookie"] = "true";
     }
 
-    q["x_sso_enabled"] = isSsoEnabled ? "true" : "false";
+    if (isSsoEnabled != null) {
+      q["x_sso_enabled"] = isSsoEnabled ? "true" : "false";
+    }
 
     final oauthProviderAlias = this.oauthProviderAlias;
     if (oauthProviderAlias != null) {
@@ -136,6 +146,16 @@ class OIDCAuthenticationRequest {
       q["x_authentication_flow_group"] = authenticationFlowGroup;
     }
 
+    final responseMode = this.responseMode;
+    if (responseMode != null) {
+      q["response_mode"] = responseMode.value;
+    }
+
+    final xPreAuthenticatedURLToken = this.xPreAuthenticatedURLToken;
+    if (xPreAuthenticatedURLToken != null) {
+      q["x_pre_authenticated_url_token"] = xPreAuthenticatedURLToken;
+    }
+
     return q;
   }
 }
@@ -150,6 +170,13 @@ class OIDCTokenRequest {
   final String? accessToken;
   final String? jwt;
   final String? xDeviceInfo;
+  final String? deviceSecret;
+  final RequestedTokenType? requestedTokenType;
+  final String? audience;
+  final SubjectTokenType? subjectTokenType;
+  final String? subjectToken;
+  final ActorTokenType? actorTokenType;
+  final String? actorToken;
 
   OIDCTokenRequest({
     required this.grantType,
@@ -161,6 +188,13 @@ class OIDCTokenRequest {
     this.accessToken,
     this.jwt,
     this.xDeviceInfo,
+    this.deviceSecret,
+    this.requestedTokenType,
+    this.audience,
+    this.subjectTokenType,
+    this.subjectToken,
+    this.actorTokenType,
+    this.actorToken,
   });
 
   Map<String, String> toQueryParameters() {
@@ -204,6 +238,39 @@ class OIDCTokenRequest {
       q["x_device_info"] = xDeviceInfo;
     }
 
+    final deviceSecret = this.deviceSecret;
+    if (deviceSecret != null) {
+      q["device_secret"] = deviceSecret;
+    }
+
+    final requestedTokenType = this.requestedTokenType;
+    if (requestedTokenType != null) {
+      q["requested_token_type"] = requestedTokenType.value;
+    }
+
+    final audience = this.audience;
+    if (audience != null) {
+      q["audience"] = audience;
+    }
+
+    final subjectTokenType = this.subjectTokenType;
+    if (subjectTokenType != null) {
+      q["subject_token_type"] = subjectTokenType.value;
+    }
+    final subjectToken = this.subjectToken;
+    if (subjectToken != null) {
+      q["subject_token"] = subjectToken;
+    }
+
+    final actorTokenType = this.actorTokenType;
+    if (actorTokenType != null) {
+      q["actor_token_type"] = actorTokenType.value;
+    }
+    final actorToken = this.actorToken;
+    if (actorToken != null) {
+      q["actor_token"] = actorToken;
+    }
+
     return q;
   }
 }
@@ -214,27 +281,35 @@ class OIDCTokenResponse {
   final String? accessToken;
   final int? expiresIn;
   final String? refreshToken;
+  final String? deviceSecret;
 
   OIDCTokenResponse.fromJSON(dynamic json)
       : idToken = json["id_token"],
         tokenType = json["token_type"],
         accessToken = json["access_token"],
         expiresIn = json["expires_in"]?.toInt(),
-        refreshToken = json["refresh_token"];
+        refreshToken = json["refresh_token"],
+        deviceSecret = json["device_secret"];
 }
 
 class BiometricRequest {
   final String clientID;
   final String jwt;
+  final List<String>? scope;
 
-  BiometricRequest({required this.clientID, required this.jwt});
+  BiometricRequest({required this.clientID, required this.jwt, this.scope});
 
   Map<String, String> toQueryParameters() {
-    return {
+    Map<String, String> q = {
       "grant_type": "urn:authgear:params:oauth:grant-type:biometric-request",
       "client_id": clientID,
       "jwt": jwt,
     };
+    final scope = this.scope;
+    if (scope != null) {
+      q["scope"] = scope.join(" ");
+    }
+    return q;
   }
 }
 
@@ -286,6 +361,12 @@ class APIClient {
     final endpoint = Uri.parse(config.authorizationEndpoint);
     final origin = Uri.parse(endpoint.origin);
     return origin.replace(path: path);
+  }
+
+  Future<String> getApiOrigin() async {
+    final config = await fetchOIDCConfiguration();
+    final endpoint = Uri.parse(config.authorizationEndpoint);
+    return endpoint.origin;
   }
 
   Future<OIDCTokenResponse> sendTokenRequest(OIDCTokenRequest request,

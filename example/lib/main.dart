@@ -93,6 +93,9 @@ String _showError(dynamic e) {
   if (e is BiometricLockoutException) {
     return "The biometric is locked out due to too many failed attempts. The developer should handle this error by using normal authentication as a fallback. So normally you should not see this error";
   }
+  if (e is AuthgearException) {
+    return "AuthgearException: ${e.underlyingException}";
+  }
 
   return "$e";
 }
@@ -230,10 +233,15 @@ class _MyAppState extends State<MyApp> {
   final TextEditingController _clientIDController = TextEditingController();
   final TextEditingController _authenticationFlowGroupController =
       TextEditingController();
+  final TextEditingController _preAuthenticatedURLClientIDController =
+      TextEditingController();
+  final TextEditingController _preAuthenticatedURLRedirectURIController =
+      TextEditingController();
   StreamSubscription<SessionStateChangeEvent>? _sub;
   bool _loading = false;
   bool _useTransientTokenStorage = false;
   bool _isSsoEnabled = false;
+  bool _isPreAuthenticatedURLEnabled = false;
   bool _useWebKitWebView = false;
   bool _isBiometricEnabled = false;
   bool get _unconfigured {
@@ -413,6 +421,36 @@ class _MyAppState extends State<MyApp> {
                       },
                     )),
                 Container(
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    child: SwitchWithLabel(
+                      label: "Pre-Authenticated URL",
+                      value: _isPreAuthenticatedURLEnabled,
+                      onChanged: (newValue) {
+                        setState(() {
+                          _isPreAuthenticatedURLEnabled = newValue;
+                        });
+                      },
+                    )),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  child: TextFieldWithLabel(
+                    label: "Pre-Authenticated URL Client ID",
+                    hintText: "Enter Client ID",
+                    controller: _preAuthenticatedURLClientIDController,
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  child: TextFieldWithLabel(
+                    label: "Pre-Authenticated URL Redirect URI",
+                    hintText: "Enter Redirect URI",
+                    controller: _preAuthenticatedURLRedirectURIController,
+                  ),
+                ),
+                Container(
                   padding:
                       const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                   child: Text(
@@ -505,6 +543,18 @@ class _MyAppState extends State<MyApp> {
                       ? null
                       : () {
                           _onPressDisableBiometric(context);
+                        },
+                ),
+                SessionStateButton(
+                  sessionState: _authgear.sessionState,
+                  targetState: SessionState.authenticated,
+                  label: "Pre-Authenticated URL",
+                  onPressed: _unconfigured ||
+                          _loading ||
+                          !_isPreAuthenticatedURLEnabled
+                      ? null
+                      : () {
+                          _onPressPreAuthenticatedURL(context);
                         },
                 ),
                 SessionStateButton(
@@ -784,6 +834,7 @@ class _MyAppState extends State<MyApp> {
       endpoint: endpoint,
       clientID: clientID,
       isSsoEnabled: _isSsoEnabled,
+      preAuthenticatedURLEnabled: _isPreAuthenticatedURLEnabled,
       tokenStorage: _useTransientTokenStorage ? TransientTokenStorage() : null,
       uiImplementation: _useWebKitWebView
           ? WebKitWebViewUIImplementation(
@@ -932,6 +983,90 @@ class _MyAppState extends State<MyApp> {
       await _authgear.disableBiometric();
       await _syncAuthgearState();
     } catch (e) {
+      onError(context, e);
+    } finally {
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _onPressPreAuthenticatedURL(BuildContext context) async {
+    final clientID = _clientIDController.text;
+    final endpoint = _endpointController.text;
+    final preAuthenticatedURLRedirectURI =
+        _preAuthenticatedURLRedirectURIController.text;
+    final preAuthenticatedURLClientID =
+        _preAuthenticatedURLClientIDController.text;
+    final shouldUseAnotherBrowser = preAuthenticatedURLRedirectURI.isNotEmpty;
+    String targetRedirectURI = redirectURI;
+    String targetClientID = clientID;
+    if (preAuthenticatedURLRedirectURI.isNotEmpty) {
+      targetRedirectURI = preAuthenticatedURLRedirectURI;
+    }
+    if (preAuthenticatedURLClientID.isNotEmpty) {
+      targetClientID = preAuthenticatedURLClientID;
+    }
+    try {
+      setState(() {
+        _loading = true;
+      });
+      final url = await _authgear.makePreAuthenticatedURL(
+        webApplicationClientID: targetClientID,
+        webApplicationURI: targetRedirectURI,
+      );
+      final uiImpl = WebKitWebViewUIImplementation();
+      if (!shouldUseAnotherBrowser) {
+        // Use webkit webview to open the url and set the cookie
+        await uiImpl.openAuthorizationURL(
+          url: url.toString(),
+          redirectURI: redirectURI,
+          shareCookiesWithDeviceBrowser: true,
+        );
+        // Then start a auth to prove it is working
+        final newContainer = Authgear(
+          name: "preAuthenticatedURL",
+          endpoint: endpoint,
+          clientID: targetClientID,
+          tokenStorage: TransientTokenStorage(),
+          isSsoEnabled: true,
+          uiImplementation: uiImpl,
+        );
+        await newContainer.authenticate(
+          redirectURI: redirectURI,
+        );
+        final _ = await newContainer.getUserInfo();
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text("Success"),
+              content: const Text("Logged in successfully"),
+              actions: [
+                TextButton(
+                  child: const Text("OK"),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      } else {
+        // This will be redirected to preAuthenticatedURLRedirectURI and never close,
+        // so we do not await
+        uiImpl.openAuthorizationURL(
+          url: url.toString(),
+          redirectURI: redirectURI,
+          shareCookiesWithDeviceBrowser: true,
+        );
+      }
+    } catch (e) {
+      if (e is PreAuthenticatedURLNotAllowedError) {
+        // The current session is not allowed to make pre-authenticated url
+      }
       onError(context, e);
     } finally {
       setState(() {

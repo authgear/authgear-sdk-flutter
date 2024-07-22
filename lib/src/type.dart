@@ -54,6 +54,7 @@ enum ResponseType {
   code,
   settingsAction,
   none,
+  preAuthenticatedURLToken,
 }
 
 extension ResponseTypeExtension on ResponseType {
@@ -65,6 +66,21 @@ extension ResponseTypeExtension on ResponseType {
         return "urn:authgear:params:oauth:response-type:settings-action";
       case ResponseType.none:
         return "none";
+      case ResponseType.preAuthenticatedURLToken:
+        return "urn:authgear:params:oauth:response-type:pre-authenticated-url token";
+    }
+  }
+}
+
+enum ResponseMode {
+  cookie,
+}
+
+extension ResponseModeExtension on ResponseMode {
+  String get value {
+    switch (this) {
+      case ResponseMode.cookie:
+        return "cookie";
     }
   }
 }
@@ -77,6 +93,7 @@ enum GrantType {
   idToken,
   app2app,
   settingsAction,
+  tokenExchange,
 }
 
 extension GrantTypeExtension on GrantType {
@@ -96,6 +113,47 @@ extension GrantTypeExtension on GrantType {
         return "urn:authgear:params:oauth:grant-type:app2app-request";
       case GrantType.settingsAction:
         return "urn:authgear:params:oauth:grant-type:settings-action";
+      case GrantType.tokenExchange:
+        return "urn:ietf:params:oauth:grant-type:token-exchange";
+    }
+  }
+}
+
+enum RequestedTokenType {
+  preAuthenticatedURLToken,
+}
+
+extension RequestedTokenTypeExtension on RequestedTokenType {
+  String get value {
+    switch (this) {
+      case RequestedTokenType.preAuthenticatedURLToken:
+        return "urn:authgear:params:oauth:token-type:pre-authenticated-url-token";
+    }
+  }
+}
+
+enum SubjectTokenType {
+  idToken,
+}
+
+extension SubjectTokenTypeExtension on SubjectTokenType {
+  String get value {
+    switch (this) {
+      case SubjectTokenType.idToken:
+        return "urn:ietf:params:oauth:token-type:id_token";
+    }
+  }
+}
+
+enum ActorTokenType {
+  deviceSecret,
+}
+
+extension ActorTokenTypeExtension on ActorTokenType {
+  String get value {
+    switch (this) {
+      case ActorTokenType.deviceSecret:
+        return "urn:x-oath:params:oauth:token-type:device-secret";
     }
   }
 }

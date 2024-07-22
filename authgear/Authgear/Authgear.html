@@ -66,6 +66,7 @@
 <li><span class="parameter" id="-param-endpoint"><span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">endpoint</span>, </span></li>
 <li><span class="parameter" id="-param-name"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">name</span> = <span class="default-value">&quot;default&quot;</span>, </span></li>
 <li><span class="parameter" id="-param-isSsoEnabled"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">isSsoEnabled</span> = <span class="default-value">false</span>, </span></li>
+<li><span class="parameter" id="-param-preAuthenticatedURLEnabled"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">preAuthenticatedURLEnabled</span> = <span class="default-value">false</span>, </span></li>
 <li><span class="parameter" id="-param-sendWechatAuthRequest"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span> <span class="parameter-name">sendWechatAuthRequest</span>(<ol class="parameter-list single-line"> <li><span class="parameter" id="param-"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span></span></li>
 </ol>)?, </span></li>
 <li><span class="parameter" id="-param-tokenStorage"><span class="type-annotation"><a href="../../authgear/TokenStorage-class.html">TokenStorage</a>?</span> <span class="parameter-name">tokenStorage</span>, </span></li>
@@ -84,12 +85,14 @@
   required this.endpoint,
   this.name = &quot;default&quot;,
   this.isSsoEnabled = false,
+  this.preAuthenticatedURLEnabled = false,
   this.sendWechatAuthRequest,
   TokenStorage? tokenStorage,
   UIImplementation? uiImplementation,
 })  : _tokenStorage = tokenStorage ?? PersistentTokenStorage(),
       _uiImplementation = uiImplementation ?? DeviceBrowserUIImplementation(),
-      _storage = PersistentContainerStorage() {
+      _storage = PersistentContainerStorage(),
+      _sharedStorage = PersistentInterAppSharedStorage() {
   final plainHttpClient = Client();
   final authgearHttpClient = AuthgearHttpClient(this, plainHttpClient);
   _apiClient = APIClient(

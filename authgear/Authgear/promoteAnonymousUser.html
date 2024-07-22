@@ -113,6 +113,8 @@
     clientID: clientID,
     redirectURI: redirectURI,
     responseType: ResponseType.code,
+    &#47;&#47; device_sso and pre-authentictated-url is also not needed,
+    &#47;&#47; because anonymous users are not allowed to perform SSO.
     scope: [
       &quot;openid&quot;,
       &quot;offline_access&quot;,

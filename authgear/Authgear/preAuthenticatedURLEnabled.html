@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
-  <meta name="description" content="API docs for the refreshAccessToken method from the Authgear class, for the Dart programming language.">
-  <title>refreshAccessToken method - Authgear class - authgear library - Dart API</title>
+  <meta name="description" content="API docs for the preAuthenticatedURLEnabled property from the Authgear class, for the Dart programming language.">
+  <title>preAuthenticatedURLEnabled property - Authgear class - authgear library - Dart API</title>
 
 
   
@@ -31,9 +31,9 @@
     <li><a href="../../index.html">flutter_authgear</a></li>
     <li><a href="../../authgear/authgear-library.html">flutter_authgear.dart</a></li>
     <li><a href="../../authgear/Authgear-class.html">Authgear</a></li>
-    <li class="self-crumb">refreshAccessToken method</li>
+    <li class="self-crumb">preAuthenticatedURLEnabled property</li>
   </ol>
-  <div class="self-name">refreshAccessToken</div>
+  <div class="self-name">preAuthenticatedURLEnabled</div>
   <form class="search navbar-right" role="search">
     <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
   </form>
@@ -57,66 +57,29 @@
     data-above-sidebar="authgear&#47;Authgear-class-sidebar.html"
     data-below-sidebar="">
     <div>
-<h1><span class="kind-method">refreshAccessToken</span> method 
+<h1><span class="kind-property">preAuthenticatedURLEnabled</span> property 
 </h1></div>
 
-    <section class="multi-line-signature">
-      
-  <div>
-    <ol class="annotation-list">
-        <li>@<a href="https://api.flutter.dev/flutter/dart-core/override-constant.html">override</a></li>
-    </ol>
-  </div>
+      <section class="multi-line-signature">
+        
+        <a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a>
+        <span class="name ">preAuthenticatedURLEnabled</span>
+        <div class="features"><span class="feature">final</span></div>
 
-<span class="returntype"><a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
-<span class="name ">refreshAccessToken</span>(<wbr>)
-
+      </section>
       
 
-    </section>
-    
-
-
-    
+      
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
-  <pre class="language-dart"><code class="language-dart">@override
-Future&lt;void&gt; refreshAccessToken() async {
-  final refreshToken = _refreshToken;
-  if (refreshToken == null) {
-    await _clearSession(SessionStateChangeReason.noToken);
-    return;
-  }
-
-  String? deviceSecret = await _sharedStorage.getDeviceSecret(name);
-
-  final xDeviceInfo = await _getXDeviceInfo();
-  final tokenRequest = OIDCTokenRequest(
-    grantType: GrantType.refreshToken,
-    clientID: clientID,
-    refreshToken: refreshToken,
-    xDeviceInfo: xDeviceInfo,
-    deviceSecret: deviceSecret,
-  );
-  try {
-    final tokenResponse = await _apiClient.sendTokenRequest(tokenRequest);
-    await _persistTokenResponse(
-        tokenResponse, SessionStateChangeReason.foundToken);
-  } catch (e) {
-    await _handleInvalidGrantException(e);
-    if (e is OAuthException &amp;&amp; e.error == &quot;invalid_grant&quot;) {
-      return;
-    }
-    rethrow;
-  }
-}</code></pre>
+  <pre class="language-dart"><code class="language-dart">final bool preAuthenticatedURLEnabled;</code></pre>
 </section>
 
 
-  </div> <!-- /.main-content -->
+</div> <!-- /.main-content -->
 
-  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
-    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+  <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
 <header id="header-search-sidebar" class="hidden-l">
   <form class="search-sidebar" role="search">
     <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
@@ -127,15 +90,15 @@ Future&lt;void&gt; refreshAccessToken() async {
     <li><a href="../../index.html">flutter_authgear</a></li>
     <li><a href="../../authgear/authgear-library.html">authgear</a></li>
     <li><a href="../../authgear/Authgear-class.html">Authgear</a></li>
-    <li class="self-crumb">refreshAccessToken method</li>
+    <li class="self-crumb">preAuthenticatedURLEnabled property</li>
 </ol>
 
 
-    <h5>Authgear class</h5>
-    <div id="dartdoc-sidebar-left-content"></div>
-  </div><!--/.sidebar-offcanvas-->
+  <h5>Authgear class</h5>
+  <div id="dartdoc-sidebar-left-content"></div>
+</div><!--/.sidebar-offcanvas-->
 
-  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+<div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
 </div><!--/.sidebar-offcanvas-->
 
 </main>

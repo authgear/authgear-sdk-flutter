@@ -80,10 +80,13 @@
     await refreshAccessToken();
   }
 
+  String? deviceSecret = await _sharedStorage.getDeviceSecret(name);
+
   final tokenRequest = OIDCTokenRequest(
     grantType: GrantType.idToken,
     clientID: clientID,
     accessToken: accessToken,
+    deviceSecret: deviceSecret,
   );
 
   try {
@@ -92,6 +95,12 @@
     final idToken = tokenResponse.idToken;
     if (idToken != null) {
       _idToken = idToken;
+      await _sharedStorage.setIDToken(name, idToken);
+    }
+
+    final deviceSecret = tokenResponse.deviceSecret;
+    if (deviceSecret != null) {
+      await _sharedStorage.setDeviceSecret(name, deviceSecret);
     }
   } catch (e) {
     _handleInvalidGrantException(e);

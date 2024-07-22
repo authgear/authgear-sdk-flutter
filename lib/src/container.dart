@@ -1049,6 +1049,7 @@ class Authgear implements AuthgearHttpClientDelegate {
 
   Future<void> _clearSession(SessionStateChangeReason reason) async {
     await _tokenStorage.delRefreshToken(name);
+    await _sharedStorage.onLogout(name);
     _idToken = null;
     _accessToken = null;
     _refreshToken = null;

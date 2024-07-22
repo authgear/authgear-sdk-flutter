@@ -14,6 +14,8 @@ abstract class InterAppSharedStorage {
   Future<void> setDeviceSecret(String namespace, String deviceSecret);
   Future<String?> getDeviceSecret(String namespace);
   Future<void> delDeviceSecret(String namespace);
+
+  Future<void> onLogout(String namespace);
 }
 
 abstract class ContainerStorage {
@@ -175,6 +177,12 @@ class PersistentInterAppSharedStorage extends InterAppSharedStorage {
   @override
   Future<void> delIDToken(String namespace) {
     return _driver.del(_keyMaker.keyIDToken(namespace));
+  }
+
+  @override
+  Future<void> onLogout(String namespace) async {
+    await delDeviceSecret(namespace);
+    await delIDToken(namespace);
   }
 }
 

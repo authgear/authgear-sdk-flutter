@@ -1064,6 +1064,9 @@ class _MyAppState extends State<MyApp> {
         );
       }
     } catch (e) {
+      if (e is PreAuthenticatedURLNotAllowedError) {
+        // The current session is not allowed to make pre-authenticated url
+      }
       onError(context, e);
     } finally {
       setState(() {

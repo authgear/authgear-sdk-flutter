@@ -9,7 +9,7 @@ class OIDCAuthenticationRequest {
   final String clientID;
   final String redirectURI;
   final ResponseType responseType;
-  final bool isSsoEnabled;
+  final bool? isSsoEnabled;
   final List<String>? scope;
   final String? codeChallenge;
   final String? state;
@@ -31,7 +31,7 @@ class OIDCAuthenticationRequest {
     required this.clientID,
     required this.redirectURI,
     required this.responseType,
-    this.isSsoEnabled = false,
+    this.isSsoEnabled,
     this.scope,
     this.codeChallenge,
     this.state,
@@ -122,7 +122,9 @@ class OIDCAuthenticationRequest {
       q["x_suppress_idp_session_cookie"] = "true";
     }
 
-    q["x_sso_enabled"] = isSsoEnabled ? "true" : "false";
+    if (isSsoEnabled != null) {
+      q["x_sso_enabled"] = isSsoEnabled ? "true" : "false";
+    }
 
     final oauthProviderAlias = this.oauthProviderAlias;
     if (oauthProviderAlias != null) {

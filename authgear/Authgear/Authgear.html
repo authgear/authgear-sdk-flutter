@@ -93,12 +93,17 @@
       _uiImplementation = uiImplementation ?? DeviceBrowserUIImplementation(),
       _storage = PersistentContainerStorage(),
       _sharedStorage = PersistentInterAppSharedStorage() {
+  _dpopProvider = DefaultDPoPProvider(
+    namespace: name,
+    sharedStorage: _sharedStorage,
+  );
   final plainHttpClient = Client();
   final authgearHttpClient = AuthgearHttpClient(this, plainHttpClient);
   _apiClient = APIClient(
     endpoint: endpoint,
     plainHttpClient: plainHttpClient,
     authgearHttpClient: authgearHttpClient,
+    dpopProvider: _dpopProvider,
   );
   experimental = AuthgearExperimental(this);
 }</code></pre>

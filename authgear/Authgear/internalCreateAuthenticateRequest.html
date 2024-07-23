@@ -79,7 +79,8 @@
   <pre class="language-dart"><code class="language-dart">Future&lt;InternalAuthenticateRequest&gt; internalCreateAuthenticateRequest(
     AuthenticateOptions options) async {
   final codeVerifier = CodeVerifier(_rng);
-  final oidcRequest = options.toRequest(clientID, codeVerifier);
+  final dpopJKT = await _dpopProvider.computeJKT();
+  final oidcRequest = options.toRequest(clientID, codeVerifier, dpopJKT);
   final url = await internalBuildAuthorizationURL(oidcRequest);
 
   return InternalAuthenticateRequest(

@@ -15,6 +15,10 @@ abstract class InterAppSharedStorage {
   Future<String?> getDeviceSecret(String namespace);
   Future<void> delDeviceSecret(String namespace);
 
+  Future<void> setDPoPKeyID(String namespace, String kid);
+  Future<String?> getDPoPKeyID(String namespace);
+  Future<void> delDPoPKeyID(String namespace);
+
   Future<void> onLogout(String namespace);
 }
 
@@ -57,6 +61,10 @@ class _KeyMaker {
 
   String keyBiometricKeyID(String namespace) {
     return scopedKey("${namespace}_biometricKeyID");
+  }
+
+  String keyDPoPKeyID(String namespace) {
+    return scopedKey("${namespace}_dpopKeyID");
   }
 }
 
@@ -179,10 +187,25 @@ class PersistentInterAppSharedStorage extends InterAppSharedStorage {
     return _driver.del(_keyMaker.keyIDToken(namespace));
   }
 
+  Future<void> setDPoPKeyID(String namespace, String kid) {
+    return _driver.set(_keyMaker.keyDPoPKeyID(namespace), kid);
+  }
+
+  @override
+  Future<String?> getDPoPKeyID(String namespace) {
+    return _driver.get(_keyMaker.keyDPoPKeyID(namespace));
+  }
+
+  @override
+  Future<void> delDPoPKeyID(String namespace) {
+    return _driver.del(_keyMaker.keyDPoPKeyID(namespace));
+  }
+
   @override
   Future<void> onLogout(String namespace) async {
     await delDeviceSecret(namespace);
     await delIDToken(namespace);
+    await delDPoPKeyID(namespace);
   }
 }
 

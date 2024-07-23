@@ -482,7 +482,7 @@ class APIClient {
   Future<Map<String, String>> _composeRequestHeaders(
       Uri url, String method, Map<String, String> headers) async {
     final dpopProof =
-        await _dpopProvider.generateDPoPProof(htm: "POST", htu: url.toString());
+        await _dpopProvider.generateDPoPProof(htm: method, htu: url.toString());
     Map<String, String> h = Map.from(headers);
     if (dpopProof != null) {
       h["DPoP"] = dpopProof;

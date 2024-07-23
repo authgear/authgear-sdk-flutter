@@ -74,7 +74,7 @@ class AuthenticateOptions {
   });
 
   OIDCAuthenticationRequest toRequest(
-      String clientID, CodeVerifier verifier, String dpopJKT) {
+      String clientID, CodeVerifier verifier, String? dpopJKT) {
     return OIDCAuthenticationRequest(
       clientID: clientID,
       redirectURI: redirectURI,

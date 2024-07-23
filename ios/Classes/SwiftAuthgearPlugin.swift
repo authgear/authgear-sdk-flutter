@@ -103,6 +103,8 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
       let kid = arguments["kid"] as! String
       let payload = arguments["payload"] as! [String: Any]
       self.signWithAnonymousPrivateKey(kid: kid, payload: payload, result: result)
+    case "checkDPoPSupported":
+      self.checkDPoPSupported(result: result)
     case "createDPoPPrivateKey":
       let arguments = call.arguments as! Dictionary<String, AnyObject>
       let kid = arguments["kid"] as! String
@@ -534,11 +536,15 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     removePrivateKey(tag: tag, result: result)
   }
 
-  private func createDPoPPrivateKey(kid: String, result: FlutterResult) {
+  private func checkDPoPSupported(result: FlutterResult) {
     if #unavailable(iOS 11.3) {
-      result(nil)
+      result(false)
       return
     }
+    result(true)
+  }
+
+  private func createDPoPPrivateKey(kid: String, result: FlutterResult) {
     let tag: String = "com.authgear.keys.dpop.\(kid)"
     switch self.generatePrivateKey() {
     case .failure(let error):
@@ -651,10 +657,6 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
   }
 
   private func signWithDPoPPrivateKey(kid: String, payload: [String: Any], result: FlutterResult) {
-    if #unavailable(iOS 11.3) {
-      result("")
-      return
-    }
     switch self.getDPoPPrivateKey(kid: kid) {
     case .failure(let error):
       result(FlutterError(error: error))
@@ -669,10 +671,6 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
   }
 
   private func checkDPoPPrivateKey(kid: String, result: FlutterResult) {
-    if #unavailable(iOS 11.3) {
-      result(false)
-      return
-    }
     switch self.getDPoPPrivateKey(kid: kid) {
     case .failure(_):
       result(false)
@@ -682,10 +680,6 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
   }
 
   private func computeDPoPJKT(kid: String, result: FlutterResult) {
-    if #unavailable(iOS 11.3) {
-      result("")
-      return
-    }
     switch self.getDPoPPrivateKey(kid: kid) {
     case .failure(let error):
       result(FlutterError(error: error))

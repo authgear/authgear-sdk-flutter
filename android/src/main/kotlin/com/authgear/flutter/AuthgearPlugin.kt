@@ -238,6 +238,9 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
         val payload = call.argument<Map<String, Any>>("payload")!!
         this.signWithAnonymousPrivateKey(kid, payload, result)
       }
+      "checkDPoPSupported" -> {
+        this.checkDPoPSupported(result)
+      }
       "createDPoPPrivateKey" -> {
         val kid = call.argument<String>("kid")!!
         this.createDPoPPrivateKey(kid, result)
@@ -654,9 +657,17 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
     removePrivateKey(alias, result)
   }
 
+  private fun checkDPoPSupported(result: Result) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+      result.success(false)
+      return
+    }
+    result.success(true)
+  }
+
   private fun createDPoPPrivateKey(kid: String, result: Result) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-      result.success(null)
+      result.exception(RuntimeException("dpop not supported"))
       return
     }
     val alias = getDPoPKeyAlias(kid)
@@ -726,10 +737,9 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
 
   private fun signWithDPoPPrivateKey(kid: String, payload: Map<String, Any>, result: Result) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-      result.success("")
+      result.exception(RuntimeException("dpop not supported"))
       return
     }
-
     val alias = getDPoPKeyAlias(kid)
     try {
       val keyPair = getKeyPair(alias)
@@ -741,10 +751,9 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
 
   private fun checkDPoPPrivateKey(kid: String, result: Result) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-      result.success(false)
+      result.exception(RuntimeException("dpop not supported"))
       return
     }
-
     val alias = getDPoPKeyAlias(kid)
     try {
       getKeyPair(alias)
@@ -756,10 +765,9 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
 
   private fun computeDPoPJKT(kid: String, result: Result) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-      result.success("")
+      result.exception(RuntimeException("dpop not supported"))
       return
     }
-
     val alias = getDPoPKeyAlias(kid)
     try {
       val keypair = getKeyPair(alias)

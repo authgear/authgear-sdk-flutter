@@ -2,8 +2,8 @@ import 'storage.dart';
 import 'native.dart' as native;
 
 abstract class DPoPProvider {
-  Future<String> generateDPoPProof({required String htm, required String htu});
-  Future<String> computeJKT();
+  Future<String?> generateDPoPProof({required String htm, required String htu});
+  Future<String?> computeJKT();
 }
 
 class DefaultDPoPProvider implements DPoPProvider {
@@ -16,10 +16,14 @@ class DefaultDPoPProvider implements DPoPProvider {
   });
 
   @override
-  Future<String> generateDPoPProof({
+  Future<String?> generateDPoPProof({
     required String htm,
     required String htu,
   }) async {
+    final isSupported = await native.checkDPoPSupported();
+    if (!isSupported) {
+      return null;
+    }
     final existingKeyId = await sharedStorage.getDPoPKeyID(namespace);
     String kid;
     if (existingKeyId != null) {
@@ -55,7 +59,11 @@ class DefaultDPoPProvider implements DPoPProvider {
   }
 
   @override
-  Future<String> computeJKT() async {
+  Future<String?> computeJKT() async {
+    final isSupported = await native.checkDPoPSupported();
+    if (!isSupported) {
+      return null;
+    }
     final existingKeyId = await sharedStorage.getDPoPKeyID(namespace);
     String? kid;
     if (existingKeyId != null) {

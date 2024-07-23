@@ -484,7 +484,9 @@ class APIClient {
     final dpopProof =
         await _dpopProvider.generateDPoPProof(htm: "POST", htu: url.toString());
     Map<String, String> h = Map.from(headers);
-    h["DPoP"] = dpopProof;
+    if (dpopProof != null) {
+      h["DPoP"] = dpopProof;
+    }
     return h;
   }
 

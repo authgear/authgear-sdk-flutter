@@ -231,6 +231,14 @@ Future<String> signWithAnonymousPrivateKey({
   }
 }
 
+Future<bool> checkDPoPSupported() async {
+  try {
+    return await _channel.invokeMethod("checkDPoPSupported", {});
+  } on PlatformException catch (e) {
+    throw wrapException(e);
+  }
+}
+
 Future<void> createDPoPPrivateKey({
   required String kid,
 }) async {

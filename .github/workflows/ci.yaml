@@ -59,7 +59,7 @@ jobs:
     - run: dart format --set-exit-if-changed lib
     - run: flutter build apk --debug
 
-  deploy:
+  deploy-docs:
     runs-on: ubuntu-24.04
     needs: ["test-ios", "test-android"]
     steps:

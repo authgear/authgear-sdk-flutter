@@ -1,5 +1,8 @@
 buildscript {
-    ext.kotlin_version = '1.6.10'
+    // Flutter 3.24.2 requires kotlin to be 1.7.x
+    // As of 2024-09-06, the latest kotlin 1.7.x is 1.7.21
+    // See https://kotlinlang.org/docs/releases.html#release-details
+    ext.kotlin_version = '1.7.21'
     repositories {
         google()
         mavenCentral()

@@ -13,21 +13,22 @@ on:
 jobs:
   test-ios:
     runs-on: macos-13
-    if: ${{ github.event_name == 'pull_request' }}
     defaults:
       run:
         working-directory: "./example"
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
       with:
-        node-version: 16
+        node-version-file: "./.tool-versions"
     - run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
     - uses: subosito/flutter-action@v2
       with:
-        # Use the latest stable release
-        flutter-version: '3.x'
+        # This has to be kept in sync with .tool-versions
+        flutter-version: '3.24.2'
         channel: 'stable'
+        # This action takes 1m30s to finish. Enable cache to make it shorter.
+        cache: true
     - run: flutter pub get
     - run: flutter test
     - run: flutter analyze --no-fatal-infos
@@ -36,24 +37,25 @@ jobs:
 
   test-android:
     runs-on: macos-13
-    if: ${{ github.event_name == 'pull_request' }}
     defaults:
       run:
         working-directory: "./example"
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
       with:
-        node-version: 16
+        node-version-file: "./.tool-versions"
     # https://github.com/actions/runner-images/blob/main/images/macos/macos-13-Readme.md#java
     - name: Set java version
       run: |
         echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
     - uses: subosito/flutter-action@v2
       with:
-        # Use the latest stable release
-        flutter-version: '3.x'
+        # This has to be kept in sync with .tool-versions
+        flutter-version: '3.24.2'
         channel: 'stable'
+        # This action takes 1m30s to finish. Enable cache to make it shorter.
+        cache: true
     - run: echo "$ANDROID_HOME/tools/bin" >> $GITHUB_PATH
     - run: flutter pub get
     - run: flutter test
@@ -61,15 +63,18 @@ jobs:
     - run: dart format --set-exit-if-changed lib
     - run: flutter build apk --debug
 
-  deploy:
-    runs-on: ubuntu-22.04
+  deploy-docs:
+    runs-on: ubuntu-24.04
+    needs: ["test-ios", "test-android"]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: subosito/flutter-action@v2
       with:
-        # Use the latest stable release
-        flutter-version: '3.x'
+        # This has to be kept in sync with .tool-versions
+        flutter-version: '3.24.2'
         channel: 'stable'
+        # This action takes 1m30s to finish. Enable cache to make it shorter.
+        cache: true
     - run: flutter pub get
     - run: flutter test
     - run: flutter analyze --no-fatal-infos
@@ -89,23 +94,25 @@ jobs:
 
   deploy-ios:
     runs-on: macos-13
-    needs: "deploy"
+    needs: ["test-ios"]
     if: ${{ github.ref == 'refs/heads/main' }}
     defaults:
       run:
         working-directory: "./example"
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
       with:
-        node-version: 16
+        node-version-file: "./.tool-versions"
     - run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
     - run: npm install -g appcenter-cli
     - uses: subosito/flutter-action@v2
       with:
-        # Use the latest stable release
-        flutter-version: '3.x'
+        # This has to be kept in sync with .tool-versions
+        flutter-version: '3.24.2'
         channel: 'stable'
+        # This action takes 1m30s to finish. Enable cache to make it shorter.
+        cache: true
     - run: flutter pub get
     - run: flutter test
     - run: flutter analyze --no-fatal-infos
@@ -142,16 +149,16 @@ jobs:
 
   deploy-android:
     runs-on: macos-13
-    needs: "deploy"
+    needs: ["test-android"]
     if: ${{ github.ref == 'refs/heads/main' }}
     defaults:
       run:
         working-directory: "./example"
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
       with:
-        node-version: 16
+        node-version-file: "./.tool-versions"
     # https://github.com/actions/runner-images/blob/main/images/macos/macos-13-Readme.md#java
     - name: Set java version
       run: |
@@ -159,9 +166,11 @@ jobs:
     - run: npm install -g appcenter-cli
     - uses: subosito/flutter-action@v2
       with:
-        # Use the latest stable release
-        flutter-version: '3.x'
+        # This has to be kept in sync with .tool-versions
+        flutter-version: '3.24.2'
         channel: 'stable'
+        # This action takes 1m30s to finish. Enable cache to make it shorter.
+        cache: true
     - run: flutter pub get
     - run: flutter test
     - run: flutter analyze --no-fatal-infos

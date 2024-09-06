@@ -19,9 +19,9 @@ jobs:
         working-directory: "./example"
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/setup-node@v3
+    - uses: actions/setup-node@v4
       with:
-        node-version: 16
+        node-version-file: "./.tool-versions"
     - run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
     - uses: subosito/flutter-action@v2
       with:
@@ -42,9 +42,9 @@ jobs:
         working-directory: "./example"
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/setup-node@v3
+    - uses: actions/setup-node@v4
       with:
-        node-version: 16
+        node-version-file: "./.tool-versions"
     # https://github.com/actions/runner-images/blob/main/images/macos/macos-13-Readme.md#java
     - name: Set java version
       run: |
@@ -96,9 +96,9 @@ jobs:
         working-directory: "./example"
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/setup-node@v3
+    - uses: actions/setup-node@v4
       with:
-        node-version: 16
+        node-version-file: "./.tool-versions"
     - run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
     - run: npm install -g appcenter-cli
     - uses: subosito/flutter-action@v2
@@ -149,9 +149,9 @@ jobs:
         working-directory: "./example"
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/setup-node@v3
+    - uses: actions/setup-node@v4
       with:
-        node-version: 16
+        node-version-file: "./.tool-versions"
     # https://github.com/actions/runner-images/blob/main/images/macos/macos-13-Readme.md#java
     - name: Set java version
       run: |

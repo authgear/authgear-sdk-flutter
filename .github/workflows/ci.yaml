@@ -13,7 +13,6 @@ on:
 jobs:
   test-ios:
     runs-on: macos-13
-    if: ${{ github.event_name == 'pull_request' }}
     defaults:
       run:
         working-directory: "./example"
@@ -36,7 +35,6 @@ jobs:
 
   test-android:
     runs-on: macos-13
-    if: ${{ github.event_name == 'pull_request' }}
     defaults:
       run:
         working-directory: "./example"

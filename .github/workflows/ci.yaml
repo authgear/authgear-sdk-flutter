@@ -61,6 +61,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-24.04
+    needs: ["test-ios", "test-android"]
     steps:
     - uses: actions/checkout@v4
     - uses: subosito/flutter-action@v2
@@ -87,7 +88,7 @@ jobs:
 
   deploy-ios:
     runs-on: macos-13
-    needs: "deploy"
+    needs: ["test-ios"]
     if: ${{ github.ref == 'refs/heads/main' }}
     defaults:
       run:
@@ -140,7 +141,7 @@ jobs:
 
   deploy-android:
     runs-on: macos-13
-    needs: "deploy"
+    needs: ["test-android"]
     if: ${{ github.ref == 'refs/heads/main' }}
     defaults:
       run:

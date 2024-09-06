@@ -16,15 +16,11 @@
   <link rel="stylesheet" href="../static-assets/github.css?v1">
   <link rel="stylesheet" href="../static-assets/styles.css?v1">
   <link rel="icon" href="../static-assets/favicon.png?v1">
-
   
 </head>
 
-
 <body data-base-href="../" data-using-base-href="false" class="light-theme">
-
 <div id="overlay-under-drawer"></div>
-
 <header id="title">
   <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
   <ol class="breadcrumbs gt-separated dark hidden-xs">
@@ -49,11 +45,10 @@
   </div>
 </header>
 <main>
-
 <div
     id="dartdoc-main-content"
     class="main-content"
-    data-above-sidebar="src_experimental&#47;src_experimental-library-sidebar.html"
+    data-above-sidebar="authgear&#47;authgear-library-sidebar.html"
     data-below-sidebar="authgear&#47;AuthgearExperimental-class-sidebar.html">
     <div>
 <h1><span class="kind-class">AuthgearExperimental</span> class 
@@ -67,7 +62,6 @@
     
   <section class="summary offset-anchor" id="constructors">
     <h2>Constructors</h2>
-
     <dl class="constructor-summary-list">
         <dt id="AuthgearExperimental" class="callable">
           <span class="name"><a href="../authgear/AuthgearExperimental/AuthgearExperimental.html">AuthgearExperimental</a></span><span class="signature">(<span class="parameter" id="-param-authgear"><span class="type-annotation"><a href="../authgear/Authgear-class.html">Authgear</a></span> <span class="parameter-name">authgear</span></span>)</span>
@@ -129,7 +123,7 @@
     <dl class="callables">
         <dt id="createAuthenticateRequest" class="callable">
   <span class="name"><a href="../authgear/AuthgearExperimental/createAuthenticateRequest.html">createAuthenticateRequest</a></span><span class="signature">(<wbr>{<span class="parameter" id="createAuthenticateRequest-param-redirectURI"><span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">redirectURI</span>, </span><span class="parameter" id="createAuthenticateRequest-param-state"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">state</span>, </span><span class="parameter" id="createAuthenticateRequest-param-prompt"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../authgear/PromptOption.html">PromptOption</a></span>&gt;</span>?</span> <span class="parameter-name">prompt</span>, </span><span class="parameter" id="createAuthenticateRequest-param-loginHint"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">loginHint</span>, </span><span class="parameter" id="createAuthenticateRequest-param-uiLocales"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>&gt;</span>?</span> <span class="parameter-name">uiLocales</span>, </span><span class="parameter" id="createAuthenticateRequest-param-colorScheme"><span class="type-annotation"><a href="../authgear/ColorScheme.html">ColorScheme</a>?</span> <span class="parameter-name">colorScheme</span>, </span><span class="parameter" id="createAuthenticateRequest-param-wechatRedirectURI"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">wechatRedirectURI</span>, </span><span class="parameter" id="createAuthenticateRequest-param-page"><span class="type-annotation"><a href="../authgear/AuthenticationPage.html">AuthenticationPage</a>?</span> <span class="parameter-name">page</span></span>})
-    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../authgear/AuthenticateRequest-class.html">AuthenticateRequest</a></span>&gt;</span></span>
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../authgear/AuthenticateRequest-class.html">AuthenticateRequest</a></span>&gt;</span></span>
   </span>
   
 
@@ -142,7 +136,7 @@
 
         <dt id="createReauthenticateRequest" class="callable">
   <span class="name"><a href="../authgear/AuthgearExperimental/createReauthenticateRequest.html">createReauthenticateRequest</a></span><span class="signature">(<wbr>{<span class="parameter" id="createReauthenticateRequest-param-redirectURI"><span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">redirectURI</span>, </span><span class="parameter" id="createReauthenticateRequest-param-idTokenHint"><span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">idTokenHint</span>, </span><span class="parameter" id="createReauthenticateRequest-param-state"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">state</span>, </span><span class="parameter" id="createReauthenticateRequest-param-uiLocales"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>&gt;</span>?</span> <span class="parameter-name">uiLocales</span>, </span><span class="parameter" id="createReauthenticateRequest-param-colorScheme"><span class="type-annotation"><a href="../authgear/ColorScheme.html">ColorScheme</a>?</span> <span class="parameter-name">colorScheme</span>, </span><span class="parameter" id="createReauthenticateRequest-param-wechatRedirectURI"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">wechatRedirectURI</span></span>})
-    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../authgear/AuthenticateRequest-class.html">AuthenticateRequest</a></span>&gt;</span></span>
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../authgear/AuthenticateRequest-class.html">AuthenticateRequest</a></span>&gt;</span></span>
   </span>
   
 
@@ -155,7 +149,7 @@
 
         <dt id="finishAuthentication" class="callable">
   <span class="name"><a href="../authgear/AuthgearExperimental/finishAuthentication.html">finishAuthentication</a></span><span class="signature">(<wbr>{<span class="parameter" id="finishAuthentication-param-url"><span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Uri-class.html">Uri</a></span> <span class="parameter-name">url</span>, </span><span class="parameter" id="finishAuthentication-param-request"><span>required</span> <span class="type-annotation"><a href="../authgear/AuthenticateRequest-class.html">AuthenticateRequest</a></span> <span class="parameter-name">request</span></span>})
-    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../authgear/UserInfo-class.html">UserInfo</a></span>&gt;</span></span>
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../authgear/UserInfo-class.html">UserInfo</a></span>&gt;</span></span>
   </span>
   
 
@@ -168,7 +162,7 @@
 
         <dt id="generateURL" class="callable">
   <span class="name"><a href="../authgear/AuthgearExperimental/generateURL.html">generateURL</a></span><span class="signature">(<wbr>{<span class="parameter" id="generateURL-param-redirectURI"><span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">redirectURI</span></span>})
-    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/Uri-class.html">Uri</a></span>&gt;</span></span>
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/Uri-class.html">Uri</a></span>&gt;</span></span>
   </span>
   
 
@@ -232,9 +226,7 @@
     
     
 
-
   </div> <!-- /.main-content -->
-
   <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
     <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
 <header id="header-search-sidebar" class="hidden-l">
@@ -242,40 +234,30 @@
     <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
   </form>
 </header>
-
 <ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
     <li><a href="../index.html">flutter_authgear</a></li>
     <li><a href="../authgear/authgear-library.html">authgear</a></li>
     <li class="self-crumb">AuthgearExperimental class</li>
 </ol>
 
-
     <h5>authgear library</h5>
     <div id="dartdoc-sidebar-left-content"></div>
   </div>
-
   <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
   </div><!--/.sidebar-offcanvas-->
-
 </main>
-
 <footer>
   <span class="no-break">
     flutter_authgear
       1.7.0
   </span>
-
   
 </footer>
-
 
 
 <script src="../static-assets/highlight.pack.js?v1"></script>
 <script src="../static-assets/docs.dart.js"></script>
 
-
-
 </body>
-
 </html>
 

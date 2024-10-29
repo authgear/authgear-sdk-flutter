@@ -33,7 +33,9 @@ target 'Runner' do
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 
-  pod 'WechatOpenSDK', '~> 2.0.4'
+  # Use WechatOpenSDK-XCFramework instead of WechatOpenSDK
+  # See https://developers.weixin.qq.com/community/develop/doc/000c62b9b0ccf8c1d65fa90b751001?blockType=1
+  pod 'WechatOpenSDK-XCFramework', '~> 2.0.4'
 end
 
 post_install do |installer|

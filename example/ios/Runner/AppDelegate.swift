@@ -2,7 +2,7 @@ import UIKit
 import Flutter
 import flutter_authgear
 
-@UIApplicationMain
+@main
 @objc class AppDelegate: FlutterAppDelegate, WXApiDelegate {
 
   private var wechat = [String: FlutterResult]()

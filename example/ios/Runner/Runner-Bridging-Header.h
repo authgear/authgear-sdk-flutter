@@ -1,2 +1,2 @@
 #import "GeneratedPluginRegistrant.h"
-#import "WXApi.h"
+#import <WXApi.h>

@@ -12,7 +12,7 @@ on:
 
 jobs:
   test-ios:
-    runs-on: macos-13
+    runs-on: macos-14
     defaults:
       run:
         working-directory: "./example"
@@ -21,11 +21,14 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version-file: "./.tool-versions"
-    - run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
+    # Xcode_16.2.app is available, but it does not have any simulator pre-installed.
+    # So it is not really usable.
+    # Let's use Xcode_16.1.app instead.
+    - run: sudo xcode-select -s /Applications/Xcode_16.1.app/Contents/Developer
     - uses: subosito/flutter-action@v2
       with:
         # This has to be kept in sync with .tool-versions
-        flutter-version: '3.24.2'
+        flutter-version: '3.27.1'
         channel: 'stable'
         # This action takes 1m30s to finish. Enable cache to make it shorter.
         cache: true
@@ -36,7 +39,7 @@ jobs:
     - run: flutter build ipa --no-codesign
 
   test-android:
-    runs-on: macos-13
+    runs-on: macos-14
     defaults:
       run:
         working-directory: "./example"
@@ -45,14 +48,14 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version-file: "./.tool-versions"
-    # https://github.com/actions/runner-images/blob/main/images/macos/macos-13-Readme.md#java
+    # https://github.com/actions/runner-images/blob/main/images/macos/macos-14-arm64-Readme.md#java
     - name: Set java version
       run: |
-        echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
+        echo "JAVA_HOME=$JAVA_HOME_21_arm64" >> $GITHUB_ENV
     - uses: subosito/flutter-action@v2
       with:
         # This has to be kept in sync with .tool-versions
-        flutter-version: '3.24.2'
+        flutter-version: '3.27.1'
         channel: 'stable'
         # This action takes 1m30s to finish. Enable cache to make it shorter.
         cache: true
@@ -71,7 +74,7 @@ jobs:
     - uses: subosito/flutter-action@v2
       with:
         # This has to be kept in sync with .tool-versions
-        flutter-version: '3.24.2'
+        flutter-version: '3.27.1'
         channel: 'stable'
         # This action takes 1m30s to finish. Enable cache to make it shorter.
         cache: true
@@ -93,9 +96,10 @@ jobs:
         publish_dir: ./doc/api
 
   deploy-ios:
-    runs-on: macos-13
+    runs-on: macos-14
     needs: ["test-ios"]
-    if: ${{ github.ref == 'refs/heads/main' }}
+    # We cannot build in PRs because secrets are not available in PRs.
+    if: ${{ github.repository == 'authgear/authgear-sdk-flutter' && github.ref == 'refs/heads/main' }}
     defaults:
       run:
         working-directory: "./example"
@@ -104,12 +108,15 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version-file: "./.tool-versions"
-    - run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
+    # Xcode_16.2.app is available, but it does not have any simulator pre-installed.
+    # So it is not really usable.
+    # Let's use Xcode_16.1.app instead.
+    - run: sudo xcode-select -s /Applications/Xcode_16.1.app/Contents/Developer
     - run: npm install -g appcenter-cli
     - uses: subosito/flutter-action@v2
       with:
         # This has to be kept in sync with .tool-versions
-        flutter-version: '3.24.2'
+        flutter-version: '3.27.1'
         channel: 'stable'
         # This action takes 1m30s to finish. Enable cache to make it shorter.
         cache: true
@@ -119,23 +126,31 @@ jobs:
     - run: dart format --set-exit-if-changed lib
     - name: Prepare certificate and provisioning profile
       env:
+        IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
         IOS_CERTIFICATE_BASE64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
         IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+        IOS_KEYCHAIN_PASSWORD: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
       run: |
         CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
         PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
         KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
 
+        # import certificate and provisioning profile from secrets
         echo -n "$IOS_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+
         echo -n "$IOS_PROVISIONING_PROFILE_BASE64" | base64 --decode -o $PP_PATH
 
-        security create-keychain -p "" $KEYCHAIN_PATH
-        security set-keychain-settings $KEYCHAIN_PATH
-        security unlock-keychain -p "" $KEYCHAIN_PATH
+        # create temporary keychain
+        security create-keychain -p "$IOS_KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+        security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+        security unlock-keychain -p "$IOS_KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
 
-        security import $CERTIFICATE_PATH -P "" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+        # import certificate to keychain
+        security import $CERTIFICATE_PATH -P "$IOS_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+        security set-key-partition-list -S apple-tool:,apple: -k "$IOS_KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
         security list-keychain -d user -s $KEYCHAIN_PATH
 
+        # apply provisioning profile
         mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
         cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
     - name: Build .ipa
@@ -148,9 +163,10 @@ jobs:
       run: appcenter distribute release --debug --silent --file "./build/ios/ipa/Authgear Flutter.ipa" --store "App Store Connect Users" --app "Oursky/Authgear-Demo-Flutter-iOS" --release-notes "no release notes"
 
   deploy-android:
-    runs-on: macos-13
+    runs-on: macos-14
     needs: ["test-android"]
-    if: ${{ github.ref == 'refs/heads/main' }}
+    # We cannot build in PRs because secrets are not available in PRs.
+    if: ${{ github.repository == 'authgear/authgear-sdk-flutter' && github.ref == 'refs/heads/main' }}
     defaults:
       run:
         working-directory: "./example"
@@ -159,15 +175,15 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version-file: "./.tool-versions"
-    # https://github.com/actions/runner-images/blob/main/images/macos/macos-13-Readme.md#java
+    # https://github.com/actions/runner-images/blob/main/images/macos/macos-14-arm64-Readme.md#java
     - name: Set java version
       run: |
-        echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
+        echo "JAVA_HOME=$JAVA_HOME_21_arm64" >> $GITHUB_ENV
     - run: npm install -g appcenter-cli
     - uses: subosito/flutter-action@v2
       with:
         # This has to be kept in sync with .tool-versions
-        flutter-version: '3.24.2'
+        flutter-version: '3.27.1'
         channel: 'stable'
         # This action takes 1m30s to finish. Enable cache to make it shorter.
         cache: true

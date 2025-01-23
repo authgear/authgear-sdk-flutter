@@ -25,7 +25,7 @@ jobs:
     - uses: subosito/flutter-action@v2
       with:
         # This has to be kept in sync with .tool-versions
-        flutter-version: '3.24.2'
+        flutter-version: '3.27.1'
         channel: 'stable'
         # This action takes 1m30s to finish. Enable cache to make it shorter.
         cache: true
@@ -52,7 +52,7 @@ jobs:
     - uses: subosito/flutter-action@v2
       with:
         # This has to be kept in sync with .tool-versions
-        flutter-version: '3.24.2'
+        flutter-version: '3.27.1'
         channel: 'stable'
         # This action takes 1m30s to finish. Enable cache to make it shorter.
         cache: true
@@ -71,7 +71,7 @@ jobs:
     - uses: subosito/flutter-action@v2
       with:
         # This has to be kept in sync with .tool-versions
-        flutter-version: '3.24.2'
+        flutter-version: '3.27.1'
         channel: 'stable'
         # This action takes 1m30s to finish. Enable cache to make it shorter.
         cache: true
@@ -109,7 +109,7 @@ jobs:
     - uses: subosito/flutter-action@v2
       with:
         # This has to be kept in sync with .tool-versions
-        flutter-version: '3.24.2'
+        flutter-version: '3.27.1'
         channel: 'stable'
         # This action takes 1m30s to finish. Enable cache to make it shorter.
         cache: true
@@ -167,7 +167,7 @@ jobs:
     - uses: subosito/flutter-action@v2
       with:
         # This has to be kept in sync with .tool-versions
-        flutter-version: '3.24.2'
+        flutter-version: '3.27.1'
         channel: 'stable'
         # This action takes 1m30s to finish. Enable cache to make it shorter.
         cache: true

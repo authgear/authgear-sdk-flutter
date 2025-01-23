@@ -98,7 +98,8 @@ jobs:
   deploy-ios:
     runs-on: macos-14
     needs: ["test-ios"]
-    if: ${{ github.ref == 'refs/heads/main' }}
+    # We cannot build in PRs because secrets are not available in PRs.
+    if: ${{ github.repository == 'authgear/authgear-sdk-flutter' && github.ref == 'refs/heads/main' }}
     defaults:
       run:
         working-directory: "./example"
@@ -164,7 +165,8 @@ jobs:
   deploy-android:
     runs-on: macos-14
     needs: ["test-android"]
-    if: ${{ github.ref == 'refs/heads/main' }}
+    # We cannot build in PRs because secrets are not available in PRs.
+    if: ${{ github.repository == 'authgear/authgear-sdk-flutter' && github.ref == 'refs/heads/main' }}
     defaults:
       run:
         working-directory: "./example"

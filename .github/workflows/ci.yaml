@@ -12,7 +12,7 @@ on:
 
 jobs:
   test-ios:
-    runs-on: macos-13
+    runs-on: macos-14
     defaults:
       run:
         working-directory: "./example"
@@ -21,7 +21,10 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version-file: "./.tool-versions"
-    - run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
+    # Xcode_16.2.app is available, but it does not have any simulator pre-installed.
+    # So it is not really usable.
+    # Let's use Xcode_16.1.app instead.
+    - run: sudo xcode-select -s /Applications/Xcode_16.1.app/Contents/Developer
     - uses: subosito/flutter-action@v2
       with:
         # This has to be kept in sync with .tool-versions
@@ -36,7 +39,7 @@ jobs:
     - run: flutter build ipa --no-codesign
 
   test-android:
-    runs-on: macos-13
+    runs-on: macos-14
     defaults:
       run:
         working-directory: "./example"
@@ -45,10 +48,10 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version-file: "./.tool-versions"
-    # https://github.com/actions/runner-images/blob/main/images/macos/macos-13-Readme.md#java
+    # https://github.com/actions/runner-images/blob/main/images/macos/macos-14-arm64-Readme.md#java
     - name: Set java version
       run: |
-        echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
+        echo "JAVA_HOME=$JAVA_HOME_21_arm64" >> $GITHUB_ENV
     - uses: subosito/flutter-action@v2
       with:
         # This has to be kept in sync with .tool-versions
@@ -93,7 +96,7 @@ jobs:
         publish_dir: ./doc/api
 
   deploy-ios:
-    runs-on: macos-13
+    runs-on: macos-14
     needs: ["test-ios"]
     if: ${{ github.ref == 'refs/heads/main' }}
     defaults:
@@ -104,7 +107,10 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version-file: "./.tool-versions"
-    - run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
+    # Xcode_16.2.app is available, but it does not have any simulator pre-installed.
+    # So it is not really usable.
+    # Let's use Xcode_16.1.app instead.
+    - run: sudo xcode-select -s /Applications/Xcode_16.1.app/Contents/Developer
     - run: npm install -g appcenter-cli
     - uses: subosito/flutter-action@v2
       with:
@@ -148,7 +154,7 @@ jobs:
       run: appcenter distribute release --debug --silent --file "./build/ios/ipa/Authgear Flutter.ipa" --store "App Store Connect Users" --app "Oursky/Authgear-Demo-Flutter-iOS" --release-notes "no release notes"
 
   deploy-android:
-    runs-on: macos-13
+    runs-on: macos-14
     needs: ["test-android"]
     if: ${{ github.ref == 'refs/heads/main' }}
     defaults:
@@ -159,10 +165,10 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version-file: "./.tool-versions"
-    # https://github.com/actions/runner-images/blob/main/images/macos/macos-13-Readme.md#java
+    # https://github.com/actions/runner-images/blob/main/images/macos/macos-14-arm64-Readme.md#java
     - name: Set java version
       run: |
-        echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
+        echo "JAVA_HOME=$JAVA_HOME_21_arm64" >> $GITHUB_ENV
     - run: npm install -g appcenter-cli
     - uses: subosito/flutter-action@v2
       with:

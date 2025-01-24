@@ -634,6 +634,20 @@ class Authgear implements AuthgearHttpClientDelegate {
     await _clearSession(SessionStateChangeReason.invalid);
   }
 
+  Future<void> addEmail(
+      {required String redirectURI,
+      List<String>? uiLocales,
+      ColorScheme? colorScheme,
+      String? wechatRedirectURI}) async {
+    await _openSettingsAction(
+      action: SettingsAction.addEmail,
+      redirectURI: redirectURI,
+      uiLocales: uiLocales,
+      colorScheme: colorScheme,
+      wechatRedirectURI: wechatRedirectURI,
+    );
+  }
+
   Future<void> refreshIDToken() async {
     if (shouldRefreshAccessToken) {
       await refreshAccessToken();

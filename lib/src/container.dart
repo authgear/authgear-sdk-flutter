@@ -648,6 +648,20 @@ class Authgear implements AuthgearHttpClientDelegate {
     );
   }
 
+  Future<void> addPhone(
+      {required String redirectURI,
+      List<String>? uiLocales,
+      ColorScheme? colorScheme,
+      String? wechatRedirectURI}) async {
+    await _openSettingsAction(
+      action: SettingsAction.addPhone,
+      redirectURI: redirectURI,
+      uiLocales: uiLocales,
+      colorScheme: colorScheme,
+      wechatRedirectURI: wechatRedirectURI,
+    );
+  }
+
   Future<void> refreshIDToken() async {
     if (shouldRefreshAccessToken) {
       await refreshAccessToken();

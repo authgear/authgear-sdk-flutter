@@ -163,6 +163,7 @@ enum SettingsAction {
   deleteAccount,
   addEmail,
   addPhone,
+  addUsername,
 }
 
 extension SettingsActionExtension on SettingsAction {
@@ -176,6 +177,8 @@ extension SettingsActionExtension on SettingsAction {
         return "add_email";
       case SettingsAction.addPhone:
         return "add_phone";
+      case SettingsAction.addUsername:
+        return "add_username";
     }
   }
 }

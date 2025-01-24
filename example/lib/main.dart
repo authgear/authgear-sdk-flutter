@@ -937,7 +937,6 @@ class _MyAppState extends State<MyApp> {
       await _authgear.changePassword(
         redirectURI: redirectURI,
         colorScheme: _getColorScheme(context),
-        wechatRedirectURI: wechatRedirectURI,
       );
     } catch (e) {
       onError(context, e);
@@ -956,7 +955,6 @@ class _MyAppState extends State<MyApp> {
       await _authgear.deleteAccount(
         redirectURI: redirectURI,
         colorScheme: _getColorScheme(context),
-        wechatRedirectURI: wechatRedirectURI,
       );
     } catch (e) {
       onError(context, e);
@@ -975,7 +973,6 @@ class _MyAppState extends State<MyApp> {
       await _authgear.addEmail(
         redirectURI: redirectURI,
         colorScheme: _getColorScheme(context),
-        wechatRedirectURI: wechatRedirectURI,
       );
     } catch (e) {
       onError(context, e);
@@ -994,7 +991,6 @@ class _MyAppState extends State<MyApp> {
       await _authgear.addPhone(
         redirectURI: redirectURI,
         colorScheme: _getColorScheme(context),
-        wechatRedirectURI: wechatRedirectURI,
       );
     } catch (e) {
       onError(context, e);
@@ -1013,7 +1009,6 @@ class _MyAppState extends State<MyApp> {
       await _authgear.addUsername(
         redirectURI: redirectURI,
         colorScheme: _getColorScheme(context),
-        wechatRedirectURI: wechatRedirectURI,
       );
     } catch (e) {
       onError(context, e);

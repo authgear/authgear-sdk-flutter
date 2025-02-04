@@ -1,5 +1,6 @@
 import 'dart:async' show StreamSubscription;
 import 'dart:io';
+import 'dart:developer' as developer;
 import 'dart:convert';
 import 'package:flutter/material.dart' hide ColorScheme;
 import 'package:flutter/services.dart';
@@ -626,6 +627,16 @@ class _MyAppState extends State<MyApp> {
                 SessionStateButton(
                   sessionState: _authgear.sessionState,
                   targetState: SessionState.authenticated,
+                  label: "Change Email",
+                  onPressed: _unconfigured || _loading
+                      ? null
+                      : () {
+                          _onPressChangeEmail(context);
+                        },
+                ),
+                SessionStateButton(
+                  sessionState: _authgear.sessionState,
+                  targetState: SessionState.authenticated,
                   label: "Delete Account",
                   onPressed: _unconfigured || _loading
                       ? null
@@ -1009,6 +1020,30 @@ class _MyAppState extends State<MyApp> {
       await _authgear.addUsername(
         redirectURI: redirectURI,
         colorScheme: _getColorScheme(context),
+      );
+    } catch (e) {
+      onError(context, e);
+    } finally {
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _onPressChangeEmail(BuildContext context) async {
+    try {
+      setState(() {
+        _loading = true;
+      });
+      final info = await _authgear.getUserInfo();
+      final email = info.email;
+      if (email == null) {
+        throw Exception("User have no email");
+      }
+      await _authgear.changeEmail(
+        redirectURI: redirectURI,
+        colorScheme: _getColorScheme(context),
+        originalEmail: email,
       );
     } catch (e) {
       onError(context, e);

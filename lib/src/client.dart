@@ -24,6 +24,7 @@ class OIDCAuthenticationRequest {
   final String? wechatRedirectURI;
   final String? oauthProviderAlias;
   final SettingsAction? settingsAction;
+  final String? settingsActionQuery;
   final String? authenticationFlowGroup;
   final ResponseMode? responseMode;
   final String? xPreAuthenticatedURLToken;
@@ -47,6 +48,7 @@ class OIDCAuthenticationRequest {
     this.wechatRedirectURI,
     this.oauthProviderAlias,
     this.settingsAction,
+    this.settingsActionQuery,
     this.authenticationFlowGroup,
     this.responseMode,
     this.xPreAuthenticatedURLToken,
@@ -142,6 +144,11 @@ class OIDCAuthenticationRequest {
     final settingsAction = this.settingsAction;
     if (settingsAction != null) {
       q["x_settings_action"] = settingsAction.value;
+    }
+
+    final settingsActionQuery = this.settingsActionQuery;
+    if (settingsActionQuery != null) {
+      q["x_settings_action_query"] = settingsActionQuery;
     }
 
     final authenticationFlowGroup = this.authenticationFlowGroup;

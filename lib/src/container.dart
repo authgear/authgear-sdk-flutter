@@ -167,15 +167,31 @@ class SettingsActionOptions {
   final List<String>? uiLocales;
   final ColorScheme? colorScheme;
 
+  // For change_email, change_phone, change_password
+  final String? qLoginID;
+
   SettingsActionOptions({
     required this.settingAction,
     required this.redirectURI,
     this.uiLocales,
     this.colorScheme,
+    this.qLoginID,
   });
 
   OIDCAuthenticationRequest toRequest(String clientID, String idTokenHint,
       String loginHint, CodeVerifier verifier) {
+    final Map<String, String> xSettingsActionQueryMap = {};
+    final qLoginID = this.qLoginID;
+    if (qLoginID != null) {
+      xSettingsActionQueryMap["q_login_id"] = qLoginID;
+    }
+
+    String? xSettingsActionQuery;
+    if (xSettingsActionQueryMap.isNotEmpty) {
+      final u = Uri(queryParameters: xSettingsActionQueryMap);
+      xSettingsActionQuery = u.query;
+    }
+
     return OIDCAuthenticationRequest(
       clientID: clientID,
       redirectURI: redirectURI,
@@ -195,6 +211,7 @@ class SettingsActionOptions {
       idTokenHint: idTokenHint,
       loginHint: loginHint,
       settingsAction: settingAction,
+      settingsActionQuery: xSettingsActionQuery,
     );
   }
 }
@@ -559,6 +576,7 @@ class Authgear implements AuthgearHttpClientDelegate {
     required String redirectURI,
     List<String>? uiLocales,
     ColorScheme? colorScheme,
+    String? qLoginID,
   }) async {
     final idTokenHint = this.idTokenHint;
     final refreshToken = _refreshToken;
@@ -578,6 +596,7 @@ class Authgear implements AuthgearHttpClientDelegate {
       redirectURI: redirectURI,
       uiLocales: uiLocales,
       colorScheme: colorScheme,
+      qLoginID: qLoginID,
     );
 
     final request = await internalCreateSettingsActionRequest(
@@ -652,6 +671,20 @@ class Authgear implements AuthgearHttpClientDelegate {
       redirectURI: redirectURI,
       uiLocales: uiLocales,
       colorScheme: colorScheme,
+    );
+  }
+
+  Future<void> changeEmail(
+      {required String redirectURI,
+      required String originalEmail,
+      List<String>? uiLocales,
+      ColorScheme? colorScheme}) async {
+    await _openSettingsAction(
+      action: SettingsAction.changeEmail,
+      redirectURI: redirectURI,
+      uiLocales: uiLocales,
+      colorScheme: colorScheme,
+      qLoginID: originalEmail,
     );
   }
 

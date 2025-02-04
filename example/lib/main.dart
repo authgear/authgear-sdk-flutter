@@ -1,6 +1,5 @@
 import 'dart:async' show StreamSubscription;
 import 'dart:io';
-import 'dart:developer' as developer;
 import 'dart:convert';
 import 'package:flutter/material.dart' hide ColorScheme;
 import 'package:flutter/services.dart';

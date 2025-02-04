@@ -688,6 +688,34 @@ class Authgear implements AuthgearHttpClientDelegate {
     );
   }
 
+  Future<void> changePhoneNumber(
+      {required String redirectURI,
+      required String originalPhoneNumber,
+      List<String>? uiLocales,
+      ColorScheme? colorScheme}) async {
+    await _openSettingsAction(
+      action: SettingsAction.changePhone,
+      redirectURI: redirectURI,
+      uiLocales: uiLocales,
+      colorScheme: colorScheme,
+      qLoginID: originalPhoneNumber,
+    );
+  }
+
+  Future<void> changeUsername(
+      {required String redirectURI,
+      required String originalUsername,
+      List<String>? uiLocales,
+      ColorScheme? colorScheme}) async {
+    await _openSettingsAction(
+      action: SettingsAction.changeUsername,
+      redirectURI: redirectURI,
+      uiLocales: uiLocales,
+      colorScheme: colorScheme,
+      qLoginID: originalUsername,
+    );
+  }
+
   Future<void> refreshIDToken() async {
     if (shouldRefreshAccessToken) {
       await refreshAccessToken();

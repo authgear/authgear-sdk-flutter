@@ -158,7 +158,13 @@ extension ActorTokenTypeExtension on ActorTokenType {
   }
 }
 
-enum SettingsAction { changePassword, deleteAccount }
+enum SettingsAction {
+  changePassword,
+  deleteAccount,
+  addEmail,
+  addPhone,
+  addUsername,
+}
 
 extension SettingsActionExtension on SettingsAction {
   String get value {
@@ -167,6 +173,12 @@ extension SettingsActionExtension on SettingsAction {
         return "change_password";
       case SettingsAction.deleteAccount:
         return "delete_account";
+      case SettingsAction.addEmail:
+        return "add_email";
+      case SettingsAction.addPhone:
+        return "add_phone";
+      case SettingsAction.addUsername:
+        return "add_username";
     }
   }
 }

@@ -596,6 +596,36 @@ class _MyAppState extends State<MyApp> {
                 SessionStateButton(
                   sessionState: _authgear.sessionState,
                   targetState: SessionState.authenticated,
+                  label: "Add Email",
+                  onPressed: _unconfigured || _loading
+                      ? null
+                      : () {
+                          _onPressAddEmail(context);
+                        },
+                ),
+                SessionStateButton(
+                  sessionState: _authgear.sessionState,
+                  targetState: SessionState.authenticated,
+                  label: "Add Phone",
+                  onPressed: _unconfigured || _loading
+                      ? null
+                      : () {
+                          _onPressAddPhone(context);
+                        },
+                ),
+                SessionStateButton(
+                  sessionState: _authgear.sessionState,
+                  targetState: SessionState.authenticated,
+                  label: "Add Username",
+                  onPressed: _unconfigured || _loading
+                      ? null
+                      : () {
+                          _onPressAddUsername(context);
+                        },
+                ),
+                SessionStateButton(
+                  sessionState: _authgear.sessionState,
+                  targetState: SessionState.authenticated,
                   label: "Delete Account",
                   onPressed: _unconfigured || _loading
                       ? null
@@ -907,7 +937,6 @@ class _MyAppState extends State<MyApp> {
       await _authgear.changePassword(
         redirectURI: redirectURI,
         colorScheme: _getColorScheme(context),
-        wechatRedirectURI: wechatRedirectURI,
       );
     } catch (e) {
       onError(context, e);
@@ -926,7 +955,60 @@ class _MyAppState extends State<MyApp> {
       await _authgear.deleteAccount(
         redirectURI: redirectURI,
         colorScheme: _getColorScheme(context),
-        wechatRedirectURI: wechatRedirectURI,
+      );
+    } catch (e) {
+      onError(context, e);
+    } finally {
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _onPressAddEmail(BuildContext context) async {
+    try {
+      setState(() {
+        _loading = true;
+      });
+      await _authgear.addEmail(
+        redirectURI: redirectURI,
+        colorScheme: _getColorScheme(context),
+      );
+    } catch (e) {
+      onError(context, e);
+    } finally {
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _onPressAddPhone(BuildContext context) async {
+    try {
+      setState(() {
+        _loading = true;
+      });
+      await _authgear.addPhone(
+        redirectURI: redirectURI,
+        colorScheme: _getColorScheme(context),
+      );
+    } catch (e) {
+      onError(context, e);
+    } finally {
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _onPressAddUsername(BuildContext context) async {
+    try {
+      setState(() {
+        _loading = true;
+      });
+      await _authgear.addUsername(
+        redirectURI: redirectURI,
+        colorScheme: _getColorScheme(context),
       );
     } catch (e) {
       onError(context, e);

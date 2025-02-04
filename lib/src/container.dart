@@ -166,14 +166,12 @@ class SettingsActionOptions {
   final String redirectURI;
   final List<String>? uiLocales;
   final ColorScheme? colorScheme;
-  final String? wechatRedirectURI;
 
   SettingsActionOptions({
     required this.settingAction,
     required this.redirectURI,
     this.uiLocales,
     this.colorScheme,
-    this.wechatRedirectURI,
   });
 
   OIDCAuthenticationRequest toRequest(String clientID, String idTokenHint,
@@ -196,7 +194,6 @@ class SettingsActionOptions {
       colorScheme: colorScheme,
       idTokenHint: idTokenHint,
       loginHint: loginHint,
-      wechatRedirectURI: wechatRedirectURI,
       settingsAction: settingAction,
     );
   }
@@ -562,7 +559,6 @@ class Authgear implements AuthgearHttpClientDelegate {
     required String redirectURI,
     List<String>? uiLocales,
     ColorScheme? colorScheme,
-    String? wechatRedirectURI,
   }) async {
     final idTokenHint = this.idTokenHint;
     final refreshToken = _refreshToken;
@@ -582,17 +578,10 @@ class Authgear implements AuthgearHttpClientDelegate {
       redirectURI: redirectURI,
       uiLocales: uiLocales,
       colorScheme: colorScheme,
-      wechatRedirectURI: wechatRedirectURI,
     );
 
     final request = await internalCreateSettingsActionRequest(
         clientID, idTokenHint, loginHint, options);
-
-    if (wechatRedirectURI != null) {
-      await native.registerWechatRedirectURI(
-          onWechatRedirectURI: _onWechatRedirectURI,
-          wechatRedirectURI: wechatRedirectURI);
-    }
 
     final resultURL = await _uiImplementation.openAuthorizationURL(
       url: request.url.toString(),
@@ -608,30 +597,62 @@ class Authgear implements AuthgearHttpClientDelegate {
   Future<void> changePassword(
       {required String redirectURI,
       List<String>? uiLocales,
-      ColorScheme? colorScheme,
-      String? wechatRedirectURI}) {
+      ColorScheme? colorScheme}) {
     return _openSettingsAction(
       action: SettingsAction.changePassword,
       redirectURI: redirectURI,
       uiLocales: uiLocales,
       colorScheme: colorScheme,
-      wechatRedirectURI: wechatRedirectURI,
     );
   }
 
   Future<void> deleteAccount(
       {required String redirectURI,
       List<String>? uiLocales,
-      ColorScheme? colorScheme,
-      String? wechatRedirectURI}) async {
+      ColorScheme? colorScheme}) async {
     await _openSettingsAction(
       action: SettingsAction.deleteAccount,
       redirectURI: redirectURI,
       uiLocales: uiLocales,
       colorScheme: colorScheme,
-      wechatRedirectURI: wechatRedirectURI,
     );
     await _clearSession(SessionStateChangeReason.invalid);
+  }
+
+  Future<void> addEmail(
+      {required String redirectURI,
+      List<String>? uiLocales,
+      ColorScheme? colorScheme}) async {
+    await _openSettingsAction(
+      action: SettingsAction.addEmail,
+      redirectURI: redirectURI,
+      uiLocales: uiLocales,
+      colorScheme: colorScheme,
+    );
+  }
+
+  Future<void> addPhone(
+      {required String redirectURI,
+      List<String>? uiLocales,
+      ColorScheme? colorScheme}) async {
+    await _openSettingsAction(
+      action: SettingsAction.addPhone,
+      redirectURI: redirectURI,
+      uiLocales: uiLocales,
+      colorScheme: colorScheme,
+    );
+  }
+
+  Future<void> addUsername(
+      {required String redirectURI,
+      List<String>? uiLocales,
+      ColorScheme? colorScheme}) async {
+    await _openSettingsAction(
+      action: SettingsAction.addUsername,
+      redirectURI: redirectURI,
+      uiLocales: uiLocales,
+      colorScheme: colorScheme,
+    );
   }
 
   Future<void> refreshIDToken() async {

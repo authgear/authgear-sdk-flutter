@@ -26,6 +26,8 @@
             pkgs.nodejs_20
             # 3.3.6
             pkgs.ruby_3_3
+            # 1.16.2
+            pkgs.cocoapods
             # 3.27.1
             pkgs.flutter327
           ];

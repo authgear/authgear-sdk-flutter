@@ -626,6 +626,36 @@ class _MyAppState extends State<MyApp> {
                 SessionStateButton(
                   sessionState: _authgear.sessionState,
                   targetState: SessionState.authenticated,
+                  label: "Change Email",
+                  onPressed: _unconfigured || _loading
+                      ? null
+                      : () {
+                          _onPressChangeEmail(context);
+                        },
+                ),
+                SessionStateButton(
+                  sessionState: _authgear.sessionState,
+                  targetState: SessionState.authenticated,
+                  label: "Change Phone",
+                  onPressed: _unconfigured || _loading
+                      ? null
+                      : () {
+                          _onPressChangePhoneNumber(context);
+                        },
+                ),
+                SessionStateButton(
+                  sessionState: _authgear.sessionState,
+                  targetState: SessionState.authenticated,
+                  label: "Change Username",
+                  onPressed: _unconfigured || _loading
+                      ? null
+                      : () {
+                          _onPressChangeUsername(context);
+                        },
+                ),
+                SessionStateButton(
+                  sessionState: _authgear.sessionState,
+                  targetState: SessionState.authenticated,
                   label: "Delete Account",
                   onPressed: _unconfigured || _loading
                       ? null
@@ -1009,6 +1039,78 @@ class _MyAppState extends State<MyApp> {
       await _authgear.addUsername(
         redirectURI: redirectURI,
         colorScheme: _getColorScheme(context),
+      );
+    } catch (e) {
+      onError(context, e);
+    } finally {
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _onPressChangeEmail(BuildContext context) async {
+    try {
+      setState(() {
+        _loading = true;
+      });
+      final info = await _authgear.getUserInfo();
+      final email = info.email;
+      if (email == null) {
+        throw Exception("User have no email");
+      }
+      await _authgear.changeEmail(
+        redirectURI: redirectURI,
+        colorScheme: _getColorScheme(context),
+        originalEmail: email,
+      );
+    } catch (e) {
+      onError(context, e);
+    } finally {
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _onPressChangePhoneNumber(BuildContext context) async {
+    try {
+      setState(() {
+        _loading = true;
+      });
+      final info = await _authgear.getUserInfo();
+      final phoneNumber = info.phoneNumber;
+      if (phoneNumber == null) {
+        throw Exception("User have no phone");
+      }
+      await _authgear.changePhoneNumber(
+        redirectURI: redirectURI,
+        colorScheme: _getColorScheme(context),
+        originalPhoneNumber: phoneNumber,
+      );
+    } catch (e) {
+      onError(context, e);
+    } finally {
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _onPressChangeUsername(BuildContext context) async {
+    try {
+      setState(() {
+        _loading = true;
+      });
+      final info = await _authgear.getUserInfo();
+      final username = info.preferredUsername;
+      if (username == null) {
+        throw Exception("User have no username");
+      }
+      await _authgear.changeUsername(
+        redirectURI: redirectURI,
+        colorScheme: _getColorScheme(context),
+        originalUsername: username,
       );
     } catch (e) {
       onError(context, e);

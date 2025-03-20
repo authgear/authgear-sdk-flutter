@@ -1,0 +1,30 @@
+default_platform(:ios)
+
+platform :ios do
+  lane :runner_build_ios_app do |options|
+    build_app(
+      skip_codesigning: options[:skip_codesigning] == "1",
+      # when skip_codesigning is false, there is no Team ID.
+      # -exportArchive requires Team ID.
+      # So we need to skip generating the ipa.
+      skip_package_ipa: options[:skip_codesigning] == "1",
+      destination: "generic/platform=iOS",
+      workspace: "./example/ios/Runner.xcworkspace",
+      scheme: "Runner",
+      configuration: "Release",
+      export_options: "./example/exportOptions.plist",
+      clean: true,
+      output_directory: "./build/Release/iOS/Runner",
+      output_name: "Runner.ipa",
+      xcargs: "FLUTTER_BUILD_NAME=#{options[:FLUTTER_BUILD_NAME]} FLUTTER_BUILD_NUMBER=#{options[:FLUTTER_BUILD_NUMBER]}",
+    )
+  end
+
+  lane :upload_ios_app do |options|
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      api_key_path: "./build/fastlane-api-key.json",
+      ipa: options[:ipa],
+    )
+  end
+end

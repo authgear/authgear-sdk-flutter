@@ -27,3 +27,8 @@
 .dart_tool/
 .packages
 build/
+
+# fastlane
+/vendor/
+/fastlane/README.md
+/fastlane/report.xml

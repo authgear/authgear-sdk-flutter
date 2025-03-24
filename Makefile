@@ -20,15 +20,15 @@ example-pod-install:
 
 .PHONY: example-build-unsigned-ios-app
 example-build-unsigned-ios-app:
-	bundle exec fastlane runner_build_ios_app skip_codesigning:1
+	bundle exec fastlane ios runner_build_ios_app skip_codesigning:1
 
 .PHONY: example-build-ios-app
 example-build-ios-app:
-	bundle exec fastlane runner_build_ios_app FLUTTER_BUILD_NAME:1.0 FLUTTER_BUILD_NUMBER:$(shell date +%s)
+	bundle exec fastlane ios runner_build_ios_app FLUTTER_BUILD_NAME:1.0 FLUTTER_BUILD_NUMBER:$(shell date +%s)
 
 .PHONY: example-upload-ios-app
 example-upload-ios-app:
-	bundle exec fastlane upload_ios_app ipa:./build/Release/iOS/Runner/Runner.ipa
+	bundle exec fastlane ios upload_ios_app ipa:./build/Release/iOS/Runner/Runner.ipa
 
 .PHONY: sdk-flutter-pub-get
 sdk-flutter-pub-get:

@@ -40,10 +40,6 @@ jobs:
     - uses: ruby/setup-ruby@v1
       with:
         bundler-cache: true
-    # https://github.com/actions/runner-images/blob/main/images/macos/macos-14-arm64-Readme.md#java
-    - name: Set java version
-      run: |
-        echo "JAVA_HOME=$JAVA_HOME_21_arm64" >> $GITHUB_ENV
     - uses: subosito/flutter-action@v2
       with:
         # This has to be kept in sync with .tool-versions
@@ -51,13 +47,11 @@ jobs:
         channel: 'stable'
         # This action takes 1m30s to finish. Enable cache to make it shorter.
         cache: true
-    - run: echo "$ANDROID_HOME/tools/bin" >> $GITHUB_PATH
     - run: make example-flutter-pub-get
     - run: make example-flutter-test
     - run: make example-flutter-analyze
     - run: make example-dart-format
-    - run: flutter build apk --debug
-      working-directory: ./example
+    - run: make example-build-unsigned-android-aab
 
   deploy-docs:
     runs-on: ubuntu-24.04
@@ -127,21 +121,12 @@ jobs:
   deploy-android:
     runs-on: macos-14
     needs: ["test-android"]
-    # We cannot build in PRs because secrets are not available in PRs.
-    if: ${{ github.repository == 'authgear/authgear-sdk-flutter' && github.ref == 'refs/heads/main' }}
-    defaults:
-      run:
-        working-directory: "./example"
+    if: ${{ github.repository == 'authgear/authgear-sdk-flutter' }}
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
+    - uses: ruby/setup-ruby@v1
       with:
-        node-version-file: "./.tool-versions"
-    # https://github.com/actions/runner-images/blob/main/images/macos/macos-14-arm64-Readme.md#java
-    - name: Set java version
-      run: |
-        echo "JAVA_HOME=$JAVA_HOME_21_arm64" >> $GITHUB_ENV
-    - run: npm install -g appcenter-cli
+        bundler-cache: true
     - uses: subosito/flutter-action@v2
       with:
         # This has to be kept in sync with .tool-versions
@@ -149,26 +134,25 @@ jobs:
         channel: 'stable'
         # This action takes 1m30s to finish. Enable cache to make it shorter.
         cache: true
-    - run: flutter pub get
-    - run: flutter test
-    - run: flutter analyze --no-fatal-infos
-    - run: dart format --set-exit-if-changed lib
-    - name: Prepare key store
+    - run: make example-flutter-pub-get
+    - run: make example-flutter-test
+    - run: make example-flutter-analyze
+    - run: make example-dart-format
+    - name: Build aab
       env:
-        ANDROID_KEY_STORE_BASE64: ${{ secrets.ANDROID_KEY_STORE_BASE64 }}
-      run: |
-        KEY_STORE_PATH=./android/app/keystore.jks
-
-        echo -n "$ANDROID_KEY_STORE_BASE64" | base64 --decode -o "$KEY_STORE_PATH"
-    - name: Build .apk
-      env:
+        STORE_BASE64: ${{ secrets.ANDROID_KEY_STORE_BASE64 }}
         STORE_PASSWORD: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
         KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
       run: |
-        BUILD_NUMBER=$(date +%s)
-        flutter build apk --build-number $BUILD_NUMBER -P STORE_PASSWORD="$STORE_PASSWORD" -P KEY_PASSWORD="$KEY_PASSWORD" -P KEY_ALIAS="$KEY_ALIAS"
-    - name: Distribute to App Center
+        export STORE_FILE="$RUNNER_TEMP/upload_key.jks"
+        echo -n "$STORE_BASE64" | base64 --decode -o "$STORE_FILE"
+        make example-build-android-aab
+    - name: Upload aab
+      if: ${{ github.ref == 'refs/heads/main' }}
       env:
-        APPCENTER_ACCESS_TOKEN: ${{ secrets.ANDROID_APPCENTER_ACCESS_TOKEN }}
-      run: appcenter distribute release --debug --silent --file "./build/app/outputs/flutter-apk/app-release.apk" --group "Collaborators" --app "Oursky/Authgear-Demo-Flutter-Android"
+        GOOGLE_SERVICE_ACCOUNT_KEY_JSON_BASE64: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY_JSON_BASE64 }}
+      run: |
+        export GOOGLE_SERVICE_ACCOUNT_KEY_JSON_FILE="$RUNNER_TEMP/google_service_account_key.json"
+        echo -n "$GOOGLE_SERVICE_ACCOUNT_KEY_JSON_BASE64" | base64 --decode -o "$GOOGLE_SERVICE_ACCOUNT_KEY_JSON_FILE"
+        make example-upload-android-aab

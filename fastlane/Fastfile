@@ -26,3 +26,28 @@ platform :ios do
     )
   end
 end
+
+platform :android do
+  lane :build_aab do |options|
+    gradle(
+      project_dir: "./example/android",
+      tasks: [":app:bundleRelease"],
+      properties: {
+        "VERSION_CODE" => options[:VERSION_CODE],
+        "STORE_FILE" => options[:STORE_FILE],
+        "STORE_PASSWORD" => options[:STORE_PASSWORD],
+        "KEY_ALIAS" => options[:KEY_ALIAS],
+        "KEY_PASSWORD" => options[:KEY_PASSWORD],
+      },
+    )
+  end
+
+  lane :upload_aab do |options|
+    upload_to_play_store(
+      json_key: options[:json_key],
+      package_name: "com.authgear.sdk.exampleapp.flutter",
+      track: "internal",
+      aab: "./example/build/app/outputs/bundle/release/app-release.aab",
+    )
+  end
+end

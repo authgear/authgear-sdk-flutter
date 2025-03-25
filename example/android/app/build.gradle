@@ -24,27 +24,35 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.authgear.exampleapp.flutter"
+        applicationId = "com.authgear.sdk.exampleapp.flutter"
         // minSdkVersion flutter.minSdkVersion
         // 21 is required to use androidx.security
         minSdk = 21
         targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
+        if (project.hasProperty("VERSION_CODE")) {
+            versionCode = Integer.parseInt(project.findProperty("VERSION_CODE"))
+        } else {
+            versionCode = flutter.versionCode
+        }
         versionName = flutter.versionName
     }
 
     signingConfigs {
-        release {
-            storeFile file("keystore.jks")
-            storePassword project.ext.has("STORE_PASSWORD") ? project.ext["STORE_PASSWORD"] : ""
-            keyAlias project.ext.has("KEY_ALIAS") ? project.ext["KEY_ALIAS"] : ""
-            keyPassword project.ext.has("KEY_PASSWORD") ? project.ext["KEY_PASSWORD"] : ""
+        if (project.hasProperty("STORE_FILE")) {
+            release {
+                storeFile file(project.findProperty("STORE_FILE"))
+                storePassword project.findProperty("STORE_PASSWORD")
+                keyAlias project.findProperty("KEY_ALIAS")
+                keyPassword project.findProperty("KEY_PASSWORD")
+            }
         }
     }
 
     buildTypes {
         release {
-            signingConfig signingConfigs.release
+            if (project.hasProperty("STORE_FILE")) {
+                signingConfig signingConfigs.release
+            }
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }

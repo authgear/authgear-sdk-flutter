@@ -21,17 +21,21 @@ Future<String> openAuthorizeURL({
 }
 
 Future<String> openAuthorizeURLWithWebView({
+  required String methodChannelName,
   required String url,
   required String redirectURI,
   String? modalPresentationStyle,
   String? navigationBarBackgroundColor,
   String? navigationBarButtonTintColor,
   bool? iosIsInspectable,
+  String? iosWechatRedirectURI,
   String? actionBarBackgroundColor,
   String? actionBarButtonTintColor,
+  String? androidWechatRedirectURI,
 }) async {
   try {
     return await _channel.invokeMethod("openAuthorizeURLWithWebView", {
+      "methodChannelName": methodChannelName,
       "url": url,
       "redirectURI": redirectURI,
       "modalPresentationStyle": modalPresentationStyle,
@@ -40,6 +44,8 @@ Future<String> openAuthorizeURLWithWebView({
       "iosIsInspectable": iosIsInspectable,
       "actionBarBackgroundColor": actionBarBackgroundColor,
       "actionBarButtonTintColor": actionBarButtonTintColor,
+      "iosWechatRedirectURI": iosWechatRedirectURI,
+      "androidWechatRedirectURI": androidWechatRedirectURI,
     });
   } on PlatformException catch (e) {
     throw wrapException(e);

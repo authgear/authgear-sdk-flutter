@@ -35,19 +35,23 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
       self.openAuthorizeURL(url: url, redirectURI: redirectURI, preferEphemeral: preferEphemeral, result: result)
     case "openAuthorizeURLWithWebView":
       let arguments = call.arguments as! Dictionary<String, AnyObject>
+      let methodChannelName = arguments["methodChannelName"] as! String
       let url = URL(string: arguments["url"] as! String)!
       let redirectURI = URL(string: arguments["redirectURI"] as! String)!
       let modalPresentationStyle = UIModalPresentationStyle.from(string: arguments["modalPresentationStyle"] as? String)
       let navigationBarBackgroundColor = UIColor(argb: arguments["navigationBarBackgroundColor"] as? String)
       let navigationBarButtonTintColor = UIColor(argb: arguments["navigationBarButtonTintColor"] as? String)
       let isInspectable = arguments["iosIsInspectable"] as? Bool
+      let wechatRedirectURIString = arguments["iosWechatRedirectURI"] as? String
       self.openAuthorizeURLWithWebView(
+        methodChannelName: methodChannelName,
         url: url,
         redirectURI: redirectURI,
         modalPresentationStyle: modalPresentationStyle,
         navigationBarBackgroundColor: navigationBarBackgroundColor,
         navigationBarButtonTintColor: navigationBarButtonTintColor,
         isInspectable: isInspectable,
+        wechatRedirectURIString: wechatRedirectURIString,
         result: result
       )
     case "openURL":
@@ -190,12 +194,14 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
   }
 
   private func openAuthorizeURLWithWebView(
+    methodChannelName: String,
     url: URL,
     redirectURI: URL,
     modalPresentationStyle: UIModalPresentationStyle,
     navigationBarBackgroundColor: UIColor?,
     navigationBarButtonTintColor: UIColor?,
     isInspectable: Bool?,
+    wechatRedirectURIString: String?,
     result: @escaping FlutterResult
   ) {
       let controller = AGWKWebViewController(url: url, redirectURI: redirectURI, isInspectable: isInspectable ?? false) { resultURL, error in
@@ -221,6 +227,15 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
       controller.navigationBarBackgroundColor = navigationBarBackgroundColor
       controller.navigationBarButtonTintColor = navigationBarButtonTintColor
       controller.modalPresentationStyle = modalPresentationStyle
+      if let wechatRedirectURIString = wechatRedirectURIString {
+          if let wechatRedirectURI = URL(string: wechatRedirectURIString) {
+              controller.wechatRedirectURI = wechatRedirectURI
+              controller.onWechatRedirectURINavigate = { (url) in
+                  let channel = FlutterMethodChannel(name: methodChannelName, binaryMessenger: self.binaryMessenger)
+                  channel.invokeMethod("unimportant", arguments: url.absoluteString)
+              }
+          }
+      }
       controller.presentationContextProvider = self
       controller.start()
   }

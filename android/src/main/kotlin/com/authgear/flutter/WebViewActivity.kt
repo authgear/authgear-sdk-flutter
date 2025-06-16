@@ -43,17 +43,10 @@ class WebViewActivity: AppCompatActivity() {
                 view: WebView?,
                 request: WebResourceRequest?
             ): Boolean {
-                val url = request?.url
-                if (url != null && AuthgearPlugin.onWechatRedirectURI(url)) {
-                    return true
-                }
                 return super.shouldOverrideUrlLoading(view, request)
             }
 
             override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
-                if (url != null && AuthgearPlugin.onWechatRedirectURI(Uri.parse(url))) {
-                    return true
-                }
                 return super.shouldOverrideUrlLoading(view, url)
             }
         }

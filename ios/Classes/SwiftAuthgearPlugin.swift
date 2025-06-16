@@ -16,20 +16,15 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     return FlutterError(wechatErrCode: errCode, errStr: errStr)
   }
 
-  private var wechatRedirectURIToMethodChannel: [String: String]
   private let binaryMessenger: FlutterBinaryMessenger
 
   internal init(binaryMessenger: FlutterBinaryMessenger) {
-    self.wechatRedirectURIToMethodChannel = [String: String]()
     self.binaryMessenger = binaryMessenger
     super.init()
   }
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     switch call.method {
-    case "registerWechatRedirectURI":
-      self.storeWechat(arguments: call.arguments)
-      result(nil)
     case "openAuthorizeURL":
       let arguments = call.arguments as! Dictionary<String, AnyObject>
       let urlString = arguments["url"] as! String
@@ -132,7 +127,7 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     open url: URL,
     options: [UIApplication.OpenURLOptionsKey : Any] = [:]
   ) -> Bool {
-    return self.handleWechatRedirectURI(url: url)
+    return false
   }
 
   public func application(
@@ -141,7 +136,7 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     sourceApplication: String,
     annotation: Any
   ) -> Bool {
-    return self.handleWechatRedirectURI(url: url)
+    return false
   }
 
   public func application(
@@ -149,46 +144,7 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     continue userActivity: NSUserActivity,
     restorationHandler: @escaping ([Any]) -> Void
   ) -> Bool {
-    guard userActivity.activityType == NSUserActivityTypeBrowsingWeb, let url = userActivity.webpageURL else {
-      return false
-    }
-    return self.handleWechatRedirectURI(url: url)
-  }
-
-  private func storeWechat(arguments: Any?) {
-    guard let arguments = arguments as? Dictionary<String, AnyObject> else {
-      return
-    }
-
-    guard
-      let wechatRedirectURI = arguments["wechatRedirectURI"] as? String,
-      let wechatMethodChannel = arguments["wechatMethodChannel"] as? String
-    else {
-      return
-    }
-
-    self.wechatRedirectURIToMethodChannel[wechatRedirectURI] = wechatMethodChannel
-  }
-
-  private func handleWechatRedirectURI(url: URL) -> Bool {
-    guard var urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
-      return false
-    }
-
-    urlComponents.query = nil
-    urlComponents.fragment = nil
-
-    guard let urlWithoutQuery = urlComponents.string else {
-      return false
-    }
-
-    guard let methodChannel = wechatRedirectURIToMethodChannel.removeValue(forKey: urlWithoutQuery) else {
-      return false
-    }
-
-    let channel = FlutterMethodChannel(name: methodChannel, binaryMessenger: self.binaryMessenger)
-    channel.invokeMethod("onWechatRedirectURI", arguments: url.absoluteString)
-    return true
+    return false
   }
 
   private func openAuthorizeURL(url: URL, redirectURI: URL, preferEphemeral: Bool, result: @escaping FlutterResult) {

@@ -4,34 +4,6 @@ import 'type.dart';
 
 const MethodChannel _channel = MethodChannel("flutter_authgear");
 
-var _wechatMethodChannelCounter = 0;
-
-String _getNextWechatMethodChannelName() {
-  _wechatMethodChannelCounter += 1;
-  final counter = _wechatMethodChannelCounter;
-  return "flutter_authgear:wechat:$counter";
-}
-
-Future<void> registerWechatRedirectURI({
-  required void Function(Uri) onWechatRedirectURI,
-  required String wechatRedirectURI,
-}) async {
-  try {
-    final wechatMethodChannelName = _getNextWechatMethodChannelName();
-    final wechatMethodChannel = MethodChannel(wechatMethodChannelName);
-    wechatMethodChannel.setMethodCallHandler((call) async {
-      final uri = Uri.parse(call.arguments);
-      onWechatRedirectURI(uri);
-    });
-    return await _channel.invokeMethod("registerWechatRedirectURI", {
-      "wechatRedirectURI": wechatRedirectURI,
-      "wechatMethodChannel": wechatMethodChannelName,
-    });
-  } on PlatformException catch (e) {
-    throw wrapException(e);
-  }
-}
-
 Future<String> openAuthorizeURL({
   required String url,
   required String redirectURI,

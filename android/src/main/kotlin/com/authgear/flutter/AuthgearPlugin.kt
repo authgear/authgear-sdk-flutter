@@ -46,7 +46,9 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
   private lateinit var channel: MethodChannel
   private var pluginBinding: FlutterPlugin.FlutterPluginBinding? = null
   private var activityBinding: ActivityPluginBinding? = null
-  private val startActivityHandles = StartActivityHandles<Result>()
+  private val startActivityHandles = StartActivityHandles<Handle>()
+
+  private class Handle(val result: Result)
 
   companion object {
     private const val LOGTAG = "AuthgearPlugin"
@@ -105,15 +107,15 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
     return when (handle.tag) {
       TAG_AUTHENTICATION -> {
         when (resultCode) {
-          Activity.RESULT_CANCELED -> handle.value.cancel()
-          Activity.RESULT_OK -> handle.value.success(data?.data.toString())
+          Activity.RESULT_CANCELED -> handle.value.result.cancel()
+          Activity.RESULT_OK -> handle.value.result.success(data?.data.toString())
         }
         true
       }
       TAG_OPEN_URL -> {
         when (resultCode) {
-          Activity.RESULT_CANCELED -> handle.value.success(null)
-          Activity.RESULT_OK -> handle.value.success(null)
+          Activity.RESULT_CANCELED -> handle.value.result.success(null)
+          Activity.RESULT_OK -> handle.value.result.success(null)
         }
         true
       }
@@ -128,7 +130,7 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
         val redirectURI = Uri.parse(call.argument("redirectURI"))
         // Custom tabs do not support incognito mode for now.
 //        val preferEphemeral: Boolean = call.argument("preferEphemeral")!!
-        val requestCode = startActivityHandles.push(StartActivityHandle(TAG_AUTHENTICATION, result))
+        val requestCode = startActivityHandles.push(StartActivityHandle(TAG_AUTHENTICATION, Handle(result)))
         val activity = activityBinding?.activity
         if (activity == null) {
           result.noActivity()
@@ -147,7 +149,7 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
         options.actionBarBackgroundColor = actionBarBackgroundColor
         options.actionBarButtonTintColor = actionBarButtonTintColor
 
-        val requestCode = startActivityHandles.push(StartActivityHandle(TAG_AUTHENTICATION, result))
+        val requestCode = startActivityHandles.push(StartActivityHandle(TAG_AUTHENTICATION, Handle(result)))
         val activity = activityBinding?.activity
         if (activity == null) {
           result.noActivity()
@@ -158,7 +160,7 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
       }
       "openURL" -> {
         val url = Uri.parse(call.argument("url"))
-        val requestCode = startActivityHandles.push(StartActivityHandle(TAG_OPEN_URL, result))
+        val requestCode = startActivityHandles.push(StartActivityHandle(TAG_OPEN_URL, Handle(result)))
         val activity = activityBinding?.activity
         if (activity == null) {
           result.noActivity()

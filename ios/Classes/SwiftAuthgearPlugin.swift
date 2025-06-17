@@ -16,20 +16,15 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     return FlutterError(wechatErrCode: errCode, errStr: errStr)
   }
 
-  private var wechatRedirectURIToMethodChannel: [String: String]
   private let binaryMessenger: FlutterBinaryMessenger
 
   internal init(binaryMessenger: FlutterBinaryMessenger) {
-    self.wechatRedirectURIToMethodChannel = [String: String]()
     self.binaryMessenger = binaryMessenger
     super.init()
   }
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     switch call.method {
-    case "registerWechatRedirectURI":
-      self.storeWechat(arguments: call.arguments)
-      result(nil)
     case "openAuthorizeURL":
       let arguments = call.arguments as! Dictionary<String, AnyObject>
       let urlString = arguments["url"] as! String
@@ -40,19 +35,23 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
       self.openAuthorizeURL(url: url, redirectURI: redirectURI, preferEphemeral: preferEphemeral, result: result)
     case "openAuthorizeURLWithWebView":
       let arguments = call.arguments as! Dictionary<String, AnyObject>
+      let methodChannelName = arguments["methodChannelName"] as! String
       let url = URL(string: arguments["url"] as! String)!
       let redirectURI = URL(string: arguments["redirectURI"] as! String)!
       let modalPresentationStyle = UIModalPresentationStyle.from(string: arguments["modalPresentationStyle"] as? String)
       let navigationBarBackgroundColor = UIColor(argb: arguments["navigationBarBackgroundColor"] as? String)
       let navigationBarButtonTintColor = UIColor(argb: arguments["navigationBarButtonTintColor"] as? String)
       let isInspectable = arguments["iosIsInspectable"] as? Bool
+      let wechatRedirectURIString = arguments["iosWechatRedirectURI"] as? String
       self.openAuthorizeURLWithWebView(
+        methodChannelName: methodChannelName,
         url: url,
         redirectURI: redirectURI,
         modalPresentationStyle: modalPresentationStyle,
         navigationBarBackgroundColor: navigationBarBackgroundColor,
         navigationBarButtonTintColor: navigationBarButtonTintColor,
         isInspectable: isInspectable,
+        wechatRedirectURIString: wechatRedirectURIString,
         result: result
       )
     case "openURL":
@@ -132,7 +131,7 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     open url: URL,
     options: [UIApplication.OpenURLOptionsKey : Any] = [:]
   ) -> Bool {
-    return self.handleWechatRedirectURI(url: url)
+    return false
   }
 
   public func application(
@@ -141,7 +140,7 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     sourceApplication: String,
     annotation: Any
   ) -> Bool {
-    return self.handleWechatRedirectURI(url: url)
+    return false
   }
 
   public func application(
@@ -149,46 +148,7 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     continue userActivity: NSUserActivity,
     restorationHandler: @escaping ([Any]) -> Void
   ) -> Bool {
-    guard userActivity.activityType == NSUserActivityTypeBrowsingWeb, let url = userActivity.webpageURL else {
-      return false
-    }
-    return self.handleWechatRedirectURI(url: url)
-  }
-
-  private func storeWechat(arguments: Any?) {
-    guard let arguments = arguments as? Dictionary<String, AnyObject> else {
-      return
-    }
-
-    guard
-      let wechatRedirectURI = arguments["wechatRedirectURI"] as? String,
-      let wechatMethodChannel = arguments["wechatMethodChannel"] as? String
-    else {
-      return
-    }
-
-    self.wechatRedirectURIToMethodChannel[wechatRedirectURI] = wechatMethodChannel
-  }
-
-  private func handleWechatRedirectURI(url: URL) -> Bool {
-    guard var urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
-      return false
-    }
-
-    urlComponents.query = nil
-    urlComponents.fragment = nil
-
-    guard let urlWithoutQuery = urlComponents.string else {
-      return false
-    }
-
-    guard let methodChannel = wechatRedirectURIToMethodChannel.removeValue(forKey: urlWithoutQuery) else {
-      return false
-    }
-
-    let channel = FlutterMethodChannel(name: methodChannel, binaryMessenger: self.binaryMessenger)
-    channel.invokeMethod("onWechatRedirectURI", arguments: url.absoluteString)
-    return true
+    return false
   }
 
   private func openAuthorizeURL(url: URL, redirectURI: URL, preferEphemeral: Bool, result: @escaping FlutterResult) {
@@ -234,12 +194,14 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
   }
 
   private func openAuthorizeURLWithWebView(
+    methodChannelName: String,
     url: URL,
     redirectURI: URL,
     modalPresentationStyle: UIModalPresentationStyle,
     navigationBarBackgroundColor: UIColor?,
     navigationBarButtonTintColor: UIColor?,
     isInspectable: Bool?,
+    wechatRedirectURIString: String?,
     result: @escaping FlutterResult
   ) {
       let controller = AGWKWebViewController(url: url, redirectURI: redirectURI, isInspectable: isInspectable ?? false) { resultURL, error in
@@ -265,6 +227,15 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
       controller.navigationBarBackgroundColor = navigationBarBackgroundColor
       controller.navigationBarButtonTintColor = navigationBarButtonTintColor
       controller.modalPresentationStyle = modalPresentationStyle
+      if let wechatRedirectURIString = wechatRedirectURIString {
+          if let wechatRedirectURI = URL(string: wechatRedirectURIString) {
+              controller.wechatRedirectURI = wechatRedirectURI
+              controller.onWechatRedirectURINavigate = { (url) in
+                  let channel = FlutterMethodChannel(name: methodChannelName, binaryMessenger: self.binaryMessenger)
+                  channel.invokeMethod("unimportant", arguments: url.absoluteString)
+              }
+          }
+      }
       controller.presentationContextProvider = self
       controller.start()
   }

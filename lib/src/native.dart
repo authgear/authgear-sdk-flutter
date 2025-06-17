@@ -4,34 +4,6 @@ import 'type.dart';
 
 const MethodChannel _channel = MethodChannel("flutter_authgear");
 
-var _wechatMethodChannelCounter = 0;
-
-String _getNextWechatMethodChannelName() {
-  _wechatMethodChannelCounter += 1;
-  final counter = _wechatMethodChannelCounter;
-  return "flutter_authgear:wechat:$counter";
-}
-
-Future<void> registerWechatRedirectURI({
-  required void Function(Uri) onWechatRedirectURI,
-  required String wechatRedirectURI,
-}) async {
-  try {
-    final wechatMethodChannelName = _getNextWechatMethodChannelName();
-    final wechatMethodChannel = MethodChannel(wechatMethodChannelName);
-    wechatMethodChannel.setMethodCallHandler((call) async {
-      final uri = Uri.parse(call.arguments);
-      onWechatRedirectURI(uri);
-    });
-    return await _channel.invokeMethod("registerWechatRedirectURI", {
-      "wechatRedirectURI": wechatRedirectURI,
-      "wechatMethodChannel": wechatMethodChannelName,
-    });
-  } on PlatformException catch (e) {
-    throw wrapException(e);
-  }
-}
-
 Future<String> openAuthorizeURL({
   required String url,
   required String redirectURI,
@@ -49,17 +21,21 @@ Future<String> openAuthorizeURL({
 }
 
 Future<String> openAuthorizeURLWithWebView({
+  required String methodChannelName,
   required String url,
   required String redirectURI,
   String? modalPresentationStyle,
   String? navigationBarBackgroundColor,
   String? navigationBarButtonTintColor,
   bool? iosIsInspectable,
+  String? iosWechatRedirectURI,
   String? actionBarBackgroundColor,
   String? actionBarButtonTintColor,
+  String? androidWechatRedirectURI,
 }) async {
   try {
     return await _channel.invokeMethod("openAuthorizeURLWithWebView", {
+      "methodChannelName": methodChannelName,
       "url": url,
       "redirectURI": redirectURI,
       "modalPresentationStyle": modalPresentationStyle,
@@ -68,6 +44,8 @@ Future<String> openAuthorizeURLWithWebView({
       "iosIsInspectable": iosIsInspectable,
       "actionBarBackgroundColor": actionBarBackgroundColor,
       "actionBarButtonTintColor": actionBarButtonTintColor,
+      "iosWechatRedirectURI": iosWechatRedirectURI,
+      "androidWechatRedirectURI": androidWechatRedirectURI,
     });
   } on PlatformException catch (e) {
     throw wrapException(e);

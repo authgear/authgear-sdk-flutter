@@ -224,7 +224,6 @@ class Authgear implements AuthgearHttpClientDelegate {
   final String name;
   final bool isSsoEnabled;
   final bool preAuthenticatedURLEnabled;
-  final Future<void> Function(String)? sendWechatAuthRequest;
 
   final TokenStorage _tokenStorage;
   final ContainerStorage _storage;
@@ -279,7 +278,6 @@ class Authgear implements AuthgearHttpClientDelegate {
     this.name = "default",
     this.isSsoEnabled = false,
     this.preAuthenticatedURLEnabled = false,
-    this.sendWechatAuthRequest,
     TokenStorage? tokenStorage,
     UIImplementation? uiImplementation,
   })  : _tokenStorage = tokenStorage ?? PersistentTokenStorage(),
@@ -362,12 +360,6 @@ class Authgear implements AuthgearHttpClientDelegate {
       authenticationFlowGroup: authenticationFlowGroup,
     ));
 
-    if (wechatRedirectURI != null) {
-      await native.registerWechatRedirectURI(
-          onWechatRedirectURI: _onWechatRedirectURI,
-          wechatRedirectURI: wechatRedirectURI);
-    }
-
     final resultURL = await _uiImplementation.openAuthorizationURL(
       url: authRequest.url.toString(),
       redirectURI: authRequest.redirectURI,
@@ -431,12 +423,6 @@ class Authgear implements AuthgearHttpClientDelegate {
 
     final request =
         await internalCreateReauthenticateRequest(idTokenHint, options);
-
-    if (wechatRedirectURI != null) {
-      await native.registerWechatRedirectURI(
-          onWechatRedirectURI: _onWechatRedirectURI,
-          wechatRedirectURI: wechatRedirectURI);
-    }
 
     final resultURL = await _uiImplementation.openAuthorizationURL(
       url: request.url.toString(),
@@ -506,12 +492,6 @@ class Authgear implements AuthgearHttpClientDelegate {
       redirectURI: url,
       wechatRedirectURI: wechatRedirectURI,
     );
-
-    if (wechatRedirectURI != null) {
-      await native.registerWechatRedirectURI(
-          onWechatRedirectURI: _onWechatRedirectURI,
-          wechatRedirectURI: wechatRedirectURI);
-    }
 
     await native.openURL(
       url: targetURL.toString(),
@@ -971,12 +951,6 @@ class Authgear implements AuthgearHttpClientDelegate {
     final authenticationURL = Uri.parse(config.authorizationEndpoint)
         .replace(queryParameters: oidcRequest.toQueryParameters());
 
-    if (wechatRedirectURI != null) {
-      await native.registerWechatRedirectURI(
-          onWechatRedirectURI: _onWechatRedirectURI,
-          wechatRedirectURI: wechatRedirectURI);
-    }
-
     final resultURL = await _uiImplementation.openAuthorizationURL(
       url: authenticationURL.toString(),
       redirectURI: redirectURI,
@@ -1314,14 +1288,6 @@ class Authgear implements AuthgearHttpClientDelegate {
     } catch (e) {
       await _handleInvalidGrantException(e);
       rethrow;
-    }
-  }
-
-  void _onWechatRedirectURI(Uri uri) {
-    final q = uri.queryParameters;
-    final state = q["state"];
-    if (state != null) {
-      sendWechatAuthRequest?.call(state);
     }
   }
 }

@@ -14,6 +14,8 @@ class AGWKWebViewController: UIViewController, WKNavigationDelegate {
     weak var presentationContextProvider: AGWKWebViewControllerPresentationContextProviding?
     var navigationBarBackgroundColor: UIColor?
     var navigationBarButtonTintColor: UIColor?
+    var wechatRedirectURI: URL?
+    var onWechatRedirectURINavigate: ((URL) -> Void)?
 
     private let url: URL
     private let redirectURI: URL
@@ -181,16 +183,26 @@ class AGWKWebViewController: UIViewController, WKNavigationDelegate {
                     return
                 }
             }
-            // Handle redirect uri
+
             var parts = URLComponents(url: navigationURL, resolvingAgainstBaseURL: false)
             parts?.query = nil
             parts?.fragment = nil
             if let partsString = parts?.string {
+                // Handle redirect uri
                 if partsString == self.redirectURI.absoluteString {
                     decisionHandler(.cancel)
                     self.result = navigationURL
                     self.dismissSelf()
                     return
+                }
+
+                // Handle wechat redirect URI
+                if let wechatRedirectURI = self.wechatRedirectURI {
+                    if partsString == wechatRedirectURI.absoluteString {
+                        decisionHandler(.cancel)
+                        self.onWechatRedirectURINavigate?(navigationURL)
+                        return
+                    }
                 }
             }
         }

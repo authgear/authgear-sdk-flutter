@@ -1,4 +1,5 @@
 PODS:
+  - Add-OTHER_LDFLAGS-ObjC (1.0.0)
   - Flutter (1.0.0)
   - flutter_authgear (0.1.0):
     - Flutter
@@ -8,6 +9,7 @@ PODS:
   - WechatOpenSDK-XCFramework (2.0.4)
 
 DEPENDENCIES:
+  - Add-OTHER_LDFLAGS-ObjC (from `./Add-OTHER_LDFLAGS-ObjC/Add-OTHER_LDFLAGS-ObjC.podspec`)
   - Flutter (from `Flutter`)
   - flutter_authgear (from `.symlinks/plugins/flutter_authgear/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
@@ -18,6 +20,8 @@ SPEC REPOS:
     - WechatOpenSDK-XCFramework
 
 EXTERNAL SOURCES:
+  Add-OTHER_LDFLAGS-ObjC:
+    :podspec: "./Add-OTHER_LDFLAGS-ObjC/Add-OTHER_LDFLAGS-ObjC.podspec"
   Flutter:
     :path: Flutter
   flutter_authgear:
@@ -26,11 +30,12 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
 
 SPEC CHECKSUMS:
+  Add-OTHER_LDFLAGS-ObjC: 5f8f0f83c16738a7f9954268aef665b10f5c5b81
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   flutter_authgear: 91b45db8689e711cb672a39d77e4662d4fcc2998
   shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7
   WechatOpenSDK-XCFramework: 36fb2bea0754266c17184adf4963d7e6ff98b69f
 
-PODFILE CHECKSUM: a223dddfd171e1c2eb444b4e549ee6ab3f96bcae
+PODFILE CHECKSUM: 38144be7857f60194b0e96460fe073ee7263422e
 
 COCOAPODS: 1.16.2

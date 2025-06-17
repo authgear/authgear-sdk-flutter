@@ -61,4 +61,5 @@ sdk-flutter-analyze:
 	flutter analyze --no-fatal-infos
 
 .PHONY: sdk-dart-format
+sdk-dart-format:
 	dart format --set-exit-if-changed lib

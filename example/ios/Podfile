@@ -36,6 +36,7 @@ target 'Runner' do
   # Use WechatOpenSDK-XCFramework instead of WechatOpenSDK
   # See https://developers.weixin.qq.com/community/develop/doc/000c62b9b0ccf8c1d65fa90b751001?blockType=1
   pod 'WechatOpenSDK-XCFramework', '~> 2.0.4'
+  pod 'Add-OTHER_LDFLAGS-ObjC', :podspec => './Add-OTHER_LDFLAGS-ObjC/Add-OTHER_LDFLAGS-ObjC.podspec'
 end
 
 post_install do |installer|

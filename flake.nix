@@ -30,8 +30,23 @@
             pkgs.nodejs_20
             # 3.3.6
             pkgs.ruby_3_3
+            # The flutter setup is broken as of 2025-06-16
+            #
+            # See https://github.com/NixOS/nixpkgs/issues/405066
+            # See https://github.com/flutter/flutter/issues/167823
+            #
+            # The known workaround is to use a manual flutter installation.
+            # You can download a specific version of flutter at
+            # https://docs.flutter.dev/install/archive
+            #
+            # In the below shellHook, you need to put the manual flutter installation in your PATH
+            # See https://docs.flutter.dev/install/manual#add-to-path
+            # For example,
+            #
+            #  export PATH="/path/to/your/installation/bin:$PATH"
+
             # 3.27.1
-            pkgs.flutter327
+            # pkgs.flutter327
           ];
           # Even we use mkShellNoCC, DEVELOPER_DIR, SDKROOT, MACOSX_DEPLOYMENT_TARGET is still set.
           # We undo that.

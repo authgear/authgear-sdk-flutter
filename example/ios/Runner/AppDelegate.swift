@@ -33,6 +33,16 @@ import flutter_authgear
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
+    override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+        WXApi.handleOpen(url, delegate: self)
+        return super.application(app, open: url, options: options)
+    }
+
+    override func application(_ application: UIApplication, open url: URL, sourceApplication: String?, annotation: Any) -> Bool {
+        WXApi.handleOpen(url, delegate: self)
+        return super.application(application, open: url, sourceApplication: sourceApplication, annotation: annotation)
+    }
+
   override func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void) -> Bool {
     WXApi.handleOpenUniversalLink(userActivity, delegate: self)
     return super.application(application, continue: userActivity, restorationHandler: restorationHandler)

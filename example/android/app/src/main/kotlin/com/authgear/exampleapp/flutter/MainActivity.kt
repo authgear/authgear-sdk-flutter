@@ -30,7 +30,7 @@ class MainActivity: FlutterFragmentActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
-        api = WXAPIFactory.createWXAPI(this, WECHAT_APP_ID)
+        api = WXAPIFactory.createWXAPI(this, WECHAT_APP_ID, true)
         api?.registerApp(WECHAT_APP_ID)
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->

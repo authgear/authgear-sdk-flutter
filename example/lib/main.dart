@@ -908,11 +908,15 @@ class _MyAppState extends State<MyApp> {
                 ios: WebKitWebViewUIImplementationOptionsIOS(
                   modalPresentationStyle: ModalPresentationStyle.fullScreen,
                   isInspectable: true,
+                  wechatRedirectURI: wechatRedirectURI,
                 ),
+                android: WebKitWebViewUIImplementationOptionsAndroid(
+                  wechatRedirectURI: wechatRedirectURI,
+                ),
+                sendWechatAuthRequest: _sendWechatAuthRequest,
               ),
             )
           : null,
-      sendWechatAuthRequest: _sendWechatAuthRequest,
     );
     _sub?.cancel();
     await authgear.configure();

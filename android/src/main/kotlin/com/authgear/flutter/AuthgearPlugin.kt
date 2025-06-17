@@ -1,8 +1,10 @@
 package com.authgear.flutter
 
 import android.app.Activity
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.content.pm.PackageInfo
 import android.graphics.Color
@@ -20,6 +22,7 @@ import androidx.annotation.NonNull
 import androidx.annotation.RequiresApi
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
@@ -46,25 +49,17 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
   private lateinit var channel: MethodChannel
   private var pluginBinding: FlutterPlugin.FlutterPluginBinding? = null
   private var activityBinding: ActivityPluginBinding? = null
-  private val startActivityHandles = StartActivityHandles<Result>()
+  private val startActivityHandles = StartActivityHandles<Handle>()
+
+  private class Handle(val result: Result) {
+    var broadcastReceiver: BroadcastReceiver? = null
+  }
 
   companion object {
     private const val LOGTAG = "AuthgearPlugin"
     private const val ENCRYPTED_SHARED_PREFERENCES_NAME = "authgear_encrypted_shared_preferences"
     private const val TAG_AUTHENTICATION = 1
     private const val TAG_OPEN_URL = 2
-
-    private val wechat: HashMap<String, MethodChannel> = hashMapOf()
-
-    internal fun onWechatRedirectURI(uri: Uri): Boolean {
-      val uriWithoutQuery = uri.buildUpon().clearQuery().fragment("").build().toString()
-      val methodChannel = wechat.remove(uriWithoutQuery)
-      if (methodChannel == null) {
-        return false
-      }
-      methodChannel.invokeMethod("onWechatRedirectURI", uri.toString())
-      return true
-    }
 
     fun wechatErrorResult(errCode: Int, errStr: String, result: Result) {
       if (errCode == -2) {
@@ -113,19 +108,22 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
     if (handle == null) {
       return false
     }
+    if (handle.value.broadcastReceiver != null) {
+      this.pluginBinding?.applicationContext?.unregisterReceiver(handle.value.broadcastReceiver)
+    }
 
     return when (handle.tag) {
       TAG_AUTHENTICATION -> {
         when (resultCode) {
-          Activity.RESULT_CANCELED -> handle.value.cancel()
-          Activity.RESULT_OK -> handle.value.success(data?.data.toString())
+          Activity.RESULT_CANCELED -> handle.value.result.cancel()
+          Activity.RESULT_OK -> handle.value.result.success(data?.data.toString())
         }
         true
       }
       TAG_OPEN_URL -> {
         when (resultCode) {
-          Activity.RESULT_CANCELED -> handle.value.success(null)
-          Activity.RESULT_OK -> handle.value.success(null)
+          Activity.RESULT_CANCELED -> handle.value.result.success(null)
+          Activity.RESULT_OK -> handle.value.result.success(null)
         }
         true
       }
@@ -135,16 +133,12 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
 
   override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
     when (call.method) {
-      "registerWechatRedirectURI" -> {
-        this.storeWechat(call)
-        result.success(null)
-      }
       "openAuthorizeURL" -> {
         val url = Uri.parse(call.argument("url"))
         val redirectURI = Uri.parse(call.argument("redirectURI"))
         // Custom tabs do not support incognito mode for now.
 //        val preferEphemeral: Boolean = call.argument("preferEphemeral")!!
-        val requestCode = startActivityHandles.push(StartActivityHandle(TAG_AUTHENTICATION, result))
+        val requestCode = startActivityHandles.push(StartActivityHandle(TAG_AUTHENTICATION, Handle(result)))
         val activity = activityBinding?.activity
         if (activity == null) {
           result.noActivity()
@@ -155,15 +149,34 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
         activity.startActivityForResult(intent, requestCode)
       }
       "openAuthorizeURLWithWebView" -> {
+        val methodChannelName = call.argument<String>("methodChannelName")!!
         val url = Uri.parse(call.argument("url"))
         val redirectURI = Uri.parse(call.argument("redirectURI"))
         val actionBarBackgroundColor = this.readColorInt(call, "actionBarBackgroundColor")
         val actionBarButtonTintColor = this.readColorInt(call, "actionBarButtonTintColor")
+        val wechatRedirectURIString = call.argument<String>("androidWechatRedirectURI")
         val options = WebKitWebViewActivity.Options(url, redirectURI)
         options.actionBarBackgroundColor = actionBarBackgroundColor
         options.actionBarButtonTintColor = actionBarButtonTintColor
+        val handle = Handle(result)
+        wechatRedirectURIString?.let {
+          val wechatRedirectURI = Uri.parse(it)
+          val intentAction = "com.authgear.flutter.$methodChannelName"
+          handle.broadcastReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+              val methodChannel = MethodChannel(this@AuthgearPlugin.pluginBinding?.binaryMessenger!!, methodChannelName)
+              val u = intent?.getParcelableExtra<Uri>(WebKitWebViewActivity.KEY_WECHAT_REDIRECT_URI)!!
+              methodChannel.invokeMethod("unimportant", u.toString())
+            }
+          }
+          val intentFilter = IntentFilter(intentAction)
+          options.wechatRedirectURI = wechatRedirectURI
+          options.wechatRedirectURIIntentAction = intentAction
+          val ctx = pluginBinding?.applicationContext!!
+          ContextCompat.registerReceiver(ctx, handle.broadcastReceiver, intentFilter, ContextCompat.RECEIVER_NOT_EXPORTED)
+        }
 
-        val requestCode = startActivityHandles.push(StartActivityHandle(TAG_AUTHENTICATION, result))
+        val requestCode = startActivityHandles.push(StartActivityHandle(TAG_AUTHENTICATION, handle))
         val activity = activityBinding?.activity
         if (activity == null) {
           result.noActivity()
@@ -174,7 +187,7 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
       }
       "openURL" -> {
         val url = Uri.parse(call.argument("url"))
-        val requestCode = startActivityHandles.push(StartActivityHandle(TAG_OPEN_URL, result))
+        val requestCode = startActivityHandles.push(StartActivityHandle(TAG_OPEN_URL, Handle(result)))
         val activity = activityBinding?.activity
         if (activity == null) {
           result.noActivity()
@@ -260,20 +273,6 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
       }
       else -> result.notImplemented()
     }
-  }
-
-  private fun storeWechat(call: MethodCall) {
-    val wechatRedirectURI = call.argument<String>("wechatRedirectURI")
-    val wechatMethodChannel = call.argument<String>("wechatMethodChannel")
-    if (wechatRedirectURI == null || wechatMethodChannel == null) {
-      return
-    }
-    val binaryMessenger = pluginBinding?.binaryMessenger
-    if (binaryMessenger == null) {
-      return
-    }
-    val channel = MethodChannel(binaryMessenger, wechatMethodChannel)
-    wechat[wechatRedirectURI] = channel
   }
 
   private fun getDeviceInfo(result: Result) {

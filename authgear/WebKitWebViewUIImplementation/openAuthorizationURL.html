@@ -33,17 +33,14 @@
   <form class="search navbar-right" role="search">
     <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
   </form>
-  <div class="toggle" id="theme-button" title="Toggle brightness">
-    <label for="theme">
-      <input type="checkbox" id="theme" value="light-theme">
-      <span id="dark-theme-button" class="material-symbols-outlined">
-        dark_mode
-      </span>
-      <span id="light-theme-button" class="material-symbols-outlined">
-        light_mode
-      </span>
-    </label>
-  </div>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
 </header>
 <main>
 <div
@@ -82,21 +79,44 @@ Future&lt;String&gt; openAuthorizationURL({
   required String url,
   required String redirectURI,
   required bool shareCookiesWithDeviceBrowser,
-}) {
-  return native.openAuthorizeURLWithWebView(
-    url: url,
-    redirectURI: redirectURI,
-    modalPresentationStyle: options?.ios?.modalPresentationStyle?.value,
-    navigationBarBackgroundColor:
-        options?.ios?.navigationBarBackgroundColor?.toRadixString(16),
-    navigationBarButtonTintColor:
-        options?.ios?.navigationBarButtonTintColor?.toRadixString(16),
-    iosIsInspectable: options?.ios?.isInspectable,
-    actionBarBackgroundColor:
-        options?.android?.actionBarBackgroundColor?.toRadixString(16),
-    actionBarButtonTintColor:
-        options?.android?.actionBarButtonTintColor?.toRadixString(16),
-  );
+}) async {
+  final id = _rng.nextInt(math.pow(2, 32) as int).toRadixString(16);
+  final methodChannelName = &quot;flutter_authgear:wechat:$id&quot;;
+
+  final methodChannel = MethodChannel(methodChannelName);
+  methodChannel.setMethodCallHandler((call) async {
+    final uri = Uri.parse(call.arguments);
+    final state = uri.queryParameters[&quot;state&quot;];
+    if (state != null) {
+      final sendWechatAuthRequest = options?.sendWechatAuthRequest;
+      if (sendWechatAuthRequest != null) {
+        sendWechatAuthRequest(state);
+      }
+    }
+  });
+
+  try {
+    return await native.openAuthorizeURLWithWebView(
+      methodChannelName: methodChannelName,
+      url: url,
+      redirectURI: redirectURI,
+      modalPresentationStyle: options?.ios?.modalPresentationStyle?.value,
+      navigationBarBackgroundColor:
+          options?.ios?.navigationBarBackgroundColor?.toRadixString(16),
+      navigationBarButtonTintColor:
+          options?.ios?.navigationBarButtonTintColor?.toRadixString(16),
+      iosIsInspectable: options?.ios?.isInspectable,
+      actionBarBackgroundColor:
+          options?.android?.actionBarBackgroundColor?.toRadixString(16),
+      actionBarButtonTintColor:
+          options?.android?.actionBarButtonTintColor?.toRadixString(16),
+      iosWechatRedirectURI: options?.ios?.wechatRedirectURI,
+      androidWechatRedirectURI: options?.android?.wechatRedirectURI,
+    );
+  } finally {
+    &#47;&#47; Clean up the listener.
+    methodChannel.setMethodCallHandler(null);
+  }
 }</code></pre>
 </section>
 

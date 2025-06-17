@@ -32,17 +32,14 @@
   <form class="search navbar-right" role="search">
     <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
   </form>
-  <div class="toggle" id="theme-button" title="Toggle brightness">
-    <label for="theme">
-      <input type="checkbox" id="theme" value="light-theme">
-      <span id="dark-theme-button" class="material-symbols-outlined">
-        dark_mode
-      </span>
-      <span id="light-theme-button" class="material-symbols-outlined">
-        light_mode
-      </span>
-    </label>
-  </div>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
 </header>
 <main>
 <div
@@ -64,7 +61,7 @@
     <h2>Constructors</h2>
     <dl class="constructor-summary-list">
         <dt id="Authgear.new" class="callable">
-          <span class="name"><a href="../authgear/Authgear/Authgear.html">Authgear.new</a></span><span class="signature">({<span class="parameter" id="-param-clientID"><span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">clientID</span>, </span><span class="parameter" id="-param-endpoint"><span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">endpoint</span>, </span><span class="parameter" id="-param-name"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">name</span> = <span class="default-value">&quot;default&quot;</span>, </span><span class="parameter" id="-param-isSsoEnabled"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">isSsoEnabled</span> = <span class="default-value">false</span>, </span><span class="parameter" id="-param-preAuthenticatedURLEnabled"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">preAuthenticatedURLEnabled</span> = <span class="default-value">false</span>, </span><span class="parameter" id="-param-sendWechatAuthRequest"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span> <span class="parameter-name">sendWechatAuthRequest</span>(<span class="parameter" id="param-"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span></span>)?, </span><span class="parameter" id="-param-tokenStorage"><span class="type-annotation"><a href="../authgear/TokenStorage-class.html">TokenStorage</a>?</span> <span class="parameter-name">tokenStorage</span>, </span><span class="parameter" id="-param-uiImplementation"><span class="type-annotation"><a href="../authgear/UIImplementation-class.html">UIImplementation</a>?</span> <span class="parameter-name">uiImplementation</span></span>})</span>
+          <span class="name"><a href="../authgear/Authgear/Authgear.html">Authgear.new</a></span><span class="signature">({<span class="parameter" id="-param-clientID"><span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">clientID</span>, </span><span class="parameter" id="-param-endpoint"><span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">endpoint</span>, </span><span class="parameter" id="-param-name"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">name</span> = <span class="default-value">&quot;default&quot;</span>, </span><span class="parameter" id="-param-isSsoEnabled"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">isSsoEnabled</span> = <span class="default-value">false</span>, </span><span class="parameter" id="-param-preAuthenticatedURLEnabled"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">preAuthenticatedURLEnabled</span> = <span class="default-value">false</span>, </span><span class="parameter" id="-param-tokenStorage"><span class="type-annotation"><a href="../authgear/TokenStorage-class.html">TokenStorage</a>?</span> <span class="parameter-name">tokenStorage</span>, </span><span class="parameter" id="-param-uiImplementation"><span class="type-annotation"><a href="../authgear/UIImplementation-class.html">UIImplementation</a>?</span> <span class="parameter-name">uiImplementation</span></span>})</span>
         </dt>
         <dd>
           
@@ -230,18 +227,6 @@
 <dd class="inherited">
   A representation of the runtime type of the object.
   <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
-
-</dd>
-
-        <dt id="sendWechatAuthRequest" class="property">
-  <span class="name"><a href="../authgear/Authgear/sendWechatAuthRequest.html">sendWechatAuthRequest</a></span>
-  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span> Function<span class="signature">(<span class="parameter" id="param-"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span></span>)</span>?</span>
-  
-
-</dt>
-<dd>
-  
-  <div class="features"><span class="feature">final</span></div>
 
 </dd>
 
@@ -721,8 +706,8 @@
 </dd>
 
         <dt id="wrapHttpClient" class="callable">
-  <span class="name"><a href="../authgear/Authgear/wrapHttpClient.html">wrapHttpClient</a></span><span class="signature">(<wbr><span class="parameter" id="wrapHttpClient-param-inner"><span class="type-annotation"><a href="https://pub.dev/documentation/http/1.3.0/http/Client-class.html">Client</a></span> <span class="parameter-name">inner</span></span>)
-    <span class="returntype parameter">&#8594; <a href="https://pub.dev/documentation/http/1.3.0/http/Client-class.html">Client</a></span>
+  <span class="name"><a href="../authgear/Authgear/wrapHttpClient.html">wrapHttpClient</a></span><span class="signature">(<wbr><span class="parameter" id="wrapHttpClient-param-inner"><span class="type-annotation"><a href="https://pub.dev/documentation/http/1.4.0/http/Client-class.html">Client</a></span> <span class="parameter-name">inner</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://pub.dev/documentation/http/1.4.0/http/Client-class.html">Client</a></span>
   </span>
   
 

@@ -40,10 +40,6 @@
                     android:host="host"
                     android:pathPrefix="/path"
                     android:scheme="com.authgear.exampleapp.flutter" />
-                <data
-                    android:host="host"
-                    android:pathPrefix="/open_wechat_app"
-                    android:scheme="com.authgear.exampleapp.flutter" />
             </intent-filter>
         </activity>
        <activity
@@ -59,4 +55,7 @@
             android:name="flutterEmbedding"
             android:value="2" />
     </application>
+    <queries>
+        <package android:name="com.tencent.mm" />
+    </queries>
 </manifest>

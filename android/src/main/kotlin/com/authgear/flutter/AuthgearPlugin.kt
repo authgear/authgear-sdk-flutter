@@ -1,8 +1,10 @@
 package com.authgear.flutter
 
 import android.app.Activity
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.content.pm.PackageInfo
 import android.graphics.Color
@@ -20,6 +22,7 @@ import androidx.annotation.NonNull
 import androidx.annotation.RequiresApi
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
@@ -48,7 +51,9 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
   private var activityBinding: ActivityPluginBinding? = null
   private val startActivityHandles = StartActivityHandles<Handle>()
 
-  private class Handle(val result: Result)
+  private class Handle(val result: Result) {
+    var broadcastReceiver: BroadcastReceiver? = null
+  }
 
   companion object {
     private const val LOGTAG = "AuthgearPlugin"
@@ -103,6 +108,9 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
     if (handle == null) {
       return false
     }
+    if (handle.value.broadcastReceiver != null) {
+      this.pluginBinding?.applicationContext?.unregisterReceiver(handle.value.broadcastReceiver)
+    }
 
     return when (handle.tag) {
       TAG_AUTHENTICATION -> {
@@ -141,15 +149,34 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
         activity.startActivityForResult(intent, requestCode)
       }
       "openAuthorizeURLWithWebView" -> {
+        val methodChannelName = call.argument<String>("methodChannelName")!!
         val url = Uri.parse(call.argument("url"))
         val redirectURI = Uri.parse(call.argument("redirectURI"))
         val actionBarBackgroundColor = this.readColorInt(call, "actionBarBackgroundColor")
         val actionBarButtonTintColor = this.readColorInt(call, "actionBarButtonTintColor")
+        val wechatRedirectURIString = call.argument<String>("androidWechatRedirectURI")
         val options = WebKitWebViewActivity.Options(url, redirectURI)
         options.actionBarBackgroundColor = actionBarBackgroundColor
         options.actionBarButtonTintColor = actionBarButtonTintColor
+        val handle = Handle(result)
+        wechatRedirectURIString?.let {
+          val wechatRedirectURI = Uri.parse(it)
+          val intentAction = "com.authgear.flutter.$methodChannelName"
+          handle.broadcastReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+              val methodChannel = MethodChannel(this@AuthgearPlugin.pluginBinding?.binaryMessenger!!, methodChannelName)
+              val u = intent?.getParcelableExtra<Uri>(WebKitWebViewActivity.KEY_WECHAT_REDIRECT_URI)!!
+              methodChannel.invokeMethod("unimportant", u.toString())
+            }
+          }
+          val intentFilter = IntentFilter(intentAction)
+          options.wechatRedirectURI = wechatRedirectURI
+          options.wechatRedirectURIIntentAction = intentAction
+          val ctx = pluginBinding?.applicationContext!!
+          ContextCompat.registerReceiver(ctx, handle.broadcastReceiver, intentFilter, ContextCompat.RECEIVER_NOT_EXPORTED)
+        }
 
-        val requestCode = startActivityHandles.push(StartActivityHandle(TAG_AUTHENTICATION, Handle(result)))
+        val requestCode = startActivityHandles.push(StartActivityHandle(TAG_AUTHENTICATION, handle))
         val activity = activityBinding?.activity
         if (activity == null) {
           result.noActivity()

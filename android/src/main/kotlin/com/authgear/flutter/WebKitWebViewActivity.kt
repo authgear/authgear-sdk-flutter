@@ -27,6 +27,7 @@ class WebKitWebViewActivity: AppCompatActivity() {
         private const val KEY_OPTIONS = "KEY_OPTIONS"
         private const val KEY_WEB_VIEW_STATE = "KEY_WEB_VIEW_STATE"
         private const val TAG_FILE_CHOOSER = 1
+        internal const val KEY_WECHAT_REDIRECT_URI = "KEY_WECHAT_REDIRECT_URI"
 
         fun createIntent(ctx: Context, options: Options): Intent {
             val intent = Intent(ctx, WebKitWebViewActivity::class.java)
@@ -44,6 +45,8 @@ class WebKitWebViewActivity: AppCompatActivity() {
         var redirectURI: Uri
         var actionBarBackgroundColor: Int? = null
         var actionBarButtonTintColor: Int? = null
+        var wechatRedirectURI: Uri? = null
+        var wechatRedirectURIIntentAction: String? = null
 
         constructor(url: Uri, redirectURI: Uri) {
             this.url = url
@@ -59,6 +62,12 @@ class WebKitWebViewActivity: AppCompatActivity() {
             if (bundle.containsKey("actionBarButtonTintColor")) {
                 this.actionBarButtonTintColor = bundle.getInt("actionBarButtonTintColor")
             }
+            if (bundle.containsKey("wechatRedirectURI")) {
+                this.wechatRedirectURI = bundle.getParcelable("wechatRedirectURI")
+            }
+            if (bundle.containsKey("wechatRedirectURIIntentAction")) {
+                this.wechatRedirectURIIntentAction = bundle.getString("wechatRedirectURIIntentAction")
+            }
         }
 
         fun toBundle(): Bundle {
@@ -70,6 +79,12 @@ class WebKitWebViewActivity: AppCompatActivity() {
             }
             this.actionBarButtonTintColor?.let {
                 bundle.putInt("actionBarButtonTintColor", it)
+            }
+            this.wechatRedirectURI?.let {
+                bundle.putParcelable("wechatRedirectURI", it)
+            }
+            this.wechatRedirectURIIntentAction?.let {
+                bundle.putString("wechatRedirectURIIntentAction", it)
             }
             return bundle
         }
@@ -115,21 +130,27 @@ class WebKitWebViewActivity: AppCompatActivity() {
         }
 
         private fun shouldOverrideUrlLoading(uri: Uri): Boolean {
-            if (this.checkRedirectURI(uri)) {
-                return true;
-            }
-            return false;
-        }
-
-        private fun checkRedirectURI(uri: Uri): Boolean {
-            val redirectURI = this.activity.getOptions().redirectURI
             val withoutQuery = this.removeQueryAndFragment(uri)
+
+            val redirectURI = this.activity.getOptions().redirectURI
             if (withoutQuery.toString() ==  redirectURI.toString()) {
                 this.activity.result = uri
                 this.activity.callSetResult()
                 this.activity.finish()
                 return true
             }
+
+            val wechatRedirectURI = this.activity.getOptions().wechatRedirectURI
+            if (wechatRedirectURI != null) {
+                if (withoutQuery.toString() == wechatRedirectURI.toString()) {
+                    val intent = Intent(this.activity.getOptions().wechatRedirectURIIntentAction)
+                    intent.setPackage(this.activity.applicationContext.packageName)
+                    intent.putExtra(KEY_WECHAT_REDIRECT_URI, uri)
+                    this.activity.applicationContext.sendBroadcast(intent)
+                    return true
+                }
+            }
+
             return false;
         }
 

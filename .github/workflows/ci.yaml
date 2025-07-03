@@ -101,19 +101,22 @@ jobs:
     - run: make example-flutter-test
     - run: make example-flutter-analyze
     - run: make example-dart-format
+    - run: make example-pod-install
     - uses: authgear/gh-actions-install-apple-certificate-and-provisioning-profile@v1
+      if: ${{ github.ref == 'refs/heads/main' }}
       with:
         certificate_base64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
         certificate_password: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
         provisioning_profile_base64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
     - uses: authgear/gh-actions-create-fastlane-api-key-json-file@v1
+      if: ${{ github.ref == 'refs/heads/main' }}
       with:
         api_key_id: ${{ secrets.IOS_API_KEY_ID }}
         api_key_issuer: ${{ secrets.IOS_API_KEY_ISSUER }}
         api_key_base64: ${{ secrets.IOS_API_KEY_BASE64 }}
         output_path: ./build/fastlane-api-key.json
-    - run: make example-pod-install
     - run: make example-build-ios-app
+      if: ${{ github.ref == 'refs/heads/main' }}
     - name: Upload to TestFlight
       if: ${{ github.ref == 'refs/heads/main' }}
       run: make example-upload-ios-app
@@ -139,6 +142,7 @@ jobs:
     - run: make example-flutter-analyze
     - run: make example-dart-format
     - name: Build aab
+      if: ${{ github.ref == 'refs/heads/main' }}
       env:
         STORE_BASE64: ${{ secrets.ANDROID_KEY_STORE_BASE64 }}
         STORE_PASSWORD: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}

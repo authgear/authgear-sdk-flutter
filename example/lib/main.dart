@@ -1,3 +1,4 @@
+import 'package:http/http.dart' as http;
 import 'dart:async' show StreamSubscription;
 import 'dart:io';
 import 'dart:convert';
@@ -19,6 +20,18 @@ ColorScheme colorSchemeFromContext(BuildContext context) {
       return ColorScheme.light;
     case Brightness.dark:
       return ColorScheme.dark;
+  }
+}
+
+class MyHTTPClient extends http.BaseClient {
+  final http.Client _inner;
+
+  MyHTTPClient(this._inner);
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) {
+    request.headers["x-custom-header"] = "42";
+    return _inner.send(request);
   }
 }
 
@@ -917,6 +930,7 @@ class _MyAppState extends State<MyApp> {
               ),
             )
           : null,
+      httpClient: MyHTTPClient(http.Client()),
     );
     _sub?.cancel();
     await authgear.configure();

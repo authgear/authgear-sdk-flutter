@@ -280,6 +280,7 @@ class Authgear implements AuthgearHttpClientDelegate {
     this.preAuthenticatedURLEnabled = false,
     TokenStorage? tokenStorage,
     UIImplementation? uiImplementation,
+    Client? httpClient,
   })  : _tokenStorage = tokenStorage ?? PersistentTokenStorage(),
         _uiImplementation = uiImplementation ?? DeviceBrowserUIImplementation(),
         _storage = PersistentContainerStorage(),
@@ -288,7 +289,7 @@ class Authgear implements AuthgearHttpClientDelegate {
       namespace: name,
       sharedStorage: _sharedStorage,
     );
-    final plainHttpClient = Client();
+    final plainHttpClient = httpClient ?? Client();
     final authgearHttpClient = AuthgearHttpClient(this, plainHttpClient);
     _apiClient = APIClient(
       endpoint: endpoint,

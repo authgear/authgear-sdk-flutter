@@ -61,6 +61,7 @@
 <li><span class="parameter" id="-param-preAuthenticatedURLEnabled"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">preAuthenticatedURLEnabled</span> = <span class="default-value">false</span>, </span></li>
 <li><span class="parameter" id="-param-tokenStorage"><span class="type-annotation"><a href="../../authgear/TokenStorage-class.html">TokenStorage</a>?</span> <span class="parameter-name">tokenStorage</span>, </span></li>
 <li><span class="parameter" id="-param-uiImplementation"><span class="type-annotation"><a href="../../authgear/UIImplementation-class.html">UIImplementation</a>?</span> <span class="parameter-name">uiImplementation</span>, </span></li>
+<li><span class="parameter" id="-param-httpClient"><span class="type-annotation"><a href="https://pub.dev/documentation/http/1.4.0/http/Client-class.html">Client</a>?</span> <span class="parameter-name">httpClient</span>, </span></li>
 </ol>})
     </section>
     
@@ -77,6 +78,7 @@
   this.preAuthenticatedURLEnabled = false,
   TokenStorage? tokenStorage,
   UIImplementation? uiImplementation,
+  Client? httpClient,
 })  : _tokenStorage = tokenStorage ?? PersistentTokenStorage(),
       _uiImplementation = uiImplementation ?? DeviceBrowserUIImplementation(),
       _storage = PersistentContainerStorage(),
@@ -85,7 +87,7 @@
     namespace: name,
     sharedStorage: _sharedStorage,
   );
-  final plainHttpClient = Client();
+  final plainHttpClient = httpClient ?? Client();
   final authgearHttpClient = AuthgearHttpClient(this, plainHttpClient);
   _apiClient = APIClient(
     endpoint: endpoint,

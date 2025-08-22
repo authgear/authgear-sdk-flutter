@@ -45,8 +45,8 @@
             #
             #  export PATH="/path/to/your/installation/bin:$PATH"
 
-            # 3.27.1
-            # pkgs.flutter327
+            # 3.32.8
+            # pkgs.flutter332
           ];
           # Even we use mkShellNoCC, DEVELOPER_DIR, SDKROOT, MACOSX_DEPLOYMENT_TARGET is still set.
           # We undo that.

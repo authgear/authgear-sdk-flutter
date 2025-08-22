@@ -12,17 +12,17 @@ on:
 
 jobs:
   test-ios:
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
     - uses: actions/checkout@v4
     - uses: ruby/setup-ruby@v1
       with:
         bundler-cache: true
-    - run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+    - run: sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
     - uses: subosito/flutter-action@v2
       with:
         # This has to be kept in sync with .tool-versions
-        flutter-version: '3.27.1'
+        flutter-version: '3.32.8'
         channel: 'stable'
         # This action takes 1m30s to finish. Enable cache to make it shorter.
         cache: true
@@ -34,7 +34,7 @@ jobs:
     - run: make example-build-unsigned-ios-app
 
   test-android:
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
     - uses: actions/checkout@v4
     - uses: ruby/setup-ruby@v1
@@ -43,7 +43,7 @@ jobs:
     - uses: subosito/flutter-action@v2
       with:
         # This has to be kept in sync with .tool-versions
-        flutter-version: '3.27.1'
+        flutter-version: '3.32.8'
         channel: 'stable'
         # This action takes 1m30s to finish. Enable cache to make it shorter.
         cache: true
@@ -61,7 +61,7 @@ jobs:
     - uses: subosito/flutter-action@v2
       with:
         # This has to be kept in sync with .tool-versions
-        flutter-version: '3.27.1'
+        flutter-version: '3.32.8'
         channel: 'stable'
         # This action takes 1m30s to finish. Enable cache to make it shorter.
         cache: true
@@ -81,7 +81,7 @@ jobs:
         publish_dir: ./doc/api
 
   deploy-ios:
-    runs-on: macos-14
+    runs-on: macos-15
     needs: ["test-ios"]
     if: ${{ github.repository == 'authgear/authgear-sdk-flutter' }}
     steps:
@@ -89,11 +89,11 @@ jobs:
     - uses: ruby/setup-ruby@v1
       with:
         bundler-cache: true
-    - run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+    - run: sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
     - uses: subosito/flutter-action@v2
       with:
         # This has to be kept in sync with .tool-versions
-        flutter-version: '3.27.1'
+        flutter-version: '3.32.8'
         channel: 'stable'
         # This action takes 1m30s to finish. Enable cache to make it shorter.
         cache: true
@@ -122,7 +122,7 @@ jobs:
       run: make example-upload-ios-app
 
   deploy-android:
-    runs-on: macos-14
+    runs-on: macos-15
     needs: ["test-android"]
     if: ${{ github.repository == 'authgear/authgear-sdk-flutter' }}
     steps:
@@ -133,7 +133,7 @@ jobs:
     - uses: subosito/flutter-action@v2
       with:
         # This has to be kept in sync with .tool-versions
-        flutter-version: '3.27.1'
+        flutter-version: '3.32.8'
         channel: 'stable'
         # This action takes 1m30s to finish. Enable cache to make it shorter.
         cache: true

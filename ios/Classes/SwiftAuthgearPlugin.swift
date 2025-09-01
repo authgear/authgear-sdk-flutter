@@ -77,7 +77,8 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     case "generateUUID":
       self.generateUUID(result: result)
     case "checkBiometricSupported":
-      self.checkBiometricSupported(result: result)
+      let arguments = call.arguments as! Dictionary<String, AnyObject>
+      self.checkBiometricSupported(arguments: arguments, result: result)
     case "createBiometricPrivateKey":
       let arguments = call.arguments as! Dictionary<String, AnyObject>
       self.createBiometricPrivateKey(arguments: arguments, result: result)
@@ -434,9 +435,11 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     result(uuid)
   }
 
-  private func checkBiometricSupported(result: @escaping FlutterResult) {
+  private func checkBiometricSupported(arguments: [String: AnyObject], result: @escaping FlutterResult) {
+    let ios = arguments["ios"] as! [String: Any]
+    let policyString = ios["policy"] as! String
     if #available(iOS 11.3, *) {
-      let policy = LAPolicy.deviceOwnerAuthenticationWithBiometrics
+      let policy = LAPolicy(policyString: policyString)
       let laContext = LAContext(policy: policy)
       var nsError: NSError? = nil
       _ = laContext.canEvaluatePolicy(policy, error: &nsError)
@@ -456,12 +459,11 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     let ios = arguments["ios"] as! [String: Any]
     let constraint = ios["constraint"] as! String
     let localizedReason = ios["localizedReason"] as! String
+    let policyString = ios["policy"] as! String
     let tag = "com.authgear.keys.biometric.\(kid)"
 
     if #available(iOS 11.3, *) {
-      // We intentionally ignore the option.
-      // We want to make sure the device owner has biometric
-      let policy = LAPolicy.deviceOwnerAuthenticationWithBiometrics
+      let policy = LAPolicy(policyString: policyString)
       let flags = SecAccessControlCreateFlags(constraint: constraint)
       let laContext = LAContext(policy: policy)
       laContext.evaluatePolicy(policy, localizedReason: localizedReason) { _, error in

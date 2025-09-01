@@ -59,7 +59,6 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
     private const val LOGTAG = "AuthgearPlugin"
     private const val ENCRYPTED_SHARED_PREFERENCES_NAME = "authgear_encrypted_shared_preferences"
     private const val TAG_AUTHENTICATION = 1
-    private const val TAG_OPEN_URL = 2
 
     fun wechatErrorResult(errCode: Int, errStr: String, result: Result) {
       if (errCode == -2) {
@@ -120,13 +119,6 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
         }
         true
       }
-      TAG_OPEN_URL -> {
-        when (resultCode) {
-          Activity.RESULT_CANCELED -> handle.value.result.success(null)
-          Activity.RESULT_OK -> handle.value.result.success(null)
-        }
-        true
-      }
       else -> false
     }
   }
@@ -183,17 +175,6 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
           return
         }
         val intent = WebKitWebViewActivity.createIntent(activity, options)
-        activity.startActivityForResult(intent, requestCode)
-      }
-      "openURL" -> {
-        val url = Uri.parse(call.argument("url"))
-        val requestCode = startActivityHandles.push(StartActivityHandle(TAG_OPEN_URL, Handle(result)))
-        val activity = activityBinding?.activity
-        if (activity == null) {
-          result.noActivity()
-          return
-        }
-        val intent = WebViewActivity.createIntent(activity, url)
         activity.startActivityForResult(intent, requestCode)
       }
       "getDeviceInfo" -> {

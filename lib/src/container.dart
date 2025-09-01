@@ -494,9 +494,19 @@ class Authgear implements AuthgearHttpClientDelegate {
       wechatRedirectURI: wechatRedirectURI,
     );
 
-    await native.openURL(
-      url: targetURL.toString(),
-    );
+    try {
+      await _uiImplementation.openAuthorizationURL(
+        url: targetURL.toString(),
+        redirectURI: "nocallback://nocallback",
+        shareCookiesWithDeviceBrowser: false,
+      );
+    } catch (e) {
+      if (e is CancelException) {
+        // Ignore CancelException.
+        return;
+      }
+      rethrow;
+    }
   }
 
   Future<void> _openAuthgearURL({

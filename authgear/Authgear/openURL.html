@@ -82,9 +82,19 @@
     wechatRedirectURI: wechatRedirectURI,
   );
 
-  await native.openURL(
-    url: targetURL.toString(),
-  );
+  try {
+    await _uiImplementation.openAuthorizationURL(
+      url: targetURL.toString(),
+      redirectURI: &quot;nocallback:&#47;&#47;nocallback&quot;,
+      shareCookiesWithDeviceBrowser: false,
+    );
+  } catch (e) {
+    if (e is CancelException) {
+      &#47;&#47; Ignore CancelException.
+      return;
+    }
+    rethrow;
+  }
 }</code></pre>
 </section>
 

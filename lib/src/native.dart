@@ -52,18 +52,6 @@ Future<String> openAuthorizeURLWithWebView({
   }
 }
 
-Future<void> openURL({
-  required String url,
-}) async {
-  try {
-    await _channel.invokeMethod("openURL", {
-      "url": url,
-    });
-  } on PlatformException catch (e) {
-    throw wrapException(e);
-  }
-}
-
 Future<Map> getDeviceInfo() async {
   try {
     return await _channel.invokeMethod("getDeviceInfo");

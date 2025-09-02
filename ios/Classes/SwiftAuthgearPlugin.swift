@@ -54,11 +54,6 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
         wechatRedirectURIString: wechatRedirectURIString,
         result: result
       )
-    case "openURL":
-      let arguments = call.arguments as! Dictionary<String, AnyObject>
-      let urlString = arguments["url"] as! String
-      let url = URL(string: urlString)!
-      self.openURL(url: url, result: result);
     case "getDeviceInfo":
       self.getDeviceInfo(result: result)
     case "storageSetItem":
@@ -239,42 +234,6 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
       }
       controller.presentationContextProvider = self
       controller.start()
-  }
-
-  private func openURL(url: URL, result: @escaping FlutterResult) {
-    var sessionToKeepAlive: Any? = nil
-    let completionHandler = { (url: URL?, error: Error?) in
-      sessionToKeepAlive = nil
-      if let error = error {
-        if #available(iOS 12, *) {
-          if case ASWebAuthenticationSessionError.canceledLogin = error {
-            result(nil)
-            return
-          }
-        }
-
-        self.handleError(result: result, error: error)
-        return
-      }
-
-      result(FlutterError.cancel)
-      return
-    }
-    if #available(iOS 12, *) {
-      let session = ASWebAuthenticationSession(
-        url: url,
-        callbackURLScheme: "authgearsdk",
-        completionHandler: completionHandler
-      )
-      if #available(iOS 13, *) {
-        session.presentationContextProvider = self
-        session.prefersEphemeralWebBrowserSession = true
-      }
-      session.start()
-      sessionToKeepAlive = session
-    } else {
-      result(FlutterError.unsupported)
-    }
   }
 
   private func getDeviceInfo(result: FlutterResult) {

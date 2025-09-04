@@ -925,6 +925,8 @@ class _MyAppState extends State<MyApp> {
                 ),
                 android: WebKitWebViewUIImplementationOptionsAndroid(
                   wechatRedirectURI: wechatRedirectURI,
+                  actionBarBackgroundColor: 0x00ffffff,
+                  actionBarButtonTintColor: 0xff000000,
                 ),
                 sendWechatAuthRequest: _sendWechatAuthRequest,
               ),

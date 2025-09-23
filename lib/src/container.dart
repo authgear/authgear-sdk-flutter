@@ -1230,6 +1230,11 @@ class Authgear implements AuthgearHttpClientDelegate {
 
   Future<void> _persistTokenResponse(
       OIDCTokenResponse tokenResponse, SessionStateChangeReason reason) async {
+    final refreshToken = tokenResponse.refreshToken;
+    if (refreshToken != null) {
+      await _updateRefreshToken(refreshToken);
+    }
+
     final idToken = tokenResponse.idToken;
     if (idToken != null) {
       _idToken = idToken;
@@ -1244,18 +1249,20 @@ class Authgear implements AuthgearHttpClientDelegate {
     final accessToken = tokenResponse.accessToken!;
     _accessToken = accessToken;
 
-    final refreshToken = tokenResponse.refreshToken;
-    if (refreshToken != null) {
-      _refreshToken = refreshToken;
-      await _tokenStorage.setRefreshToken(name, refreshToken);
-    }
-
     final expiresIn = tokenResponse.expiresIn!;
     _expireAt = DateTime.now()
         .toUtc()
         .add(Duration(seconds: (expiresIn * _expiresInPercentage).toInt()));
 
     _setSessionState(SessionState.authenticated, reason);
+  }
+
+  Future<void> _updateRefreshToken(String refreshToken) async {
+    _refreshToken = refreshToken;
+    await _tokenStorage.setRefreshToken(name, refreshToken);
+    // We should invalidate the existing access token whenever we got a new refresh token
+    _accessToken = null;
+    _expireAt = null;
   }
 
   Future<void> _handleInvalidGrantException(dynamic e) async {
@@ -1280,8 +1287,7 @@ class Authgear implements AuthgearHttpClientDelegate {
       final resp = await _apiClient.getAppSessionToken(refreshToken);
       final newRefreshToken = resp.refreshToken;
       if (newRefreshToken != null) {
-        _refreshToken = newRefreshToken;
-        await _tokenStorage.setRefreshToken(name, newRefreshToken);
+        await _updateRefreshToken(newRefreshToken);
       }
       return resp;
     } catch (e) {

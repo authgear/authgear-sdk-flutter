@@ -1277,7 +1277,13 @@ class Authgear implements AuthgearHttpClientDelegate {
   Future<AppSessionTokenResponse> _getAppSessionToken(
       String refreshToken) async {
     try {
-      return await _apiClient.getAppSessionToken(refreshToken);
+      final resp = await _apiClient.getAppSessionToken(refreshToken);
+      final newRefreshToken = resp.refreshToken;
+      if (newRefreshToken != null) {
+        _refreshToken = newRefreshToken;
+        await _tokenStorage.setRefreshToken(name, newRefreshToken);
+      }
+      return resp;
     } catch (e) {
       await _handleInvalidGrantException(e);
       rethrow;

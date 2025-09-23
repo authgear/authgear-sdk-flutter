@@ -305,10 +305,12 @@ class OIDCConfiguration {
 class AppSessionTokenResponse {
   final String appSessionToken;
   final DateTime expireAt;
+  final String? refreshToken;
 
   AppSessionTokenResponse.fromJSON(dynamic json)
       : appSessionToken = json["app_session_token"],
-        expireAt = DateTime.parse(json["expire_at"]);
+        expireAt = DateTime.parse(json["expire_at"]),
+        refreshToken = json["refresh_token"];
 }
 
 class ChallengeResponse {

@@ -819,7 +819,9 @@ class Authgear implements AuthgearHttpClientDelegate {
     try {
       return await newTask;
     } finally {
-      _refreshAccessTokenTask = null;
+      if (_refreshAccessTokenTask == newTask) {
+        _refreshAccessTokenTask = null;
+      }
     }
   }
 

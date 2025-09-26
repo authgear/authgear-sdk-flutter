@@ -240,6 +240,8 @@ class Authgear implements AuthgearHttpClientDelegate {
   Stream<SessionStateChangeEvent> get onSessionStateChange =>
       _sessionStateStreamController.stream;
 
+  Future<void>? _refreshAccessTokenTask;
+
   String? _accessToken;
   @override
   String? get accessToken => _accessToken;
@@ -779,32 +781,47 @@ class Authgear implements AuthgearHttpClientDelegate {
 
   @override
   Future<void> refreshAccessToken() async {
-    final refreshToken = _refreshToken;
-    if (refreshToken == null) {
-      await _clearSession(SessionStateChangeReason.noToken);
-      return;
-    }
-
-    String? deviceSecret = await _sharedStorage.getDeviceSecret(name);
-
-    final xDeviceInfo = await _getXDeviceInfo();
-    final tokenRequest = OIDCTokenRequest(
-      grantType: GrantType.refreshToken,
-      clientID: clientID,
-      refreshToken: refreshToken,
-      xDeviceInfo: xDeviceInfo,
-      deviceSecret: deviceSecret,
-    );
-    try {
-      final tokenResponse = await _apiClient.sendTokenRequest(tokenRequest);
-      await _persistTokenResponse(
-          tokenResponse, SessionStateChangeReason.foundToken);
-    } catch (e) {
-      await _handleInvalidGrantException(e);
-      if (e is OAuthException && e.error == "invalid_grant") {
+    doRefreshAccessToken() async {
+      final refreshToken = _refreshToken;
+      if (refreshToken == null) {
+        await _clearSession(SessionStateChangeReason.noToken);
         return;
       }
-      rethrow;
+
+      String? deviceSecret = await _sharedStorage.getDeviceSecret(name);
+
+      final xDeviceInfo = await _getXDeviceInfo();
+      final tokenRequest = OIDCTokenRequest(
+        grantType: GrantType.refreshToken,
+        clientID: clientID,
+        refreshToken: refreshToken,
+        xDeviceInfo: xDeviceInfo,
+        deviceSecret: deviceSecret,
+      );
+      try {
+        final tokenResponse = await _apiClient.sendTokenRequest(tokenRequest);
+        await _persistTokenResponse(
+            tokenResponse, SessionStateChangeReason.foundToken);
+      } catch (e) {
+        await _handleInvalidGrantException(e);
+        if (e is OAuthException && e.error == "invalid_grant") {
+          return;
+        }
+        rethrow;
+      }
+    }
+
+    if (_refreshAccessTokenTask != null) {
+      return await _refreshAccessTokenTask;
+    }
+    final newTask = doRefreshAccessToken();
+    _refreshAccessTokenTask = newTask;
+    try {
+      return await newTask;
+    } finally {
+      if (_refreshAccessTokenTask == newTask) {
+        _refreshAccessTokenTask = null;
+      }
     }
   }
 

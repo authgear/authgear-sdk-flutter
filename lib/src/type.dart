@@ -232,6 +232,7 @@ class UserInfo {
   final bool isAnonymous;
   final bool isVerified;
   final bool canReauthenticate;
+  final bool hasPrimaryPassword;
   final List<String>? roles;
 
   final Map<String, dynamic> raw;
@@ -262,6 +263,8 @@ class UserInfo {
         isVerified = json["https://authgear.com/claims/user/is_verified"],
         canReauthenticate =
             json["https://authgear.com/claims/user/can_reauthenticate"],
+        hasPrimaryPassword =
+            json["https://authgear.com/claims/user/has_primary_password"],
         roles = parseRoles(json["https://authgear.com/claims/user/roles"]),
         raw = json,
         customAttributes = json["custom_attributes"] ?? {},

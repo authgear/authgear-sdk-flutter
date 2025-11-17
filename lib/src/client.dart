@@ -213,10 +213,7 @@ class OIDCTokenRequest {
   });
 
   Map<String, String> toQueryParameters() {
-    final q = {
-      "client_id": clientID,
-      "grant_type": grantType.value,
-    };
+    final q = {"client_id": clientID, "grant_type": grantType.value};
 
     final code = this.code;
     if (code != null) {
@@ -365,8 +362,9 @@ class APIClient {
       return config;
     }
 
-    final url =
-        Uri.parse(endpoint).replace(path: "/.well-known/openid-configuration");
+    final url = Uri.parse(
+      endpoint,
+    ).replace(path: "/.well-known/openid-configuration");
     final resp = await _get(_plainHttpClient, url);
     final json = jsonDecode(utf8.decode(resp.bodyBytes));
     final newConfig = OIDCConfiguration.fromJSON(json);
@@ -387,14 +385,19 @@ class APIClient {
     return endpoint.origin;
   }
 
-  Future<OIDCTokenResponse> sendTokenRequest(OIDCTokenRequest request,
-      {bool includeAccessToken = false}) async {
+  Future<OIDCTokenResponse> sendTokenRequest(
+    OIDCTokenRequest request, {
+    bool includeAccessToken = false,
+  }) async {
     final config = await fetchOIDCConfiguration();
     final url = Uri.parse(config.tokenEndpoint);
     final clientToUse =
         includeAccessToken ? _authgearHttpClient : _plainHttpClient;
-    final httpResponse =
-        await _post(clientToUse, url, body: request.toQueryParameters());
+    final httpResponse = await _post(
+      clientToUse,
+      url,
+      body: request.toQueryParameters(),
+    );
     return _decodeOIDCResponseJSON(httpResponse, OIDCTokenResponse.fromJSON);
   }
 
@@ -408,50 +411,61 @@ class APIClient {
   Future<void> revoke(String refreshToken) async {
     final config = await fetchOIDCConfiguration();
     final url = Uri.parse(config.revocationEndpoint);
-    final body = {
-      "token": refreshToken,
-    };
+    final body = {"token": refreshToken};
     final httpResponse = await _post(_plainHttpClient, url, body: body);
     return _decodeOIDCResponse(httpResponse);
   }
 
   Future<AppSessionTokenResponse> getAppSessionToken(
-      String refreshToken) async {
+    String refreshToken,
+  ) async {
     final url = await _buildApiUrl("/oauth2/app_session_token");
-    final httpResponse = await _post(_plainHttpClient, url,
-        headers: {
-          "content-type": "application/json; charset=UTF-8",
-        },
-        body: jsonEncode({
-          "refresh_token": refreshToken,
-        }));
+    final httpResponse = await _post(
+      _plainHttpClient,
+      url,
+      headers: {"content-type": "application/json; charset=UTF-8"},
+      body: jsonEncode({"refresh_token": refreshToken}),
+    );
     return _decodeAPIResponseJSON(
-        httpResponse, AppSessionTokenResponse.fromJSON);
+      httpResponse,
+      AppSessionTokenResponse.fromJSON,
+    );
   }
 
   Future<void> sendSetupBiometricRequest(BiometricRequest request) async {
     final config = await fetchOIDCConfiguration();
     final url = Uri.parse(config.tokenEndpoint);
-    final httpResponse = await _post(_authgearHttpClient, url,
-        body: request.toQueryParameters());
+    final httpResponse = await _post(
+      _authgearHttpClient,
+      url,
+      body: request.toQueryParameters(),
+    );
     return _decodeOIDCResponse(httpResponse);
   }
 
   Future<OIDCTokenResponse> sendAuthenticateBiometricRequest(
-      BiometricRequest request) async {
+    BiometricRequest request,
+  ) async {
     final config = await fetchOIDCConfiguration();
     final url = Uri.parse(config.tokenEndpoint);
-    final httpResponse = await _post(_authgearHttpClient, url,
-        body: request.toQueryParameters());
+    final httpResponse = await _post(
+      _authgearHttpClient,
+      url,
+      body: request.toQueryParameters(),
+    );
     return _decodeOIDCResponseJSON(httpResponse, OIDCTokenResponse.fromJSON);
   }
 
   Future<OIDCTokenResponse> sendAuthenticateAnonymousRequest(
-      AnonymousRequest request) async {
+    AnonymousRequest request,
+  ) async {
     final config = await fetchOIDCConfiguration();
     final url = Uri.parse(config.tokenEndpoint);
-    final httpResponse =
-        await _post(_plainHttpClient, url, body: request.toQueryParameters());
+    final httpResponse = await _post(
+      _plainHttpClient,
+      url,
+      body: request.toQueryParameters(),
+    );
     return _decodeOIDCResponseJSON(httpResponse, OIDCTokenResponse.fromJSON);
   }
 
@@ -460,12 +474,8 @@ class APIClient {
     final httpResponse = await _post(
       _plainHttpClient,
       url,
-      headers: {
-        "content-type": "application/json; charset=UTF-8",
-      },
-      body: jsonEncode({
-        "purpose": purpose,
-      }),
+      headers: {"content-type": "application/json; charset=UTF-8"},
+      body: jsonEncode({"purpose": purpose}),
     );
     return _decodeAPIResponseJSON(httpResponse, ChallengeResponse.fromJSON);
   }
@@ -478,18 +488,20 @@ class APIClient {
     final httpResponse = await _post(
       _plainHttpClient,
       url,
-      body: {
-        "state": state,
-        "code": code,
-      },
+      body: {"state": state, "code": code},
     );
     return _decodeAPIResponse(httpResponse);
   }
 
   Future<Map<String, String>> _composeRequestHeaders(
-      Uri url, String method, Map<String, String> headers) async {
-    final dpopProof =
-        await _dpopProvider.generateDPoPProof(htm: method, htu: url.toString());
+    Uri url,
+    String method,
+    Map<String, String> headers,
+  ) async {
+    final dpopProof = await _dpopProvider.generateDPoPProof(
+      htm: method,
+      htu: url.toString(),
+    );
     Map<String, String> h = Map.from(headers);
     if (dpopProof != null) {
       h["DPoP"] = dpopProof;
@@ -497,14 +509,21 @@ class APIClient {
     return h;
   }
 
-  Future<Response> _post(Client client, Uri url,
-      {Map<String, String>? headers, Object? body}) async {
+  Future<Response> _post(
+    Client client,
+    Uri url, {
+    Map<String, String>? headers,
+    Object? body,
+  }) async {
     final h = await _composeRequestHeaders(url, "POST", headers ?? {});
     return await client.post(url, headers: h, body: body);
   }
 
-  Future<Response> _get(Client client, Uri url,
-      {Map<String, String>? headers}) async {
+  Future<Response> _get(
+    Client client,
+    Uri url, {
+    Map<String, String>? headers,
+  }) async {
     final h = await _composeRequestHeaders(url, "GET", headers ?? {});
     return await client.get(url, headers: h);
   }

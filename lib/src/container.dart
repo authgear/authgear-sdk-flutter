@@ -40,8 +40,11 @@ class InternalAuthenticateRequest {
   final String redirectURI;
   final CodeVerifier verifier;
 
-  InternalAuthenticateRequest(
-      {required this.url, required this.redirectURI, required this.verifier});
+  InternalAuthenticateRequest({
+    required this.url,
+    required this.redirectURI,
+    required this.verifier,
+  });
 }
 
 class AuthenticateOptions {
@@ -74,13 +77,17 @@ class AuthenticateOptions {
   });
 
   OIDCAuthenticationRequest toRequest(
-      String clientID, CodeVerifier verifier, String? dpopJKT) {
+    String clientID,
+    CodeVerifier verifier,
+    String? dpopJKT,
+  ) {
     return OIDCAuthenticationRequest(
       clientID: clientID,
       redirectURI: redirectURI,
       responseType: ResponseType.code,
       scope: _getAuthenticationScopes(
-          preAuthenticatedURLEnabled: preAuthenticatedURLEnabled ?? false),
+        preAuthenticatedURLEnabled: preAuthenticatedURLEnabled ?? false,
+      ),
       isSsoEnabled: isSsoEnabled,
       codeChallenge: verifier.codeChallenge,
       prompt: prompt,
@@ -97,16 +104,19 @@ class AuthenticateOptions {
   }
 }
 
-List<String> _getAuthenticationScopes(
-    {required bool preAuthenticatedURLEnabled}) {
+List<String> _getAuthenticationScopes({
+  required bool preAuthenticatedURLEnabled,
+}) {
   List<String> scopes = [
     "openid",
     "offline_access",
     "https://authgear.com/scopes/full-access",
   ];
   if (preAuthenticatedURLEnabled) {
-    scopes.addAll(
-        ["device_sso", "https://authgear.com/scopes/pre-authenticated-url"]);
+    scopes.addAll([
+      "device_sso",
+      "https://authgear.com/scopes/pre-authenticated-url",
+    ]);
   }
   return scopes;
 }
@@ -135,7 +145,10 @@ class ReauthenticateOptions {
   });
 
   OIDCAuthenticationRequest toRequest(
-      String clientID, String idTokenHint, CodeVerifier verifier) {
+    String clientID,
+    String idTokenHint,
+    CodeVerifier verifier,
+  ) {
     final oidcRequest = OIDCAuthenticationRequest(
       clientID: clientID,
       redirectURI: redirectURI,
@@ -143,10 +156,7 @@ class ReauthenticateOptions {
       // offline_access is not needed because we don't want a new refresh token to be generated
       // device_sso and pre-authentictated-url is also not needed,
       // because no new session should be generated so the scopes are not important.
-      scope: [
-        "openid",
-        "https://authgear.com/scopes/full-access",
-      ],
+      scope: ["openid", "https://authgear.com/scopes/full-access"],
       isSsoEnabled: isSsoEnabled,
       codeChallenge: verifier.codeChallenge,
       uiLocales: uiLocales,
@@ -178,8 +188,12 @@ class SettingsActionOptions {
     this.qLoginID,
   });
 
-  OIDCAuthenticationRequest toRequest(String clientID, String idTokenHint,
-      String loginHint, CodeVerifier verifier) {
+  OIDCAuthenticationRequest toRequest(
+    String clientID,
+    String idTokenHint,
+    String loginHint,
+    CodeVerifier verifier,
+  ) {
     final Map<String, String> xSettingsActionQueryMap = {};
     final qLoginID = this.qLoginID;
     if (qLoginID != null) {
@@ -268,8 +282,10 @@ class Authgear implements AuthgearHttpClientDelegate {
     final payload = decodeIDToken(idToken);
     final authTimeValue = payload["auth_time"];
     if (authTimeValue is num) {
-      return DateTime.fromMillisecondsSinceEpoch(authTimeValue.toInt() * 1000,
-          isUtc: true);
+      return DateTime.fromMillisecondsSinceEpoch(
+        authTimeValue.toInt() * 1000,
+        isUtc: true,
+      );
     }
     return null;
   }
@@ -312,20 +328,24 @@ class Authgear implements AuthgearHttpClientDelegate {
 
   void _setSessionState(SessionState s, SessionStateChangeReason r) {
     _sessionStateRaw = s;
-    _sessionStateStreamController
-        .add(SessionStateChangeEvent(instance: this, reason: r));
+    _sessionStateStreamController.add(
+      SessionStateChangeEvent(instance: this, reason: r),
+    );
   }
 
   Future<Uri> internalBuildAuthorizationURL(
-      OIDCAuthenticationRequest oidcRequest) async {
+    OIDCAuthenticationRequest oidcRequest,
+  ) async {
     final config = await _apiClient.fetchOIDCConfiguration();
-    final authenticationURL = Uri.parse(config.authorizationEndpoint)
-        .replace(queryParameters: oidcRequest.toQueryParameters());
+    final authenticationURL = Uri.parse(
+      config.authorizationEndpoint,
+    ).replace(queryParameters: oidcRequest.toQueryParameters());
     return authenticationURL;
   }
 
   Future<InternalAuthenticateRequest> internalCreateAuthenticateRequest(
-      AuthenticateOptions options) async {
+    AuthenticateOptions options,
+  ) async {
     final codeVerifier = CodeVerifier(_rng);
     final dpopJKT = await _dpopProvider.computeJKT();
     final oidcRequest = options.toRequest(clientID, codeVerifier, dpopJKT);
@@ -348,20 +368,21 @@ class Authgear implements AuthgearHttpClientDelegate {
     String? wechatRedirectURI,
     String? authenticationFlowGroup,
   }) async {
-    final authRequest =
-        await internalCreateAuthenticateRequest(AuthenticateOptions(
-      redirectURI: redirectURI,
-      isSsoEnabled: isSsoEnabled,
-      preAuthenticatedURLEnabled: preAuthenticatedURLEnabled,
-      state: null,
-      prompt: prompt,
-      uiLocales: uiLocales,
-      colorScheme: colorScheme,
-      oauthProviderAlias: oauthProviderAlias,
-      wechatRedirectURI: wechatRedirectURI,
-      page: page,
-      authenticationFlowGroup: authenticationFlowGroup,
-    ));
+    final authRequest = await internalCreateAuthenticateRequest(
+      AuthenticateOptions(
+        redirectURI: redirectURI,
+        isSsoEnabled: isSsoEnabled,
+        preAuthenticatedURLEnabled: preAuthenticatedURLEnabled,
+        state: null,
+        prompt: prompt,
+        uiLocales: uiLocales,
+        colorScheme: colorScheme,
+        oauthProviderAlias: oauthProviderAlias,
+        wechatRedirectURI: wechatRedirectURI,
+        page: page,
+        authenticationFlowGroup: authenticationFlowGroup,
+      ),
+    );
 
     final resultURL = await _uiImplementation.openAuthorizationURL(
       url: authRequest.url.toString(),
@@ -369,9 +390,10 @@ class Authgear implements AuthgearHttpClientDelegate {
       shareCookiesWithDeviceBrowser: isSsoEnabled,
     );
     return await internalFinishAuthentication(
-        url: Uri.parse(resultURL),
-        redirectURI: redirectURI,
-        codeVerifier: authRequest.verifier);
+      url: Uri.parse(resultURL),
+      redirectURI: redirectURI,
+      codeVerifier: authRequest.verifier,
+    );
   }
 
   Future<InternalAuthenticateRequest> internalCreateReauthenticateRequest(
@@ -424,8 +446,10 @@ class Authgear implements AuthgearHttpClientDelegate {
       authenticationFlowGroup: authenticationFlowGroup,
     );
 
-    final request =
-        await internalCreateReauthenticateRequest(idTokenHint, options);
+    final request = await internalCreateReauthenticateRequest(
+      idTokenHint,
+      options,
+    );
 
     final resultURL = await _uiImplementation.openAuthorizationURL(
       url: request.url.toString(),
@@ -434,10 +458,11 @@ class Authgear implements AuthgearHttpClientDelegate {
     );
     final xDeviceInfo = await _getXDeviceInfo();
     return await _finishReauthentication(
-        url: Uri.parse(resultURL),
-        redirectURI: redirectURI,
-        codeVerifier: request.verifier,
-        xDeviceInfo: xDeviceInfo);
+      url: Uri.parse(resultURL),
+      redirectURI: redirectURI,
+      codeVerifier: request.verifier,
+      xDeviceInfo: xDeviceInfo,
+    );
   }
 
   Future<UserInfo> getUserInfo() async {
@@ -455,11 +480,12 @@ class Authgear implements AuthgearHttpClientDelegate {
       throw Exception("authenticated user required");
     }
     final appSessionTokenResp = await _getAppSessionToken(refreshToken);
-    final loginHint =
-        Uri.parse("https://authgear.com/login_hint").replace(queryParameters: {
-      "type": "app_session_token",
-      "app_session_token": appSessionTokenResp.appSessionToken,
-    }).toString();
+    final loginHint = Uri.parse("https://authgear.com/login_hint").replace(
+      queryParameters: {
+        "type": "app_session_token",
+        "app_session_token": appSessionTokenResp.appSessionToken,
+      },
+    ).toString();
 
     final oidcRequest = OIDCAuthenticationRequest(
       clientID: clientID,
@@ -478,14 +504,12 @@ class Authgear implements AuthgearHttpClientDelegate {
       wechatRedirectURI: wechatRedirectURI,
     );
     final config = await _apiClient.fetchOIDCConfiguration();
-    return Uri.parse(config.authorizationEndpoint)
-        .replace(queryParameters: oidcRequest.toQueryParameters());
+    return Uri.parse(
+      config.authorizationEndpoint,
+    ).replace(queryParameters: oidcRequest.toQueryParameters());
   }
 
-  Future<void> openURL({
-    required String url,
-    String? wechatRedirectURI,
-  }) async {
+  Future<void> openURL({required String url, String? wechatRedirectURI}) async {
     final refreshToken = _refreshToken;
     if (refreshToken == null) {
       throw Exception("openURL requires authenticated user");
@@ -541,20 +565,26 @@ class Authgear implements AuthgearHttpClientDelegate {
     String? wechatRedirectURI,
   }) async {
     return _openAuthgearURL(
-        path: page.path,
-        uiLocales: uiLocales,
-        colorScheme: colorScheme,
-        wechatRedirectURI: wechatRedirectURI);
+      path: page.path,
+      uiLocales: uiLocales,
+      colorScheme: colorScheme,
+      wechatRedirectURI: wechatRedirectURI,
+    );
   }
 
   Future<InternalAuthenticateRequest> internalCreateSettingsActionRequest(
-      String clientID,
-      String idTokenHint,
-      String loginHint,
-      SettingsActionOptions options) async {
+    String clientID,
+    String idTokenHint,
+    String loginHint,
+    SettingsActionOptions options,
+  ) async {
     final codeVerifier = CodeVerifier(_rng);
-    final oidcRequest =
-        options.toRequest(clientID, idTokenHint, loginHint, codeVerifier);
+    final oidcRequest = options.toRequest(
+      clientID,
+      idTokenHint,
+      loginHint,
+      codeVerifier,
+    );
     final url = await internalBuildAuthorizationURL(oidcRequest);
 
     return InternalAuthenticateRequest(
@@ -578,11 +608,12 @@ class Authgear implements AuthgearHttpClientDelegate {
     }
 
     final appSessionTokenResp = await _getAppSessionToken(refreshToken);
-    final loginHint =
-        Uri.parse("https://authgear.com/login_hint").replace(queryParameters: {
-      "type": "app_session_token",
-      "app_session_token": appSessionTokenResp.appSessionToken,
-    }).toString();
+    final loginHint = Uri.parse("https://authgear.com/login_hint").replace(
+      queryParameters: {
+        "type": "app_session_token",
+        "app_session_token": appSessionTokenResp.appSessionToken,
+      },
+    ).toString();
 
     final options = SettingsActionOptions(
       settingAction: action,
@@ -593,7 +624,11 @@ class Authgear implements AuthgearHttpClientDelegate {
     );
 
     final request = await internalCreateSettingsActionRequest(
-        clientID, idTokenHint, loginHint, options);
+      clientID,
+      idTokenHint,
+      loginHint,
+      options,
+    );
 
     final resultURL = await _uiImplementation.openAuthorizationURL(
       url: request.url.toString(),
@@ -601,15 +636,17 @@ class Authgear implements AuthgearHttpClientDelegate {
       shareCookiesWithDeviceBrowser: isSsoEnabled,
     );
     return await _finishSettingsAction(
-        url: Uri.parse(resultURL),
-        redirectURI: redirectURI,
-        codeVerifier: request.verifier);
+      url: Uri.parse(resultURL),
+      redirectURI: redirectURI,
+      codeVerifier: request.verifier,
+    );
   }
 
-  Future<void> changePassword(
-      {required String redirectURI,
-      List<String>? uiLocales,
-      ColorScheme? colorScheme}) {
+  Future<void> changePassword({
+    required String redirectURI,
+    List<String>? uiLocales,
+    ColorScheme? colorScheme,
+  }) {
     return _openSettingsAction(
       action: SettingsAction.changePassword,
       redirectURI: redirectURI,
@@ -618,10 +655,11 @@ class Authgear implements AuthgearHttpClientDelegate {
     );
   }
 
-  Future<void> deleteAccount(
-      {required String redirectURI,
-      List<String>? uiLocales,
-      ColorScheme? colorScheme}) async {
+  Future<void> deleteAccount({
+    required String redirectURI,
+    List<String>? uiLocales,
+    ColorScheme? colorScheme,
+  }) async {
     await _openSettingsAction(
       action: SettingsAction.deleteAccount,
       redirectURI: redirectURI,
@@ -631,10 +669,11 @@ class Authgear implements AuthgearHttpClientDelegate {
     await _clearSession(SessionStateChangeReason.invalid);
   }
 
-  Future<void> addEmail(
-      {required String redirectURI,
-      List<String>? uiLocales,
-      ColorScheme? colorScheme}) async {
+  Future<void> addEmail({
+    required String redirectURI,
+    List<String>? uiLocales,
+    ColorScheme? colorScheme,
+  }) async {
     await _openSettingsAction(
       action: SettingsAction.addEmail,
       redirectURI: redirectURI,
@@ -643,10 +682,11 @@ class Authgear implements AuthgearHttpClientDelegate {
     );
   }
 
-  Future<void> addPhone(
-      {required String redirectURI,
-      List<String>? uiLocales,
-      ColorScheme? colorScheme}) async {
+  Future<void> addPhone({
+    required String redirectURI,
+    List<String>? uiLocales,
+    ColorScheme? colorScheme,
+  }) async {
     await _openSettingsAction(
       action: SettingsAction.addPhone,
       redirectURI: redirectURI,
@@ -655,10 +695,11 @@ class Authgear implements AuthgearHttpClientDelegate {
     );
   }
 
-  Future<void> addUsername(
-      {required String redirectURI,
-      List<String>? uiLocales,
-      ColorScheme? colorScheme}) async {
+  Future<void> addUsername({
+    required String redirectURI,
+    List<String>? uiLocales,
+    ColorScheme? colorScheme,
+  }) async {
     await _openSettingsAction(
       action: SettingsAction.addUsername,
       redirectURI: redirectURI,
@@ -667,11 +708,12 @@ class Authgear implements AuthgearHttpClientDelegate {
     );
   }
 
-  Future<void> changeEmail(
-      {required String redirectURI,
-      required String originalEmail,
-      List<String>? uiLocales,
-      ColorScheme? colorScheme}) async {
+  Future<void> changeEmail({
+    required String redirectURI,
+    required String originalEmail,
+    List<String>? uiLocales,
+    ColorScheme? colorScheme,
+  }) async {
     await _openSettingsAction(
       action: SettingsAction.changeEmail,
       redirectURI: redirectURI,
@@ -681,11 +723,12 @@ class Authgear implements AuthgearHttpClientDelegate {
     );
   }
 
-  Future<void> changePhoneNumber(
-      {required String redirectURI,
-      required String originalPhoneNumber,
-      List<String>? uiLocales,
-      ColorScheme? colorScheme}) async {
+  Future<void> changePhoneNumber({
+    required String redirectURI,
+    required String originalPhoneNumber,
+    List<String>? uiLocales,
+    ColorScheme? colorScheme,
+  }) async {
     await _openSettingsAction(
       action: SettingsAction.changePhone,
       redirectURI: redirectURI,
@@ -695,11 +738,12 @@ class Authgear implements AuthgearHttpClientDelegate {
     );
   }
 
-  Future<void> changeUsername(
-      {required String redirectURI,
-      required String originalUsername,
-      List<String>? uiLocales,
-      ColorScheme? colorScheme}) async {
+  Future<void> changeUsername({
+    required String redirectURI,
+    required String originalUsername,
+    List<String>? uiLocales,
+    ColorScheme? colorScheme,
+  }) async {
     await _openSettingsAction(
       action: SettingsAction.changeUsername,
       redirectURI: redirectURI,
@@ -724,8 +768,10 @@ class Authgear implements AuthgearHttpClientDelegate {
     );
 
     try {
-      final tokenResponse = await _apiClient.sendTokenRequest(tokenRequest,
-          includeAccessToken: true);
+      final tokenResponse = await _apiClient.sendTokenRequest(
+        tokenRequest,
+        includeAccessToken: true,
+      );
       final idToken = tokenResponse.idToken;
       if (idToken != null) {
         _idToken = idToken;
@@ -801,7 +847,9 @@ class Authgear implements AuthgearHttpClientDelegate {
       try {
         final tokenResponse = await _apiClient.sendTokenRequest(tokenRequest);
         await _persistTokenResponse(
-            tokenResponse, SessionStateChangeReason.foundToken);
+          tokenResponse,
+          SessionStateChangeReason.foundToken,
+        );
       } catch (e) {
         await _handleInvalidGrantException(e);
         if (e is OAuthException && e.error == "invalid_grant") {
@@ -838,8 +886,9 @@ class Authgear implements AuthgearHttpClientDelegate {
   }) async {
     final kid = await native.generateUUID();
     final deviceInfo = await native.getDeviceInfo();
-    final challengeResponse =
-        await _apiClient.getChallenge("biometric_request");
+    final challengeResponse = await _apiClient.getChallenge(
+      "biometric_request",
+    );
     final now = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
     final payload = {
       "iat": now,
@@ -854,10 +903,9 @@ class Authgear implements AuthgearHttpClientDelegate {
       ios: ios,
       android: android,
     );
-    await _sendSetupBiometricRequest(BiometricRequest(
-      clientID: clientID,
-      jwt: jwt,
-    ));
+    await _sendSetupBiometricRequest(
+      BiometricRequest(clientID: clientID, jwt: jwt),
+    );
     await _storage.setBiometricKeyID(name, kid);
   }
 
@@ -884,8 +932,9 @@ class Authgear implements AuthgearHttpClientDelegate {
     }
 
     final deviceInfo = await native.getDeviceInfo();
-    final challengeResponse =
-        await _apiClient.getChallenge("biometric_request");
+    final challengeResponse = await _apiClient.getChallenge(
+      "biometric_request",
+    );
     final now = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
     final payload = {
       "iat": now,
@@ -907,11 +956,14 @@ class Authgear implements AuthgearHttpClientDelegate {
           clientID: clientID,
           jwt: jwt,
           scope: _getAuthenticationScopes(
-              preAuthenticatedURLEnabled: preAuthenticatedURLEnabled),
+            preAuthenticatedURLEnabled: preAuthenticatedURLEnabled,
+          ),
         ),
       );
       await _persistTokenResponse(
-          tokenResponse, SessionStateChangeReason.authenticated);
+        tokenResponse,
+        SessionStateChangeReason.authenticated,
+      );
       final userInfo = await _apiClient.getUserInfo();
       return userInfo;
     } on BiometricPrivateKeyNotFoundException {
@@ -936,8 +988,9 @@ class Authgear implements AuthgearHttpClientDelegate {
     if (kid == null) {
       throw Exception("anonymous kid not found");
     }
-    final challengeResponse =
-        await _apiClient.getChallenge("anonymous_request");
+    final challengeResponse = await _apiClient.getChallenge(
+      "anonymous_request",
+    );
     final now = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
     final payload = {
       "iat": now,
@@ -949,11 +1002,9 @@ class Authgear implements AuthgearHttpClientDelegate {
       kid: kid,
       payload: payload,
     );
-    final loginHint =
-        Uri.parse("https://authgear.com/login_hint").replace(queryParameters: {
-      "type": "anonymous",
-      "jwt": jwt,
-    }).toString();
+    final loginHint = Uri.parse(
+      "https://authgear.com/login_hint",
+    ).replace(queryParameters: {"type": "anonymous", "jwt": jwt}).toString();
 
     final codeVerifier = CodeVerifier(_rng);
     final oidcRequest = OIDCAuthenticationRequest(
@@ -976,8 +1027,9 @@ class Authgear implements AuthgearHttpClientDelegate {
       wechatRedirectURI: wechatRedirectURI,
     );
     final config = await _apiClient.fetchOIDCConfiguration();
-    final authenticationURL = Uri.parse(config.authorizationEndpoint)
-        .replace(queryParameters: oidcRequest.toQueryParameters());
+    final authenticationURL = Uri.parse(
+      config.authorizationEndpoint,
+    ).replace(queryParameters: oidcRequest.toQueryParameters());
 
     final resultURL = await _uiImplementation.openAuthorizationURL(
       url: authenticationURL.toString(),
@@ -985,9 +1037,10 @@ class Authgear implements AuthgearHttpClientDelegate {
       shareCookiesWithDeviceBrowser: isSsoEnabled,
     );
     final userInfo = await internalFinishAuthentication(
-        url: Uri.parse(resultURL),
-        redirectURI: redirectURI,
-        codeVerifier: codeVerifier);
+      url: Uri.parse(resultURL),
+      redirectURI: redirectURI,
+      codeVerifier: codeVerifier,
+    );
     await _disableAnonymous();
     await disableBiometric();
     return userInfo;
@@ -1007,12 +1060,16 @@ class Authgear implements AuthgearHttpClientDelegate {
     String? state,
   }) async {
     if (!preAuthenticatedURLEnabled) {
-      throw AuthgearException(Exception(
-          "makePreAuthenticatedURL requires preAuthenticatedURLEnabled to be true"));
+      throw AuthgearException(
+        Exception(
+          "makePreAuthenticatedURL requires preAuthenticatedURLEnabled to be true",
+        ),
+      );
     }
     if (!(sessionState == SessionState.authenticated)) {
       throw AuthgearException(
-          Exception("makePreAuthenticatedURL requires authenticated user"));
+        Exception("makePreAuthenticatedURL requires authenticated user"),
+      );
     }
     var idToken = await _sharedStorage.getIDToken(name);
     if (idToken == null || idToken.isEmpty) {
@@ -1072,15 +1129,13 @@ class Authgear implements AuthgearHttpClientDelegate {
     required String state,
     required String code,
   }) async {
-    await _apiClient.sendWechatAuthCallback(
-      state: state,
-      code: code,
-    );
+    await _apiClient.sendWechatAuthCallback(state: state, code: code);
   }
 
   Future<UserInfo> _authenticateAnonymouslyCreate() async {
-    final challengeResponse =
-        await _apiClient.getChallenge("anonymous_request");
+    final challengeResponse = await _apiClient.getChallenge(
+      "anonymous_request",
+    );
     final kid = await native.generateUUID();
     final now = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
     final payload = {
@@ -1093,13 +1148,13 @@ class Authgear implements AuthgearHttpClientDelegate {
       kid: kid,
       payload: payload,
     );
-    final tokenResponse =
-        await _apiClient.sendAuthenticateAnonymousRequest(AnonymousRequest(
-      clientID: clientID,
-      jwt: jwt,
-    ));
+    final tokenResponse = await _apiClient.sendAuthenticateAnonymousRequest(
+      AnonymousRequest(clientID: clientID, jwt: jwt),
+    );
     await _persistTokenResponse(
-        tokenResponse, SessionStateChangeReason.authenticated);
+      tokenResponse,
+      SessionStateChangeReason.authenticated,
+    );
     final userInfo = await _apiClient.getUserInfo();
     await _storage.setAnonymousKeyID(name, kid);
     await disableBiometric();
@@ -1107,8 +1162,9 @@ class Authgear implements AuthgearHttpClientDelegate {
   }
 
   Future<UserInfo> _authenticateAnonymouslyExisting(String kid) async {
-    final challengeResponse =
-        await _apiClient.getChallenge("anonymous_request");
+    final challengeResponse = await _apiClient.getChallenge(
+      "anonymous_request",
+    );
     final now = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
     final payload = {
       "iat": now,
@@ -1120,13 +1176,13 @@ class Authgear implements AuthgearHttpClientDelegate {
       kid: kid,
       payload: payload,
     );
-    final tokenResponse =
-        await _apiClient.sendAuthenticateAnonymousRequest(AnonymousRequest(
-      clientID: clientID,
-      jwt: jwt,
-    ));
+    final tokenResponse = await _apiClient.sendAuthenticateAnonymousRequest(
+      AnonymousRequest(clientID: clientID, jwt: jwt),
+    );
     await _persistTokenResponse(
-        tokenResponse, SessionStateChangeReason.authenticated);
+      tokenResponse,
+      SessionStateChangeReason.authenticated,
+    );
     final userInfo = await _apiClient.getUserInfo();
     await disableBiometric();
     return userInfo;
@@ -1204,7 +1260,9 @@ class Authgear implements AuthgearHttpClientDelegate {
       xDeviceInfo: xDeviceInfo,
     );
     await _persistTokenResponse(
-        tokenResponse, SessionStateChangeReason.authenticated);
+      tokenResponse,
+      SessionStateChangeReason.authenticated,
+    );
     await disableBiometric();
     final userInfo = await _apiClient.getUserInfo();
     return userInfo;
@@ -1246,7 +1304,9 @@ class Authgear implements AuthgearHttpClientDelegate {
   }
 
   Future<void> _persistTokenResponse(
-      OIDCTokenResponse tokenResponse, SessionStateChangeReason reason) async {
+    OIDCTokenResponse tokenResponse,
+    SessionStateChangeReason reason,
+  ) async {
     final idToken = tokenResponse.idToken;
     if (idToken != null) {
       _idToken = idToken;
@@ -1268,9 +1328,9 @@ class Authgear implements AuthgearHttpClientDelegate {
     }
 
     final expiresIn = tokenResponse.expiresIn!;
-    _expireAt = DateTime.now()
-        .toUtc()
-        .add(Duration(seconds: (expiresIn * _expiresInPercentage).toInt()));
+    _expireAt = DateTime.now().toUtc().add(
+          Duration(seconds: (expiresIn * _expiresInPercentage).toInt()),
+        );
 
     _setSessionState(SessionState.authenticated, reason);
   }
@@ -1292,7 +1352,8 @@ class Authgear implements AuthgearHttpClientDelegate {
   }
 
   Future<AppSessionTokenResponse> _getAppSessionToken(
-      String refreshToken) async {
+    String refreshToken,
+  ) async {
     try {
       return await _apiClient.getAppSessionToken(refreshToken);
     } catch (e) {

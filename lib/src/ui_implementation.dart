@@ -5,10 +5,11 @@ import 'native.dart' as native;
 var _rng = math.Random.secure();
 
 abstract class UIImplementation {
-  Future<String> openAuthorizationURL(
-      {required String url,
-      required String redirectURI,
-      required bool shareCookiesWithDeviceBrowser});
+  Future<String> openAuthorizationURL({
+    required String url,
+    required String redirectURI,
+    required bool shareCookiesWithDeviceBrowser,
+  });
 }
 
 class DeviceBrowserUIImplementation implements UIImplementation {
@@ -27,11 +28,7 @@ class DeviceBrowserUIImplementation implements UIImplementation {
   }
 }
 
-enum ModalPresentationStyle {
-  automatic,
-  fullScreen,
-  pageSheet,
-}
+enum ModalPresentationStyle { automatic, fullScreen, pageSheet }
 
 extension ModalPresentationStyleExtension on ModalPresentationStyle {
   String get value {
@@ -89,9 +86,7 @@ class WebKitWebViewUIImplementationOptions {
 class WebKitWebViewUIImplementation implements UIImplementation {
   final WebKitWebViewUIImplementationOptions? options;
 
-  WebKitWebViewUIImplementation({
-    this.options,
-  });
+  WebKitWebViewUIImplementation({this.options});
 
   @override
   Future<String> openAuthorizationURL({

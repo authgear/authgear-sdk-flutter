@@ -62,10 +62,7 @@ Future<Map> getDeviceInfo() async {
 
 Future<void> storageSetItem(String key, String value) async {
   try {
-    await _channel.invokeMethod("storageSetItem", {
-      "key": key,
-      "value": value,
-    });
+    await _channel.invokeMethod("storageSetItem", {"key": key, "value": value});
   } on PlatformException catch (e) {
     throw wrapException(e);
   }
@@ -73,9 +70,7 @@ Future<void> storageSetItem(String key, String value) async {
 
 Future<String?> storageGetItem(String key) async {
   try {
-    return await _channel.invokeMethod("storageGetItem", {
-      "key": key,
-    });
+    return await _channel.invokeMethod("storageGetItem", {"key": key});
   } on PlatformException catch (e) {
     throw wrapException(e);
   }
@@ -83,9 +78,7 @@ Future<String?> storageGetItem(String key) async {
 
 Future<void> storageDeleteItem(String key) async {
   try {
-    await _channel.invokeMethod("storageDeleteItem", {
-      "key": key,
-    });
+    await _channel.invokeMethod("storageDeleteItem", {"key": key});
   } on PlatformException catch (e) {
     throw wrapException(e);
   }
@@ -205,13 +198,9 @@ Future<bool> checkDPoPSupported() async {
   }
 }
 
-Future<void> createDPoPPrivateKey({
-  required String kid,
-}) async {
+Future<void> createDPoPPrivateKey({required String kid}) async {
   try {
-    return await _channel.invokeMethod("createDPoPPrivateKey", {
-      "kid": kid,
-    });
+    return await _channel.invokeMethod("createDPoPPrivateKey", {"kid": kid});
   } on PlatformException catch (e) {
     throw wrapException(e);
   }
@@ -231,25 +220,17 @@ Future<String> signWithDPoPPrivateKey({
   }
 }
 
-Future<bool> checkDPoPPrivateKey({
-  required String kid,
-}) async {
+Future<bool> checkDPoPPrivateKey({required String kid}) async {
   try {
-    return await _channel.invokeMethod("checkDPoPPrivateKey", {
-      "kid": kid,
-    });
+    return await _channel.invokeMethod("checkDPoPPrivateKey", {"kid": kid});
   } on PlatformException catch (e) {
     throw wrapException(e);
   }
 }
 
-Future<String> computeDPoPJKT({
-  required String kid,
-}) async {
+Future<String> computeDPoPJKT({required String kid}) async {
   try {
-    return await _channel.invokeMethod("computeDPoPJKT", {
-      "kid": kid,
-    });
+    return await _channel.invokeMethod("computeDPoPJKT", {"kid": kid});
   } on PlatformException catch (e) {
     throw wrapException(e);
   }

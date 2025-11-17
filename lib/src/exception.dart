@@ -42,7 +42,11 @@ Exception decodeException(dynamic error) {
     final info = error["info"];
     if (name is String && reason is String && message is String) {
       return ServerException(
-          name: name, reason: reason, message: message, info: info);
+        name: name,
+        reason: reason,
+        message: message,
+        info: info,
+      );
     }
   }
 
@@ -140,11 +144,15 @@ class _Tuple<T1, T2> {
 }
 
 const _exceptionMappings = [
-  _Tuple(_isBiometricPrivateKeyNotFoundException,
-      _biometricPrivateKeyNotFoundException),
+  _Tuple(
+    _isBiometricPrivateKeyNotFoundException,
+    _biometricPrivateKeyNotFoundException,
+  ),
   _Tuple(_isBiometricCancel, _cancelException),
-  _Tuple(_isBiometricNotSupportedOrPermissionDeniedException,
-      _biometricNotSupportedOrPermissionDeniedException),
+  _Tuple(
+    _isBiometricNotSupportedOrPermissionDeniedException,
+    _biometricNotSupportedOrPermissionDeniedException,
+  ),
   _Tuple(_isBiometricNoPasscodeException, _biometricNoPasscodeException),
   _Tuple(_isBiometricNoEnrollmentException, _biometricNoEnrollmentException),
   _Tuple(_isBiometricLockoutException, _biometricLockoutException),

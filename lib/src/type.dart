@@ -352,6 +352,7 @@ extension BiometricLAPolicyExtension on BiometricLAPolicy {
 
 class BiometricOptionsIOS {
   final String localizedReason;
+  final String? localizedCancelTitle;
   final BiometricAccessConstraintIOS constraint;
   final BiometricLAPolicy policy;
 
@@ -359,11 +360,13 @@ class BiometricOptionsIOS {
     required this.localizedReason,
     required this.constraint,
     required this.policy,
+    this.localizedCancelTitle,
   });
 
   Map<String, dynamic> toMap() {
     return {
       "localizedReason": localizedReason,
+      "localizedCancelTitle": localizedCancelTitle,
       "constraint": constraint.value,
       "policy": policy.value,
     };

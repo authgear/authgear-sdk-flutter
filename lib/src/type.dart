@@ -342,15 +342,15 @@ class BiometricOptionsIOS {
   }
 }
 
-enum BiometricAccessConstraintAndroid { biometricStrong, deviceCredential }
+enum BiometricAuthenticatorAndroid { biometricStrong, deviceCredential }
 
-extension BiometricAccessConstraintAndroidExtension
-    on BiometricAccessConstraintAndroid {
+extension BiometricAuthenticatorAndroidExtension
+    on BiometricAuthenticatorAndroid {
   String get value {
     switch (this) {
-      case BiometricAccessConstraintAndroid.biometricStrong:
+      case BiometricAuthenticatorAndroid.biometricStrong:
         return "BIOMETRIC_STRONG";
-      case BiometricAccessConstraintAndroid.deviceCredential:
+      case BiometricAuthenticatorAndroid.deviceCredential:
         return "DEVICE_CREDENTIAL";
     }
   }
@@ -361,7 +361,8 @@ class BiometricOptionsAndroid {
   final String subtitle;
   final String description;
   final String negativeButtonText;
-  final List<BiometricAccessConstraintAndroid> constraint;
+  final List<BiometricAuthenticatorAndroid> allowedAuthenticatorsOnEnable;
+  final List<BiometricAuthenticatorAndroid> allowedAuthenticatorsOnAuthenticate;
   final bool invalidatedByBiometricEnrollment;
 
   BiometricOptionsAndroid({
@@ -369,7 +370,8 @@ class BiometricOptionsAndroid {
     required this.subtitle,
     required this.description,
     required this.negativeButtonText,
-    required this.constraint,
+    required this.allowedAuthenticatorsOnEnable,
+    required this.allowedAuthenticatorsOnAuthenticate,
     required this.invalidatedByBiometricEnrollment,
   });
 
@@ -379,7 +381,12 @@ class BiometricOptionsAndroid {
       "subtitle": subtitle,
       "description": description,
       "negativeButtonText": negativeButtonText,
-      "constraint": [for (var i in constraint) i.value],
+      "allowedAuthenticatorsOnEnable": [
+        for (var i in allowedAuthenticatorsOnEnable) i.value,
+      ],
+      "allowedAuthenticatorsOnAuthenticate": [
+        for (var i in allowedAuthenticatorsOnAuthenticate) i.value,
+      ],
       "invalidatedByBiometricEnrollment": invalidatedByBiometricEnrollment,
     };
   }

@@ -24,7 +24,7 @@ export 'src/type.dart'
         AuthenticationPage,
         SettingsPage,
         UserInfo,
-        BiometricAccessConstraintAndroid,
+        BiometricAuthenticatorAndroid,
         BiometricAccessConstraintIOS,
         BiometricOptionsAndroid,
         BiometricOptionsIOS,

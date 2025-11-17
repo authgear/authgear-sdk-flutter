@@ -198,9 +198,7 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
       }
       "checkBiometricSupported" -> {
         val android = call.argument<Map<String, Any>>("android")!!
-        val constraint = android["constraint"] as ArrayList<String>
-        val flags = constraintToFlag(constraint)
-        this.checkBiometricSupported(flags, result)
+        this.checkBiometricSupported(android, result)
       }
       "createBiometricPrivateKey" -> {
         val kid = call.argument<String>("kid")!!
@@ -566,14 +564,17 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
     }
   }
 
-  private fun checkBiometricSupported(flag: Int, result: Result) {
+  private fun checkBiometricSupported(android: Map<String, Any>, result: Result) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
       result.biometricAPILevel()
       return
     }
 
+    val allowedAuthenticatorsOnEnable = android["allowedAuthenticatorsOnEnable"] as ArrayList<String>
+    val allowedAuthenticatorsOnEnableFlags = constraintToFlag(allowedAuthenticatorsOnEnable)
+
     val manager = BiometricManager.from(pluginBinding?.applicationContext!!)
-    val can = manager.canAuthenticate(flag)
+    val can = manager.canAuthenticate(allowedAuthenticatorsOnEnableFlags)
     if (can == BiometricManager.BIOMETRIC_SUCCESS) {
       result.success(null)
       return
@@ -595,13 +596,16 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
       return
     }
 
-    val constraint = android["constraint"] as ArrayList<String>
-    val invalidatedByBiometricEnrollment = android["invalidatedByBiometricEnrollment"] as Boolean
-    val flags = constraintToFlag(constraint)
-    val alias = "com.authgear.keys.biometric." + kid
-    val promptInfo = buildPromptInfo(android, flags)
+    val allowedAuthenticatorsOnEnable = android["allowedAuthenticatorsOnEnable"] as ArrayList<String>
+    val allowedAuthenticatorsOnAuthenticate = android["allowedAuthenticatorsOnAuthenticate"] as ArrayList<String>
+    val allowedAuthenticatorsOnEnableFlags = constraintToFlag(allowedAuthenticatorsOnEnable)
+    val allowedAuthenticatorsOnAuthenticateFlags = constraintToFlag(allowedAuthenticatorsOnAuthenticate)
 
-    val spec = makeBiometricKeyPairSpec(alias, authenticatorTypesToKeyProperties(flags), invalidatedByBiometricEnrollment)
+    val invalidatedByBiometricEnrollment = android["invalidatedByBiometricEnrollment"] as Boolean
+    val alias = "com.authgear.keys.biometric." + kid
+    val promptInfo = buildPromptInfo(android, allowedAuthenticatorsOnEnableFlags)
+
+    val spec = makeBiometricKeyPairSpec(alias, authenticatorTypesToKeyProperties(allowedAuthenticatorsOnAuthenticateFlags), invalidatedByBiometricEnrollment)
 
     try {
       val keyPair = createKeyPair(spec)
@@ -683,10 +687,11 @@ class AuthgearPlugin: FlutterPlugin, ActivityAware, MethodCallHandler, PluginReg
       return
     }
 
-    val constraint = android["constraint"] as ArrayList<String>
-    val flags = constraintToFlag(constraint)
+    val allowedAuthenticatorsOnAuthenticate = android["allowedAuthenticatorsOnAuthenticate"] as ArrayList<String>
+    val allowedAuthenticatorsOnAuthenticateFlags = constraintToFlag(allowedAuthenticatorsOnAuthenticate)
+
     val alias = "com.authgear.keys.biometric." + kid
-    val promptInfo = buildPromptInfo(android, flags)
+    val promptInfo = buildPromptInfo(android, allowedAuthenticatorsOnAuthenticateFlags)
 
     try {
       val keyPair = getKeyPair(alias)

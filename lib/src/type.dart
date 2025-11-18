@@ -1,8 +1,4 @@
-enum SessionState {
-  unknown,
-  noSession,
-  authenticated,
-}
+enum SessionState { unknown, noSession, authenticated }
 
 enum SessionStateChangeReason {
   noToken,
@@ -13,12 +9,7 @@ enum SessionStateChangeReason {
   clear,
 }
 
-enum PromptOption {
-  none,
-  login,
-  consent,
-  selectAccount,
-}
+enum PromptOption { none, login, consent, selectAccount }
 
 extension PromptOptionExtension on PromptOption {
   String get value {
@@ -35,27 +26,13 @@ extension PromptOptionExtension on PromptOption {
   }
 }
 
-enum AuthenticationPage {
-  login,
-  signup,
-}
+enum AuthenticationPage { login, signup }
 
-enum SettingsPage {
-  settings,
-  identity,
-}
+enum SettingsPage { settings, identity }
 
-enum ColorScheme {
-  light,
-  dark,
-}
+enum ColorScheme { light, dark }
 
-enum ResponseType {
-  code,
-  settingsAction,
-  none,
-  preAuthenticatedURLToken,
-}
+enum ResponseType { code, settingsAction, none, preAuthenticatedURLToken }
 
 extension ResponseTypeExtension on ResponseType {
   String get value {
@@ -72,9 +49,7 @@ extension ResponseTypeExtension on ResponseType {
   }
 }
 
-enum ResponseMode {
-  cookie,
-}
+enum ResponseMode { cookie }
 
 extension ResponseModeExtension on ResponseMode {
   String get value {
@@ -119,9 +94,7 @@ extension GrantTypeExtension on GrantType {
   }
 }
 
-enum RequestedTokenType {
-  preAuthenticatedURLToken,
-}
+enum RequestedTokenType { preAuthenticatedURLToken }
 
 extension RequestedTokenTypeExtension on RequestedTokenType {
   String get value {
@@ -132,9 +105,7 @@ extension RequestedTokenTypeExtension on RequestedTokenType {
   }
 }
 
-enum SubjectTokenType {
-  idToken,
-}
+enum SubjectTokenType { idToken }
 
 extension SubjectTokenTypeExtension on SubjectTokenType {
   String get value {
@@ -145,9 +116,7 @@ extension SubjectTokenTypeExtension on SubjectTokenType {
   }
 }
 
-enum ActorTokenType {
-  deviceSecret,
-}
+enum ActorTokenType { deviceSecret }
 
 extension ActorTokenTypeExtension on ActorTokenType {
   String get value {
@@ -352,6 +321,7 @@ extension BiometricLAPolicyExtension on BiometricLAPolicy {
 
 class BiometricOptionsIOS {
   final String localizedReason;
+  final String? localizedCancelTitle;
   final BiometricAccessConstraintIOS constraint;
   final BiometricLAPolicy policy;
 
@@ -359,29 +329,28 @@ class BiometricOptionsIOS {
     required this.localizedReason,
     required this.constraint,
     required this.policy,
+    this.localizedCancelTitle,
   });
 
   Map<String, dynamic> toMap() {
     return {
       "localizedReason": localizedReason,
+      "localizedCancelTitle": localizedCancelTitle,
       "constraint": constraint.value,
       "policy": policy.value,
     };
   }
 }
 
-enum BiometricAccessConstraintAndroid {
-  biometricStrong,
-  deviceCredential,
-}
+enum BiometricAuthenticatorAndroid { biometricStrong, deviceCredential }
 
-extension BiometricAccessConstraintAndroidExtension
-    on BiometricAccessConstraintAndroid {
+extension BiometricAuthenticatorAndroidExtension
+    on BiometricAuthenticatorAndroid {
   String get value {
     switch (this) {
-      case BiometricAccessConstraintAndroid.biometricStrong:
+      case BiometricAuthenticatorAndroid.biometricStrong:
         return "BIOMETRIC_STRONG";
-      case BiometricAccessConstraintAndroid.deviceCredential:
+      case BiometricAuthenticatorAndroid.deviceCredential:
         return "DEVICE_CREDENTIAL";
     }
   }
@@ -392,7 +361,8 @@ class BiometricOptionsAndroid {
   final String subtitle;
   final String description;
   final String negativeButtonText;
-  final List<BiometricAccessConstraintAndroid> constraint;
+  final List<BiometricAuthenticatorAndroid> allowedAuthenticatorsOnEnable;
+  final List<BiometricAuthenticatorAndroid> allowedAuthenticatorsOnAuthenticate;
   final bool invalidatedByBiometricEnrollment;
 
   BiometricOptionsAndroid({
@@ -400,7 +370,8 @@ class BiometricOptionsAndroid {
     required this.subtitle,
     required this.description,
     required this.negativeButtonText,
-    required this.constraint,
+    required this.allowedAuthenticatorsOnEnable,
+    required this.allowedAuthenticatorsOnAuthenticate,
     required this.invalidatedByBiometricEnrollment,
   });
 
@@ -410,7 +381,12 @@ class BiometricOptionsAndroid {
       "subtitle": subtitle,
       "description": description,
       "negativeButtonText": negativeButtonText,
-      "constraint": [for (var i in constraint) i.value],
+      "allowedAuthenticatorsOnEnable": [
+        for (var i in allowedAuthenticatorsOnEnable) i.value,
+      ],
+      "allowedAuthenticatorsOnAuthenticate": [
+        for (var i in allowedAuthenticatorsOnAuthenticate) i.value,
+      ],
       "invalidatedByBiometricEnrollment": invalidatedByBiometricEnrollment,
     };
   }

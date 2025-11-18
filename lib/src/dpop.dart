@@ -10,10 +10,7 @@ class DefaultDPoPProvider implements DPoPProvider {
   final String namespace;
   final InterAppSharedStorage sharedStorage;
 
-  DefaultDPoPProvider({
-    required this.namespace,
-    required this.sharedStorage,
-  });
+  DefaultDPoPProvider({required this.namespace, required this.sharedStorage});
 
   @override
   Future<String?> generateDPoPProof({
@@ -42,19 +39,13 @@ class DefaultDPoPProvider implements DPoPProvider {
       "htu": htu,
     };
     try {
-      return await native.signWithDPoPPrivateKey(
-        kid: kid,
-        payload: payload,
-      );
+      return await native.signWithDPoPPrivateKey(kid: kid, payload: payload);
     } catch (e) {
       // Generate a new key if the original key cannot be used for any reason
       kid = await native.generateUUID();
       await native.createDPoPPrivateKey(kid: kid);
       await sharedStorage.setDPoPKeyID(namespace, kid);
-      return await native.signWithDPoPPrivateKey(
-        kid: kid,
-        payload: payload,
-      );
+      return await native.signWithDPoPPrivateKey(kid: kid, payload: payload);
     }
   }
 
@@ -67,8 +58,9 @@ class DefaultDPoPProvider implements DPoPProvider {
     final existingKeyId = await sharedStorage.getDPoPKeyID(namespace);
     String? kid;
     if (existingKeyId != null) {
-      final existingKeyOK =
-          await native.checkDPoPPrivateKey(kid: existingKeyId);
+      final existingKeyOK = await native.checkDPoPPrivateKey(
+        kid: existingKeyId,
+      );
       if (existingKeyOK) {
         kid = existingKeyId;
       }

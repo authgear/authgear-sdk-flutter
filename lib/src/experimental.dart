@@ -7,12 +7,8 @@ class AuthgearExperimental {
 
   AuthgearExperimental(this.authgear);
 
-  Future<Uri> generateURL({
-    required String redirectURI,
-  }) async {
-    final uri = await authgear.internalGenerateURL(
-      redirectURI: redirectURI,
-    );
+  Future<Uri> generateURL({required String redirectURI}) async {
+    final uri = await authgear.internalGenerateURL(redirectURI: redirectURI);
     return uri;
   }
 
@@ -59,7 +55,9 @@ class AuthgearExperimental {
       wechatRedirectURI: wechatRedirectURI,
     );
     final request = await authgear.internalCreateReauthenticateRequest(
-        idTokenHint, options);
+      idTokenHint,
+      options,
+    );
     return AuthenticateRequest.fromInternal(request);
   }
 

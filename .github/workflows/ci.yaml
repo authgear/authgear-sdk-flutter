@@ -29,6 +29,9 @@ jobs:
     - run: make example-flutter-pub-get
     - run: make example-flutter-test
     - run: make example-flutter-analyze
+    # It is extremely important that you have `pub get` run before `dart format`.
+    # Otherwise, the result is unpredictable.
+    # https://github.com/dart-lang/sdk/issues/60163#issuecomment-2680372038
     - run: make example-dart-format
     - run: make example-pod-install
     - run: make example-build-unsigned-ios-app
@@ -50,6 +53,9 @@ jobs:
     - run: make example-flutter-pub-get
     - run: make example-flutter-test
     - run: make example-flutter-analyze
+    # It is extremely important that you have `pub get` run before `dart format`.
+    # Otherwise, the result is unpredictable.
+    # https://github.com/dart-lang/sdk/issues/60163#issuecomment-2680372038
     - run: make example-dart-format
     - run: make example-build-unsigned-android-aab
 
@@ -68,6 +74,9 @@ jobs:
     - run: make sdk-flutter-pub-get
     - run: make sdk-flutter-test
     - run: make sdk-flutter-analyze
+    # It is extremely important that you have `pub get` run before `dart format`.
+    # Otherwise, the result is unpredictable.
+    # https://github.com/dart-lang/sdk/issues/60163#issuecomment-2680372038
     - run: make sdk-dart-format
     # Install the latest dartdoc to avoid a bug
     # See DEVELOPER.md
@@ -100,6 +109,9 @@ jobs:
     - run: make example-flutter-pub-get
     - run: make example-flutter-test
     - run: make example-flutter-analyze
+    # It is extremely important that you have `pub get` run before `dart format`.
+    # Otherwise, the result is unpredictable.
+    # https://github.com/dart-lang/sdk/issues/60163#issuecomment-2680372038
     - run: make example-dart-format
     - run: make example-pod-install
     - uses: authgear/gh-actions-install-apple-certificate-and-provisioning-profile@v1
@@ -140,6 +152,9 @@ jobs:
     - run: make example-flutter-pub-get
     - run: make example-flutter-test
     - run: make example-flutter-analyze
+    # It is extremely important that you have `pub get` run before `dart format`.
+    # Otherwise, the result is unpredictable.
+    # https://github.com/dart-lang/sdk/issues/60163#issuecomment-2680372038
     - run: make example-dart-format
     - name: Build aab
       if: ${{ github.ref == 'refs/heads/main' }}

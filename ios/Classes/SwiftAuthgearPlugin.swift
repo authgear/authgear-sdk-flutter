@@ -397,9 +397,10 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
   private func checkBiometricSupported(arguments: [String: AnyObject], result: @escaping FlutterResult) {
     let ios = arguments["ios"] as! [String: Any]
     let policyString = ios["policy"] as! String
+    let localizedCancelTitle = ios["localizedCancelTitle"] as? String
     if #available(iOS 11.3, *) {
       let policy = LAPolicy(policyString: policyString)
-      let laContext = LAContext(policy: policy)
+      let laContext = LAContext(policy: policy, localizedCancelTitle: localizedCancelTitle)
       var nsError: NSError? = nil
       _ = laContext.canEvaluatePolicy(policy, error: &nsError)
       if let nsError = nsError {
@@ -418,13 +419,14 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     let ios = arguments["ios"] as! [String: Any]
     let constraint = ios["constraint"] as! String
     let localizedReason = ios["localizedReason"] as! String
+    let localizedCancelTitle = ios["localizedCancelTitle"] as? String
     let policyString = ios["policy"] as! String
     let tag = "com.authgear.keys.biometric.\(kid)"
 
     if #available(iOS 11.3, *) {
       let policy = LAPolicy(policyString: policyString)
       let flags = SecAccessControlCreateFlags(constraint: constraint)
-      let laContext = LAContext(policy: policy)
+      let laContext = LAContext(policy: policy, localizedCancelTitle: localizedCancelTitle)
       laContext.evaluatePolicy(policy, localizedReason: localizedReason) { _, error in
         DispatchQueue.main.async {
           if let error = error {
@@ -511,12 +513,13 @@ public class SwiftAuthgearPlugin: NSObject, FlutterPlugin, ASWebAuthenticationPr
     let payload = arguments["payload"] as! [String: Any]
     let ios = arguments["ios"] as! [String: Any]
     let localizedReason = ios["localizedReason"] as! String
+    let localizedCancelTitle = ios["localizedCancelTitle"] as? String
     let policyString = ios["policy"] as! String
     let tag = "com.authgear.keys.biometric.\(kid)"
 
     if #available(iOS 11.3, *) {
       let policy = LAPolicy(policyString: policyString)
-      let laContext = LAContext(policy: policy)
+      let laContext = LAContext(policy: policy, localizedCancelTitle: localizedCancelTitle)
       laContext.evaluatePolicy(policy, localizedReason: localizedReason) { _, error in
         DispatchQueue.main.async {
           if let error = error {
@@ -961,13 +964,14 @@ fileprivate extension LAPolicy {
 }
 
 fileprivate extension LAContext {
-  convenience init(policy: LAPolicy) {
+  convenience init(policy: LAPolicy, localizedCancelTitle: String?) {
     self.init()
     if case .deviceOwnerAuthenticationWithBiometrics = policy {
       // Hide the fallback button
       // https://developer.apple.com/documentation/localauthentication/lacontext/1514183-localizedfallbacktitle
       self.localizedFallbackTitle = ""
     }
+    self.localizedCancelTitle = localizedCancelTitle
   }
 }
 

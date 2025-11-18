@@ -57,6 +57,7 @@ class MyApp extends StatefulWidget {
 
 final ios = BiometricOptionsIOS(
   localizedReason: "Use biometric to sign in",
+  localizedCancelTitle: "Customized Cancel",
   constraint: BiometricAccessConstraintIOS.biometryCurrentSet,
   policy: BiometricLAPolicy.deviceOwnerAuthenticationWithBiometrics,
 );
@@ -65,8 +66,14 @@ final android = BiometricOptionsAndroid(
   title: "Sign in with biometric",
   subtitle: "Sign in securely with biometric",
   description: "Use your enrolled biometric to sign in",
-  negativeButtonText: "Cancel",
-  constraint: [BiometricAccessConstraintAndroid.biometricStrong],
+  negativeButtonText: "Customized Cancel",
+  allowedAuthenticatorsOnEnable: [
+    BiometricAuthenticatorAndroid.biometricStrong
+  ],
+  allowedAuthenticatorsOnAuthenticate: [
+    BiometricAuthenticatorAndroid.biometricStrong,
+    BiometricAuthenticatorAndroid.deviceCredential
+  ],
   invalidatedByBiometricEnrollment: true,
 );
 

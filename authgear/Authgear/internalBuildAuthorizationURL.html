@@ -68,10 +68,12 @@
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
   <pre class="language-dart"><code class="language-dart">Future&lt;Uri&gt; internalBuildAuthorizationURL(
-    OIDCAuthenticationRequest oidcRequest) async {
+  OIDCAuthenticationRequest oidcRequest,
+) async {
   final config = await _apiClient.fetchOIDCConfiguration();
-  final authenticationURL = Uri.parse(config.authorizationEndpoint)
-      .replace(queryParameters: oidcRequest.toQueryParameters());
+  final authenticationURL = Uri.parse(
+    config.authorizationEndpoint,
+  ).replace(queryParameters: oidcRequest.toQueryParameters());
   return authenticationURL;
 }</code></pre>
 </section>

@@ -67,12 +67,8 @@
     
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
-  <pre class="language-dart"><code class="language-dart">Future&lt;Uri&gt; generateURL({
-  required String redirectURI,
-}) async {
-  final uri = await authgear.internalGenerateURL(
-    redirectURI: redirectURI,
-  );
+  <pre class="language-dart"><code class="language-dart">Future&lt;Uri&gt; generateURL({required String redirectURI}) async {
+  final uri = await authgear.internalGenerateURL(redirectURI: redirectURI);
   return uri;
 }</code></pre>
 </section>

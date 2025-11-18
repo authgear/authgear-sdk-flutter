@@ -93,7 +93,9 @@ Future&lt;void&gt; refreshAccessToken() async {
     try {
       final tokenResponse = await _apiClient.sendTokenRequest(tokenRequest);
       await _persistTokenResponse(
-          tokenResponse, SessionStateChangeReason.foundToken);
+        tokenResponse,
+        SessionStateChangeReason.foundToken,
+      );
     } catch (e) {
       await _handleInvalidGrantException(e);
       if (e is OAuthException &amp;&amp; e.error == &quot;invalid_grant&quot;) {

@@ -72,7 +72,12 @@
     &quot;subtitle&quot;: subtitle,
     &quot;description&quot;: description,
     &quot;negativeButtonText&quot;: negativeButtonText,
-    &quot;constraint&quot;: [for (var i in constraint) i.value],
+    &quot;allowedAuthenticatorsOnEnable&quot;: [
+      for (var i in allowedAuthenticatorsOnEnable) i.value,
+    ],
+    &quot;allowedAuthenticatorsOnAuthenticate&quot;: [
+      for (var i in allowedAuthenticatorsOnAuthenticate) i.value,
+    ],
     &quot;invalidatedByBiometricEnrollment&quot;: invalidatedByBiometricEnrollment,
   };
 }</code></pre>

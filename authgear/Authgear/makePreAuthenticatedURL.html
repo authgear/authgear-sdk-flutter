@@ -75,12 +75,16 @@
   String? state,
 }) async {
   if (!preAuthenticatedURLEnabled) {
-    throw AuthgearException(Exception(
-        &quot;makePreAuthenticatedURL requires preAuthenticatedURLEnabled to be true&quot;));
+    throw AuthgearException(
+      Exception(
+        &quot;makePreAuthenticatedURL requires preAuthenticatedURLEnabled to be true&quot;,
+      ),
+    );
   }
   if (!(sessionState == SessionState.authenticated)) {
     throw AuthgearException(
-        Exception(&quot;makePreAuthenticatedURL requires authenticated user&quot;));
+      Exception(&quot;makePreAuthenticatedURL requires authenticated user&quot;),
+    );
   }
   var idToken = await _sharedStorage.getIDToken(name);
   if (idToken == null || idToken.isEmpty) {

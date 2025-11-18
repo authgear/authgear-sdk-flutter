@@ -68,7 +68,8 @@
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
   <pre class="language-dart"><code class="language-dart">Future&lt;InternalAuthenticateRequest&gt; internalCreateAuthenticateRequest(
-    AuthenticateOptions options) async {
+  AuthenticateOptions options,
+) async {
   final codeVerifier = CodeVerifier(_rng);
   final dpopJKT = await _dpopProvider.computeJKT();
   final oidcRequest = options.toRequest(clientID, codeVerifier, dpopJKT);

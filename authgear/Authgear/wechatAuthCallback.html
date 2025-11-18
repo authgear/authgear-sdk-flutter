@@ -72,10 +72,7 @@
   required String state,
   required String code,
 }) async {
-  await _apiClient.sendWechatAuthCallback(
-    state: state,
-    code: code,
-  );
+  await _apiClient.sendWechatAuthCallback(state: state, code: code);
 }</code></pre>
 </section>
 

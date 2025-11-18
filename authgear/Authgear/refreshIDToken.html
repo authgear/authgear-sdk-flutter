@@ -81,8 +81,10 @@
   );
 
   try {
-    final tokenResponse = await _apiClient.sendTokenRequest(tokenRequest,
-        includeAccessToken: true);
+    final tokenResponse = await _apiClient.sendTokenRequest(
+      tokenRequest,
+      includeAccessToken: true,
+    );
     final idToken = tokenResponse.idToken;
     if (idToken != null) {
       _idToken = idToken;

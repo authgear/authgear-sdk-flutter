@@ -81,11 +81,12 @@
     throw Exception(&quot;authenticated user required&quot;);
   }
   final appSessionTokenResp = await _getAppSessionToken(refreshToken);
-  final loginHint =
-      Uri.parse(&quot;https:&#47;&#47;authgear.com&#47;login_hint&quot;).replace(queryParameters: {
-    &quot;type&quot;: &quot;app_session_token&quot;,
-    &quot;app_session_token&quot;: appSessionTokenResp.appSessionToken,
-  }).toString();
+  final loginHint = Uri.parse(&quot;https:&#47;&#47;authgear.com&#47;login_hint&quot;).replace(
+    queryParameters: {
+      &quot;type&quot;: &quot;app_session_token&quot;,
+      &quot;app_session_token&quot;: appSessionTokenResp.appSessionToken,
+    },
+  ).toString();
 
   final oidcRequest = OIDCAuthenticationRequest(
     clientID: clientID,
@@ -104,8 +105,9 @@
     wechatRedirectURI: wechatRedirectURI,
   );
   final config = await _apiClient.fetchOIDCConfiguration();
-  return Uri.parse(config.authorizationEndpoint)
-      .replace(queryParameters: oidcRequest.toQueryParameters());
+  return Uri.parse(
+    config.authorizationEndpoint,
+  ).replace(queryParameters: oidcRequest.toQueryParameters());
 }</code></pre>
 </section>
 

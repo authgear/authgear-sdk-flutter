@@ -84,20 +84,21 @@
   String? wechatRedirectURI,
   String? authenticationFlowGroup,
 }) async {
-  final authRequest =
-      await internalCreateAuthenticateRequest(AuthenticateOptions(
-    redirectURI: redirectURI,
-    isSsoEnabled: isSsoEnabled,
-    preAuthenticatedURLEnabled: preAuthenticatedURLEnabled,
-    state: null,
-    prompt: prompt,
-    uiLocales: uiLocales,
-    colorScheme: colorScheme,
-    oauthProviderAlias: oauthProviderAlias,
-    wechatRedirectURI: wechatRedirectURI,
-    page: page,
-    authenticationFlowGroup: authenticationFlowGroup,
-  ));
+  final authRequest = await internalCreateAuthenticateRequest(
+    AuthenticateOptions(
+      redirectURI: redirectURI,
+      isSsoEnabled: isSsoEnabled,
+      preAuthenticatedURLEnabled: preAuthenticatedURLEnabled,
+      state: null,
+      prompt: prompt,
+      uiLocales: uiLocales,
+      colorScheme: colorScheme,
+      oauthProviderAlias: oauthProviderAlias,
+      wechatRedirectURI: wechatRedirectURI,
+      page: page,
+      authenticationFlowGroup: authenticationFlowGroup,
+    ),
+  );
 
   final resultURL = await _uiImplementation.openAuthorizationURL(
     url: authRequest.url.toString(),
@@ -105,9 +106,10 @@
     shareCookiesWithDeviceBrowser: isSsoEnabled,
   );
   return await internalFinishAuthentication(
-      url: Uri.parse(resultURL),
-      redirectURI: redirectURI,
-      codeVerifier: authRequest.verifier);
+    url: Uri.parse(resultURL),
+    redirectURI: redirectURI,
+    codeVerifier: authRequest.verifier,
+  );
 }</code></pre>
 </section>
 

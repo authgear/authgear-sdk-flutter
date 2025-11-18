@@ -111,8 +111,10 @@
     authenticationFlowGroup: authenticationFlowGroup,
   );
 
-  final request =
-      await internalCreateReauthenticateRequest(idTokenHint, options);
+  final request = await internalCreateReauthenticateRequest(
+    idTokenHint,
+    options,
+  );
 
   final resultURL = await _uiImplementation.openAuthorizationURL(
     url: request.url.toString(),
@@ -121,10 +123,11 @@
   );
   final xDeviceInfo = await _getXDeviceInfo();
   return await _finishReauthentication(
-      url: Uri.parse(resultURL),
-      redirectURI: redirectURI,
-      codeVerifier: request.verifier,
-      xDeviceInfo: xDeviceInfo);
+    url: Uri.parse(resultURL),
+    redirectURI: redirectURI,
+    codeVerifier: request.verifier,
+    xDeviceInfo: xDeviceInfo,
+  );
 }</code></pre>
 </section>
 

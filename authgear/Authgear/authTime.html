@@ -78,8 +78,10 @@
   final payload = decodeIDToken(idToken);
   final authTimeValue = payload[&quot;auth_time&quot;];
   if (authTimeValue is num) {
-    return DateTime.fromMillisecondsSinceEpoch(authTimeValue.toInt() * 1000,
-        isUtc: true);
+    return DateTime.fromMillisecondsSinceEpoch(
+      authTimeValue.toInt() * 1000,
+      isUtc: true,
+    );
   }
   return null;
 }</code></pre>

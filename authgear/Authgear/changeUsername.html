@@ -70,11 +70,12 @@
     
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
-  <pre class="language-dart"><code class="language-dart">Future&lt;void&gt; changeUsername(
-    {required String redirectURI,
-    required String originalUsername,
-    List&lt;String&gt;? uiLocales,
-    ColorScheme? colorScheme}) async {
+  <pre class="language-dart"><code class="language-dart">Future&lt;void&gt; changeUsername({
+  required String redirectURI,
+  required String originalUsername,
+  List&lt;String&gt;? uiLocales,
+  ColorScheme? colorScheme,
+}) async {
   await _openSettingsAction(
     action: SettingsAction.changeUsername,
     redirectURI: redirectURI,

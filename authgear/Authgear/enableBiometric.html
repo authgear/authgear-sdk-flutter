@@ -74,8 +74,9 @@
 }) async {
   final kid = await native.generateUUID();
   final deviceInfo = await native.getDeviceInfo();
-  final challengeResponse =
-      await _apiClient.getChallenge(&quot;biometric_request&quot;);
+  final challengeResponse = await _apiClient.getChallenge(
+    &quot;biometric_request&quot;,
+  );
   final now = DateTime.now().toUtc().millisecondsSinceEpoch &#47; 1000;
   final payload = {
     &quot;iat&quot;: now,
@@ -90,10 +91,9 @@
     ios: ios,
     android: android,
   );
-  await _sendSetupBiometricRequest(BiometricRequest(
-    clientID: clientID,
-    jwt: jwt,
-  ));
+  await _sendSetupBiometricRequest(
+    BiometricRequest(clientID: clientID, jwt: jwt),
+  );
   await _storage.setBiometricKeyID(name, kid);
 }</code></pre>
 </section>

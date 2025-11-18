@@ -71,13 +71,18 @@
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
   <pre class="language-dart"><code class="language-dart">Future&lt;InternalAuthenticateRequest&gt; internalCreateSettingsActionRequest(
-    String clientID,
-    String idTokenHint,
-    String loginHint,
-    SettingsActionOptions options) async {
+  String clientID,
+  String idTokenHint,
+  String loginHint,
+  SettingsActionOptions options,
+) async {
   final codeVerifier = CodeVerifier(_rng);
-  final oidcRequest =
-      options.toRequest(clientID, idTokenHint, loginHint, codeVerifier);
+  final oidcRequest = options.toRequest(
+    clientID,
+    idTokenHint,
+    loginHint,
+    codeVerifier,
+  );
   final url = await internalBuildAuthorizationURL(oidcRequest);
 
   return InternalAuthenticateRequest(

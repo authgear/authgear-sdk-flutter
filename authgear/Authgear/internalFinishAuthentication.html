@@ -82,7 +82,9 @@
     xDeviceInfo: xDeviceInfo,
   );
   await _persistTokenResponse(
-      tokenResponse, SessionStateChangeReason.authenticated);
+    tokenResponse,
+    SessionStateChangeReason.authenticated,
+  );
   await disableBiometric();
   final userInfo = await _apiClient.getUserInfo();
   return userInfo;

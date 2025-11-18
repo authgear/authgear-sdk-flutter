@@ -89,7 +89,9 @@
     wechatRedirectURI: wechatRedirectURI,
   );
   final request = await authgear.internalCreateReauthenticateRequest(
-      idTokenHint, options);
+    idTokenHint,
+    options,
+  );
   return AuthenticateRequest.fromInternal(request);
 }</code></pre>
 </section>

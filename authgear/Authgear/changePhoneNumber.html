@@ -70,11 +70,12 @@
     
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
-  <pre class="language-dart"><code class="language-dart">Future&lt;void&gt; changePhoneNumber(
-    {required String redirectURI,
-    required String originalPhoneNumber,
-    List&lt;String&gt;? uiLocales,
-    ColorScheme? colorScheme}) async {
+  <pre class="language-dart"><code class="language-dart">Future&lt;void&gt; changePhoneNumber({
+  required String redirectURI,
+  required String originalPhoneNumber,
+  List&lt;String&gt;? uiLocales,
+  ColorScheme? colorScheme,
+}) async {
   await _openSettingsAction(
     action: SettingsAction.changePhone,
     redirectURI: redirectURI,

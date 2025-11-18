@@ -78,8 +78,9 @@
   }
 
   final deviceInfo = await native.getDeviceInfo();
-  final challengeResponse =
-      await _apiClient.getChallenge(&quot;biometric_request&quot;);
+  final challengeResponse = await _apiClient.getChallenge(
+    &quot;biometric_request&quot;,
+  );
   final now = DateTime.now().toUtc().millisecondsSinceEpoch &#47; 1000;
   final payload = {
     &quot;iat&quot;: now,
@@ -101,11 +102,14 @@
         clientID: clientID,
         jwt: jwt,
         scope: _getAuthenticationScopes(
-            preAuthenticatedURLEnabled: preAuthenticatedURLEnabled),
+          preAuthenticatedURLEnabled: preAuthenticatedURLEnabled,
+        ),
       ),
     );
     await _persistTokenResponse(
-        tokenResponse, SessionStateChangeReason.authenticated);
+      tokenResponse,
+      SessionStateChangeReason.authenticated,
+    );
     final userInfo = await _apiClient.getUserInfo();
     return userInfo;
   } on BiometricPrivateKeyNotFoundException {

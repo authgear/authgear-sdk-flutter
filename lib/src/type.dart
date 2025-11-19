@@ -1,3 +1,5 @@
+import 'authenticator.dart';
+
 enum SessionState { unknown, noSession, authenticated }
 
 enum SessionStateChangeReason {
@@ -196,11 +198,19 @@ List<String>? parseRoles(dynamic roles) {
   return null;
 }
 
+List<Authenticator>? parseAuthenticators(dynamic authenticators) {
+  if (authenticators is List) {
+    return authenticators.map((e) => Authenticator.fromJSON(e)).toList();
+  }
+  return null;
+}
+
 class UserInfo {
   final String sub;
   final bool isAnonymous;
   final bool isVerified;
   final bool canReauthenticate;
+  final bool? recoveryCodeEnabled;
   final List<String>? roles;
 
   final Map<String, dynamic> raw;
@@ -224,6 +234,7 @@ class UserInfo {
   final String? zoneinfo;
   final String? locale;
   final UserInfoAddress? address;
+  final List<Authenticator>? authenticators;
 
   UserInfo.fromJSON(dynamic json)
       : sub = json["sub"],
@@ -231,6 +242,8 @@ class UserInfo {
         isVerified = json["https://authgear.com/claims/user/is_verified"],
         canReauthenticate =
             json["https://authgear.com/claims/user/can_reauthenticate"],
+        recoveryCodeEnabled =
+            json["https://authgear.com/claims/user/recovery_code_enabled"],
         roles = parseRoles(json["https://authgear.com/claims/user/roles"]),
         raw = json,
         customAttributes = json["custom_attributes"] ?? {},
@@ -253,7 +266,9 @@ class UserInfo {
         locale = json["locale"],
         address = json["address"] != null
             ? UserInfoAddress.fromJSON(json["address"])
-            : null;
+            : null,
+        authenticators = parseAuthenticators(
+            json["https://authgear.com/claims/user/authenticators"]);
 }
 
 class OIDCConfiguration {

@@ -2,7 +2,9 @@
 
 Read https://dart.dev/tools/pub/publishing
 
-Basically you bump the version with a new commit, and then run `flutter pub publish`
+Basically you bump the version with a new commit, and then run `flutter pub publish`.
+
+Then run `cd example && flutter pub get`
 
 ## Known issue
 

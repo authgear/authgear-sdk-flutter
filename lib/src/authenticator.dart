@@ -3,18 +3,12 @@ class Authenticator {
   final DateTime updatedAt;
   final AuthenticatorType type;
   final AuthenticatorKind kind;
-  final String? displayName;
-  final String? email;
-  final String? phone;
 
   Authenticator.fromJSON(dynamic json)
       : createdAt = DateTime.parse(json["created_at"]),
         updatedAt = DateTime.parse(json["updated_at"]),
         type = AuthenticatorTypeExtension.parse(json["type"]),
-        kind = AuthenticatorKindExtension.parse(json["kind"]),
-        displayName = json["display_name"],
-        email = json["email"],
-        phone = json["phone"];
+        kind = AuthenticatorKindExtension.parse(json["kind"]);
 }
 
 enum AuthenticatorType {

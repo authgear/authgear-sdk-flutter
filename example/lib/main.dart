@@ -872,8 +872,10 @@ class _MyAppState extends State<MyApp> {
         builder: (BuildContext context) {
           return AlertDialog(
             title: const Text("User Info"),
-            content:
-                Text(const JsonEncoder.withIndent("  ").convert(userInfo.raw)),
+            content: SingleChildScrollView(
+              child: Text(
+                  const JsonEncoder.withIndent("  ").convert(userInfo.raw)),
+            ),
             actions: [
               TextButton(
                 child: const Text("OK"),

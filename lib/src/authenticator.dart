@@ -16,6 +16,7 @@ enum AuthenticatorType {
   oobOtpEmail,
   oobOtpSms,
   totp,
+  passkey,
   unknown,
 }
 
@@ -30,6 +31,8 @@ extension AuthenticatorTypeExtension on AuthenticatorType {
         return "oob_otp_sms";
       case AuthenticatorType.totp:
         return "totp";
+      case AuthenticatorType.passkey:
+        return "passkey";
       case AuthenticatorType.unknown:
         return "unknown";
     }
@@ -45,6 +48,8 @@ extension AuthenticatorTypeExtension on AuthenticatorType {
         return AuthenticatorType.oobOtpSms;
       case "totp":
         return AuthenticatorType.totp;
+      case "passkey":
+        return AuthenticatorType.passkey;
       default:
         return AuthenticatorType.unknown;
     }

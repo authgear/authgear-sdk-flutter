@@ -69,6 +69,8 @@
       isVerified = json[&quot;https:&#47;&#47;authgear.com&#47;claims&#47;user&#47;is_verified&quot;],
       canReauthenticate =
           json[&quot;https:&#47;&#47;authgear.com&#47;claims&#47;user&#47;can_reauthenticate&quot;],
+      recoveryCodeEnabled =
+          json[&quot;https:&#47;&#47;authgear.com&#47;claims&#47;user&#47;recovery_code_enabled&quot;],
       roles = parseRoles(json[&quot;https:&#47;&#47;authgear.com&#47;claims&#47;user&#47;roles&quot;]),
       raw = json,
       customAttributes = json[&quot;custom_attributes&quot;] ?? {},
@@ -91,7 +93,9 @@
       locale = json[&quot;locale&quot;],
       address = json[&quot;address&quot;] != null
           ? UserInfoAddress.fromJSON(json[&quot;address&quot;])
-          : null;</code></pre>
+          : null,
+      authenticators = parseAuthenticators(
+          json[&quot;https:&#47;&#47;authgear.com&#47;claims&#47;user&#47;authenticators&quot;]);</code></pre>
 </section>
 
 

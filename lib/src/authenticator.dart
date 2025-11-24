@@ -16,6 +16,8 @@ enum AuthenticatorType {
   oobOtpEmail,
   oobOtpSms,
   totp,
+  passkey,
+  unknown,
 }
 
 extension AuthenticatorTypeExtension on AuthenticatorType {
@@ -29,6 +31,10 @@ extension AuthenticatorTypeExtension on AuthenticatorType {
         return "oob_otp_sms";
       case AuthenticatorType.totp:
         return "totp";
+      case AuthenticatorType.passkey:
+        return "passkey";
+      case AuthenticatorType.unknown:
+        return "unknown";
     }
   }
 
@@ -42,8 +48,10 @@ extension AuthenticatorTypeExtension on AuthenticatorType {
         return AuthenticatorType.oobOtpSms;
       case "totp":
         return AuthenticatorType.totp;
+      case "passkey":
+        return AuthenticatorType.passkey;
       default:
-        throw Exception("unknown authenticator type: $value");
+        return AuthenticatorType.unknown;
     }
   }
 }
@@ -51,6 +59,7 @@ extension AuthenticatorTypeExtension on AuthenticatorType {
 enum AuthenticatorKind {
   primary,
   secondary,
+  unknown,
 }
 
 extension AuthenticatorKindExtension on AuthenticatorKind {
@@ -60,6 +69,8 @@ extension AuthenticatorKindExtension on AuthenticatorKind {
         return "primary";
       case AuthenticatorKind.secondary:
         return "secondary";
+      case AuthenticatorKind.unknown:
+        return "unknown";
     }
   }
 
@@ -70,7 +81,7 @@ extension AuthenticatorKindExtension on AuthenticatorKind {
       case "secondary":
         return AuthenticatorKind.secondary;
       default:
-        throw Exception("unknown authenticator kind: $value");
+        return AuthenticatorKind.unknown;
     }
   }
 }

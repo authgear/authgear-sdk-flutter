@@ -98,7 +98,8 @@ Future&lt;void&gt; refreshAccessToken() async {
       );
     } catch (e) {
       await _handleInvalidGrantException(e);
-      if (e is OAuthException &amp;&amp; e.error == &quot;invalid_grant&quot;) {
+      if (e is OAuthException &amp;&amp;
+          (e.error == &quot;invalid_grant&quot; || e.error == &quot;invalid_dpop_proof&quot;)) {
         return;
       }
       rethrow;

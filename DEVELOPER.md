@@ -2,9 +2,14 @@
 
 Read https://dart.dev/tools/pub/publishing
 
-Basically you bump the version with a new commit, and then run `flutter pub publish`.
-
-Then run `cd example && flutter pub get`
+1. Bump the version in `pubspec.yaml` and update `CHANGELOG.md`, in a new commit with the message `Bump version to VERSION`, e.g.:
+   ```
+   Bump version to 5.1.0
+   ```
+2. Run `cd example && flutter pub get` to update the version in `example/pubspec.lock`, and commit that.
+3. Open a PR with these commits, and merge it.
+4. Run `flutter pub publish`.
+5. `git tag VERSION COMMIT`, then push the tag to `authgear` (e.g. `git push authgear VERSION`).
 
 ## Known issue
 

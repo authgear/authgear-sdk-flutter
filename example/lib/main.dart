@@ -259,6 +259,7 @@ class _MyAppState extends State<MyApp> {
   final TextEditingController _clientIDController = TextEditingController();
   final TextEditingController _authenticationFlowGroupController =
       TextEditingController();
+  final TextEditingController _resourceController = TextEditingController();
   final TextEditingController _preAuthenticatedURLClientIDController =
       TextEditingController();
   final TextEditingController _preAuthenticatedURLRedirectURIController =
@@ -361,6 +362,15 @@ class _MyAppState extends State<MyApp> {
                     label: "Authentication Flow Group",
                     hintText: "Enter flow group",
                     controller: _authenticationFlowGroupController,
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  child: TextFieldWithLabel(
+                    label: "Resource",
+                    hintText: "Enter resource URI",
+                    controller: _resourceController,
                   ),
                 ),
                 RadioGroup<AuthenticationPage>(
@@ -739,6 +749,8 @@ class _MyAppState extends State<MyApp> {
         colorScheme: _getColorScheme(context),
         wechatRedirectURI: wechatRedirectURI,
         authenticationFlowGroup: _authenticationFlowGroupController.text,
+        resource:
+            _resourceController.text.isEmpty ? null : _resourceController.text,
       );
       setState(() {
         _userInfo = userInfo;

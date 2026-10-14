@@ -69,6 +69,7 @@ class AuthenticateOptions {
   final String? wechatRedirectURI;
   final AuthenticationPage? page;
   final String? authenticationFlowGroup;
+  final String? resource;
 
   AuthenticateOptions({
     required this.redirectURI,
@@ -83,6 +84,7 @@ class AuthenticateOptions {
     this.wechatRedirectURI,
     this.page,
     this.authenticationFlowGroup,
+    this.resource,
   });
 
   OIDCAuthenticationRequest toRequest(
@@ -109,6 +111,7 @@ class AuthenticateOptions {
       wechatRedirectURI: wechatRedirectURI,
       authenticationFlowGroup: authenticationFlowGroup,
       dpopJKT: dpopJKT,
+      resource: resource,
     );
   }
 }
@@ -380,6 +383,12 @@ class Authgear implements AuthgearHttpClientDelegate {
     String? oauthProviderAlias,
     String? wechatRedirectURI,
     String? authenticationFlowGroup,
+
+    /// Resource indicator (RFC 8707). The URI of an API Resource registered in Authgear Portal.
+    ///
+    /// When it is set, the access tokens of the resulting session have `aud` set to this URI instead of the Authgear endpoint.
+    /// The binding lasts for the whole session, including tokens obtained by refreshing.
+    String? resource,
   }) async {
     final authRequest = await internalCreateAuthenticateRequest(
       AuthenticateOptions(
@@ -394,6 +403,7 @@ class Authgear implements AuthgearHttpClientDelegate {
         wechatRedirectURI: wechatRedirectURI,
         page: page,
         authenticationFlowGroup: authenticationFlowGroup,
+        resource: resource,
       ),
     );
 

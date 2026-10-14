@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `authenticate()` accepts an optional `resource` (RFC 8707 resource indicator). Access tokens of the resulting session, including refreshed ones, have `aud` set to that resource URI. Resource-specific scopes cannot be requested yet.
+
 ## 5.1.0
 
 ### Fixed

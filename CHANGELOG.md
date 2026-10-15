@@ -4,7 +4,8 @@
 
 ### Added
 
-- `authenticate()` accepts an optional `resource` (RFC 8707 resource indicator). Access tokens of the resulting session, including refreshed ones, have `aud` set to that resource URI. Resource-specific scopes cannot be requested yet.
+- `authenticate()` accepts an optional `resource` (RFC 8707 resource indicator). Access tokens of the resulting session, including refreshed ones, have `aud` set to that resource URI.
+- `authenticate()` accepts optional `scopes` to request the scopes of the API resource given in `resource`. They are merged with the scopes required by the SDK, so the scopes required by the SDK are always requested.
 
 ## 5.1.0
 

@@ -39,6 +39,8 @@ import androidx.core.util.TypedValueCompat
 import androidx.core.view.OnApplyWindowInsetsListener
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.webkit.WebSettingsCompat
+import androidx.webkit.WebViewFeature
 
 class WebKitWebViewActivity: AppCompatActivity() {
     companion object {
@@ -344,6 +346,13 @@ class WebKitWebViewActivity: AppCompatActivity() {
         this.mWebView.settings.setSupportMultipleWindows(true)
         this.mWebView.settings.domStorageEnabled = true
         this.mWebView.settings.javaScriptEnabled = true
+        // Let pages use passkeys for domains whose assetlinks.json lists this app.
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_AUTHENTICATION)) {
+            WebSettingsCompat.setWebAuthenticationSupport(
+                this.mWebView.settings,
+                WebSettingsCompat.WEB_AUTHENTICATION_SUPPORT_FOR_APP
+            )
+        }
         this.mWebView.setWebViewClient(MyWebViewClient(this))
         this.mWebView.setWebChromeClient(MyWebChromeClient(this))
 

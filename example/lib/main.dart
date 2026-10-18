@@ -252,6 +252,11 @@ class SessionStateButton extends StatelessWidget {
   }
 }
 
+List<String>? _parseScopes(String scopes) {
+  final list = scopes.split(RegExp(r"\s+")).where((s) => s.isNotEmpty).toList();
+  return list.isEmpty ? null : list;
+}
+
 class _MyAppState extends State<MyApp> {
   Authgear _authgear = Authgear(endpoint: "", clientID: "");
   late SharedPreferences _sharedPreferences;
@@ -259,6 +264,8 @@ class _MyAppState extends State<MyApp> {
   final TextEditingController _clientIDController = TextEditingController();
   final TextEditingController _authenticationFlowGroupController =
       TextEditingController();
+  final TextEditingController _resourceController = TextEditingController();
+  final TextEditingController _scopesController = TextEditingController();
   final TextEditingController _preAuthenticatedURLClientIDController =
       TextEditingController();
   final TextEditingController _preAuthenticatedURLRedirectURIController =
@@ -361,6 +368,24 @@ class _MyAppState extends State<MyApp> {
                     label: "Authentication Flow Group",
                     hintText: "Enter flow group",
                     controller: _authenticationFlowGroupController,
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  child: TextFieldWithLabel(
+                    label: "Resource",
+                    hintText: "Enter resource URI",
+                    controller: _resourceController,
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  child: TextFieldWithLabel(
+                    label: "Scopes",
+                    hintText: "Enter resource scopes separated by space",
+                    controller: _scopesController,
                   ),
                 ),
                 RadioGroup<AuthenticationPage>(
@@ -739,6 +764,9 @@ class _MyAppState extends State<MyApp> {
         colorScheme: _getColorScheme(context),
         wechatRedirectURI: wechatRedirectURI,
         authenticationFlowGroup: _authenticationFlowGroupController.text,
+        resource:
+            _resourceController.text.isEmpty ? null : _resourceController.text,
+        scopes: _parseScopes(_scopesController.text),
       );
       setState(() {
         _userInfo = userInfo;

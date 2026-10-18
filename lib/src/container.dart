@@ -69,6 +69,8 @@ class AuthenticateOptions {
   final String? wechatRedirectURI;
   final AuthenticationPage? page;
   final String? authenticationFlowGroup;
+  final String? resource;
+  final List<String>? scopes;
 
   AuthenticateOptions({
     required this.redirectURI,
@@ -83,6 +85,8 @@ class AuthenticateOptions {
     this.wechatRedirectURI,
     this.page,
     this.authenticationFlowGroup,
+    this.resource,
+    this.scopes,
   });
 
   OIDCAuthenticationRequest toRequest(
@@ -96,6 +100,7 @@ class AuthenticateOptions {
       responseType: ResponseType.code,
       scope: _getAuthenticationScopes(
         preAuthenticatedURLEnabled: preAuthenticatedURLEnabled ?? false,
+        additionalScopes: scopes,
       ),
       isSsoEnabled: isSsoEnabled,
       codeChallenge: verifier.codeChallenge,
@@ -109,12 +114,16 @@ class AuthenticateOptions {
       wechatRedirectURI: wechatRedirectURI,
       authenticationFlowGroup: authenticationFlowGroup,
       dpopJKT: dpopJKT,
+      resource: resource,
     );
   }
 }
 
+/// Returns the scopes to request. [additionalScopes] are merged after the scopes
+/// required by the SDK, so the scopes required by the SDK are always requested.
 List<String> _getAuthenticationScopes({
   required bool preAuthenticatedURLEnabled,
+  List<String>? additionalScopes,
 }) {
   List<String> scopes = [
     "openid",
@@ -126,6 +135,11 @@ List<String> _getAuthenticationScopes({
       "device_sso",
       "https://authgear.com/scopes/pre-authenticated-url",
     ]);
+  }
+  for (final scope in additionalScopes ?? const <String>[]) {
+    if (!scopes.contains(scope)) {
+      scopes.add(scope);
+    }
   }
   return scopes;
 }
@@ -380,6 +394,17 @@ class Authgear implements AuthgearHttpClientDelegate {
     String? oauthProviderAlias,
     String? wechatRedirectURI,
     String? authenticationFlowGroup,
+
+    /// Resource indicator (RFC 8707). The URI of an API Resource registered in Authgear Portal.
+    ///
+    /// When it is set, the access tokens of the resulting session have `aud` set to this URI instead of the Authgear endpoint.
+    /// The binding lasts for the whole session, including tokens obtained by refreshing.
+    String? resource,
+
+    /// Scopes of the API Resource given in [resource] to request.
+    ///
+    /// They are merged with the scopes required by the SDK. The scopes required by the SDK are always requested.
+    List<String>? scopes,
   }) async {
     final authRequest = await internalCreateAuthenticateRequest(
       AuthenticateOptions(
@@ -394,6 +419,8 @@ class Authgear implements AuthgearHttpClientDelegate {
         wechatRedirectURI: wechatRedirectURI,
         page: page,
         authenticationFlowGroup: authenticationFlowGroup,
+        resource: resource,
+        scopes: scopes,
       ),
     );
 

@@ -21,6 +21,8 @@ class AuthgearExperimental {
     ColorScheme? colorScheme,
     String? wechatRedirectURI,
     AuthenticationPage? page,
+    String? resource,
+    List<String>? scopes,
   }) async {
     final options = AuthenticateOptions(
       redirectURI: redirectURI,
@@ -33,6 +35,8 @@ class AuthgearExperimental {
       colorScheme: colorScheme,
       wechatRedirectURI: wechatRedirectURI,
       page: page,
+      resource: resource,
+      scopes: scopes,
     );
     final request = await authgear.internalCreateAuthenticateRequest(options);
     return AuthenticateRequest.fromInternal(request);

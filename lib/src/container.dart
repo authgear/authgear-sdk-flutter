@@ -146,6 +146,18 @@ List<String> _getAuthenticationScopes({
   return scopes;
 }
 
+/// Returns the scopes of an anonymous request, or null to send none.
+/// Like the other SDKs, scopes are sent only when the developer gives some.
+List<String>? getAnonymousScopes(List<String>? scopes) {
+  if (scopes == null) {
+    return null;
+  }
+  return _getAuthenticationScopes(
+    preAuthenticatedURLEnabled: false,
+    additionalScopes: scopes,
+  );
+}
+
 class ReauthenticateOptions {
   final String redirectURI;
   final bool isSsoEnabled;
@@ -1137,10 +1149,7 @@ class Authgear implements AuthgearHttpClientDelegate {
       return AnonymousRequest(
         clientID: clientID,
         jwt: jwt,
-        scope: _getAuthenticationScopes(
-          preAuthenticatedURLEnabled: false,
-          additionalScopes: scopes ?? _defaultScopes,
-        ),
+        scope: getAnonymousScopes(scopes ?? _defaultScopes),
         resource: resource ?? _defaultResource,
       );
     }

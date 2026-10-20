@@ -128,4 +128,19 @@ void main() {
       ]);
     });
   });
+
+  group('getAnonymousScopes', () {
+    test('sends no scope when none is given', () {
+      expect(getAnonymousScopes(null), null);
+    });
+
+    test('merges the given scopes with the scopes required by the SDK', () {
+      expect(getAnonymousScopes(["email"]), [
+        "openid",
+        "offline_access",
+        "https://authgear.com/scopes/full-access",
+        "email",
+      ]);
+    });
+  });
 }

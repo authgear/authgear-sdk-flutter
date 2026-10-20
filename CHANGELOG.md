@@ -9,6 +9,7 @@
 - `authenticateAnonymously()`, `promoteAnonymousUser()` and `authenticateBiometric()` accept optional `resource` and `scopes`, with the same meaning as in `authenticate()`.
 - `makePreAuthenticatedURL()` accepts an optional `resource`.
 - `configure()` accepts optional `resource` and `scopes` as defaults. `resource` applies to `authenticate()`, `authenticateAnonymously()`, `promoteAnonymousUser()`, `authenticateBiometric()` and `makePreAuthenticatedURL()`. `scopes` applies to the first four. A value given to a method replaces the default; the scopes required by the SDK are always requested. `enableBiometric()` never sends them.
+- `authenticateAnonymously()` sends `scope` only when scopes are given by the call or by `configure()`, the same as the other Authgear SDKs. Otherwise it sends none, as before.
 
 ## 5.1.0
 

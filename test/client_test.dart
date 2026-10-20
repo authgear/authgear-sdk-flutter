@@ -52,6 +52,44 @@ void main() {
     expect(r.toQueryParameters().containsKey("resource"), false);
   });
 
+  test("BiometricRequest with scope and resource", () {
+    final q = BiometricRequest(
+      clientID: "clientID",
+      jwt: "jwt",
+      scope: ["openid", "offline_access"],
+      resource: "https://api.example.com/",
+    ).toQueryParameters();
+    expect(q["scope"], "openid offline_access");
+    expect(q["resource"], "https://api.example.com/");
+  });
+
+  test("BiometricRequest without resource", () {
+    final q =
+        BiometricRequest(clientID: "clientID", jwt: "jwt").toQueryParameters();
+    expect(q.containsKey("resource"), false);
+    expect(q.containsKey("scope"), false);
+  });
+
+  test("AnonymousRequest with scope and resource", () {
+    final q = AnonymousRequest(
+      clientID: "clientID",
+      jwt: "jwt",
+      scope: ["openid", "offline_access"],
+      resource: "https://api.example.com/",
+    ).toQueryParameters();
+    expect(q["scope"], "openid offline_access");
+    expect(q["resource"], "https://api.example.com/");
+  });
+
+  test("OIDCTokenRequest with resource", () {
+    final q = OIDCTokenRequest(
+      grantType: GrantType.tokenExchange,
+      clientID: "clientID",
+      resource: "https://api.example.com/",
+    ).toQueryParameters();
+    expect(q["resource"], "https://api.example.com/");
+  });
+
   test("OIDCTokenRequest", () {
     final r = OIDCTokenRequest(
       grantType: GrantType.authorizationCode,

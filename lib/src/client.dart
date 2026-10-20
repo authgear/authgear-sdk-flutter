@@ -199,6 +199,7 @@ class OIDCTokenRequest {
   final String? subjectToken;
   final ActorTokenType? actorTokenType;
   final String? actorToken;
+  final String? resource;
 
   OIDCTokenRequest({
     required this.grantType,
@@ -217,6 +218,7 @@ class OIDCTokenRequest {
     this.subjectToken,
     this.actorTokenType,
     this.actorToken,
+    this.resource,
   });
 
   Map<String, String> toQueryParameters() {
@@ -290,6 +292,11 @@ class OIDCTokenRequest {
       q["actor_token"] = actorToken;
     }
 
+    final resource = this.resource;
+    if (resource != null) {
+      q["resource"] = resource;
+    }
+
     return q;
   }
 }
@@ -315,8 +322,14 @@ class BiometricRequest {
   final String clientID;
   final String jwt;
   final List<String>? scope;
+  final String? resource;
 
-  BiometricRequest({required this.clientID, required this.jwt, this.scope});
+  BiometricRequest({
+    required this.clientID,
+    required this.jwt,
+    this.scope,
+    this.resource,
+  });
 
   Map<String, String> toQueryParameters() {
     Map<String, String> q = {
@@ -328,6 +341,10 @@ class BiometricRequest {
     if (scope != null) {
       q["scope"] = scope.join(" ");
     }
+    final resource = this.resource;
+    if (resource != null) {
+      q["resource"] = resource;
+    }
     return q;
   }
 }
@@ -335,15 +352,31 @@ class BiometricRequest {
 class AnonymousRequest {
   final String clientID;
   final String jwt;
+  final List<String>? scope;
+  final String? resource;
 
-  AnonymousRequest({required this.clientID, required this.jwt});
+  AnonymousRequest({
+    required this.clientID,
+    required this.jwt,
+    this.scope,
+    this.resource,
+  });
 
   Map<String, String> toQueryParameters() {
-    return {
+    final q = {
       "grant_type": "urn:authgear:params:oauth:grant-type:anonymous-request",
       "client_id": clientID,
       "jwt": jwt,
     };
+    final scope = this.scope;
+    if (scope != null) {
+      q["scope"] = scope.join(" ");
+    }
+    final resource = this.resource;
+    if (resource != null) {
+      q["resource"] = resource;
+    }
+    return q;
   }
 }
 

@@ -764,9 +764,6 @@ class _MyAppState extends State<MyApp> {
         colorScheme: _getColorScheme(context),
         wechatRedirectURI: wechatRedirectURI,
         authenticationFlowGroup: _authenticationFlowGroupController.text,
-        resource:
-            _resourceController.text.isEmpty ? null : _resourceController.text,
-        scopes: _parseScopes(_scopesController.text),
       );
       setState(() {
         _userInfo = userInfo;
@@ -1042,7 +1039,12 @@ class _MyAppState extends State<MyApp> {
         _syncAuthgearState();
       });
     });
-    await authgear.configure();
+    // Configure passes them as the defaults of the methods that take them.
+    await authgear.configure(
+      resource:
+          _resourceController.text.isEmpty ? null : _resourceController.text,
+      scopes: _parseScopes(_scopesController.text),
+    );
     await _sharedPreferences.setString(
       "authgear.endpoint",
       endpoint,

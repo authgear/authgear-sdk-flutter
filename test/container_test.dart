@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_authgear/src/code_verifier.dart';
+import 'package:flutter_authgear/src/client.dart';
 import 'package:flutter_authgear/src/container.dart';
 
 void main() {
@@ -74,6 +75,67 @@ void main() {
 
     test('never drops or duplicates the scopes required by the SDK', () {
       expect(requestScope(scopes: ["email", "openid", "email"]), [
+        "openid",
+        "offline_access",
+        "https://authgear.com/scopes/full-access",
+        "email",
+      ]);
+    });
+  });
+
+  group('AuthenticateOptions configure defaults', () {
+    OIDCAuthenticationRequest toRequest({
+      String? resource,
+      List<String>? scopes,
+    }) {
+      final options = AuthenticateOptions(
+        redirectURI: "http://host/path",
+        isSsoEnabled: false,
+        resource: resource,
+        scopes: scopes,
+      );
+      return options.toRequest(
+        "clientID",
+        CodeVerifier(Random.secure()),
+        null,
+        defaultResource: "https://default.example.com/",
+        defaultScopes: ["default"],
+      );
+    }
+
+    test('uses the defaults when the call gives none', () {
+      final r = toRequest();
+      expect(r.resource, "https://default.example.com/");
+      expect(r.scope, [
+        "openid",
+        "offline_access",
+        "https://authgear.com/scopes/full-access",
+        "default",
+      ]);
+    });
+
+    test('replaces the defaults with the values of the call', () {
+      final r = toRequest(
+        resource: "https://call.example.com/",
+        scopes: ["call"],
+      );
+      expect(r.resource, "https://call.example.com/");
+      expect(r.scope, [
+        "openid",
+        "offline_access",
+        "https://authgear.com/scopes/full-access",
+        "call",
+      ]);
+    });
+  });
+
+  group('getAnonymousScopes', () {
+    test('sends no scope when none is given', () {
+      expect(getAnonymousScopes(null), null);
+    });
+
+    test('merges the given scopes with the scopes required by the SDK', () {
+      expect(getAnonymousScopes(["email"]), [
         "openid",
         "offline_access",
         "https://authgear.com/scopes/full-access",

@@ -6,6 +6,7 @@
 	<string>development</string>
 	<key>com.apple.developer.associated-domains</key>
 	<array>
+		<string>webcredentials:demo-app2app.authgear-staging.com</string>
 		<string>applinks:authgear-demo-flutter.pandawork.com</string>
 	</array>
 </dict>

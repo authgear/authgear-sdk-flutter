@@ -55,7 +55,9 @@
     <section class="multi-line-signature">
       
 <span class="returntype"><a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
-<span class="name ">configure</span>(<wbr>)
+<span class="name ">configure</span>(<wbr>{<ol class="parameter-list"> <li><span class="parameter" id="configure-param-resource"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">resource</span>, </span></li>
+<li><span class="parameter" id="configure-param-scopes"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>&gt;</span>?</span> <span class="parameter-name">scopes</span>, </span></li>
+</ol>})
 
       
 
@@ -66,7 +68,20 @@
     
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
-  <pre class="language-dart"><code class="language-dart">Future&lt;void&gt; configure() async {
+  <pre class="language-dart"><code class="language-dart">Future&lt;void&gt; configure({
+  &#47;&#47;&#47; Default resource indicator (RFC 8707) of the methods that take `resource`.
+  &#47;&#47;&#47;
+  &#47;&#47;&#47; It is used only when the call does not give its own `resource`, which replaces it.
+  String? resource,
+
+  &#47;&#47;&#47; Default scopes of the methods that create a new session.
+  &#47;&#47;&#47;
+  &#47;&#47;&#47; They are used only when the call does not give its own `scopes`, which replace them.
+  &#47;&#47;&#47; The scopes required by the SDK are always requested.
+  List&lt;String&gt;? scopes,
+}) async {
+  _defaultResource = resource;
+  _defaultScopes = scopes;
   _refreshToken = await _tokenStorage.getRefreshToken(name);
   final sessionState = _refreshToken == null
       ? SessionState.noSession

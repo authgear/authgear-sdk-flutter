@@ -72,7 +72,13 @@
 ) async {
   final codeVerifier = CodeVerifier(_rng);
   final dpopJKT = await _dpopProvider.computeJKT();
-  final oidcRequest = options.toRequest(clientID, codeVerifier, dpopJKT);
+  final oidcRequest = options.toRequest(
+    clientID,
+    codeVerifier,
+    dpopJKT,
+    defaultResource: _defaultResource,
+    defaultScopes: _defaultScopes,
+  );
   final url = await internalBuildAuthorizationURL(oidcRequest);
 
   return InternalAuthenticateRequest(

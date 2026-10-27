@@ -58,6 +58,7 @@
 <span class="name ">makePreAuthenticatedURL</span>(<wbr>{<ol class="parameter-list"> <li><span class="parameter" id="makePreAuthenticatedURL-param-webApplicationClientID"><span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">webApplicationClientID</span>, </span></li>
 <li><span class="parameter" id="makePreAuthenticatedURL-param-webApplicationURI"><span>required</span> <span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">webApplicationURI</span>, </span></li>
 <li><span class="parameter" id="makePreAuthenticatedURL-param-state"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">state</span>, </span></li>
+<li><span class="parameter" id="makePreAuthenticatedURL-param-resource"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">resource</span>, </span></li>
 </ol>})
 
       
@@ -73,6 +74,10 @@
   required String webApplicationClientID,
   required String webApplicationURI,
   String? state,
+
+  &#47;&#47;&#47; Resource indicator (RFC 8707) of the session of the web application.
+  &#47;&#47;&#47; Defaults to the `resource` given to [configure].
+  String? resource,
 }) async {
   if (!preAuthenticatedURLEnabled) {
     throw AuthgearException(
@@ -103,6 +108,7 @@
     subjectToken: idToken,
     actorTokenType: ActorTokenType.deviceSecret,
     actorToken: deviceSecret,
+    resource: resource ?? _defaultResource,
   );
   final tokenExchangeResult = await _apiClient.sendTokenRequest(tokenRequest);
 

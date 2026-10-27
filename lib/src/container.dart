@@ -92,15 +92,17 @@ class AuthenticateOptions {
   OIDCAuthenticationRequest toRequest(
     String clientID,
     CodeVerifier verifier,
-    String? dpopJKT,
-  ) {
+    String? dpopJKT, {
+    String? defaultResource,
+    List<String>? defaultScopes,
+  }) {
     return OIDCAuthenticationRequest(
       clientID: clientID,
       redirectURI: redirectURI,
       responseType: ResponseType.code,
       scope: _getAuthenticationScopes(
         preAuthenticatedURLEnabled: preAuthenticatedURLEnabled ?? false,
-        additionalScopes: scopes,
+        additionalScopes: scopes ?? defaultScopes,
       ),
       isSsoEnabled: isSsoEnabled,
       codeChallenge: verifier.codeChallenge,
@@ -114,7 +116,7 @@ class AuthenticateOptions {
       wechatRedirectURI: wechatRedirectURI,
       authenticationFlowGroup: authenticationFlowGroup,
       dpopJKT: dpopJKT,
-      resource: resource,
+      resource: resource ?? defaultResource,
     );
   }
 }
@@ -142,6 +144,18 @@ List<String> _getAuthenticationScopes({
     }
   }
   return scopes;
+}
+
+/// Returns the scopes of an anonymous request, or null to send none.
+/// Like the other SDKs, scopes are sent only when the developer gives some.
+List<String>? getAnonymousScopes(List<String>? scopes) {
+  if (scopes == null) {
+    return null;
+  }
+  return _getAuthenticationScopes(
+    preAuthenticatedURLEnabled: false,
+    additionalScopes: scopes,
+  );
 }
 
 class ReauthenticateOptions {
@@ -262,6 +276,9 @@ class Authgear implements AuthgearHttpClientDelegate {
   final bool isSsoEnabled;
   final bool preAuthenticatedURLEnabled;
 
+  String? _defaultResource;
+  List<String>? _defaultScopes;
+
   final TokenStorage _tokenStorage;
   final ContainerStorage _storage;
   final InterAppSharedStorage _sharedStorage;
@@ -341,7 +358,20 @@ class Authgear implements AuthgearHttpClientDelegate {
     experimental = AuthgearExperimental(this);
   }
 
-  Future<void> configure() async {
+  Future<void> configure({
+    /// Default resource indicator (RFC 8707) of the methods that take `resource`.
+    ///
+    /// It is used only when the call does not give its own `resource`, which replaces it.
+    String? resource,
+
+    /// Default scopes of the methods that create a new session.
+    ///
+    /// They are used only when the call does not give its own `scopes`, which replace them.
+    /// The scopes required by the SDK are always requested.
+    List<String>? scopes,
+  }) async {
+    _defaultResource = resource;
+    _defaultScopes = scopes;
     _refreshToken = await _tokenStorage.getRefreshToken(name);
     final sessionState = _refreshToken == null
         ? SessionState.noSession
@@ -375,7 +405,13 @@ class Authgear implements AuthgearHttpClientDelegate {
   ) async {
     final codeVerifier = CodeVerifier(_rng);
     final dpopJKT = await _dpopProvider.computeJKT();
-    final oidcRequest = options.toRequest(clientID, codeVerifier, dpopJKT);
+    final oidcRequest = options.toRequest(
+      clientID,
+      codeVerifier,
+      dpopJKT,
+      defaultResource: _defaultResource,
+      defaultScopes: _defaultScopes,
+    );
     final url = await internalBuildAuthorizationURL(oidcRequest);
 
     return InternalAuthenticateRequest(
@@ -966,6 +1002,12 @@ class Authgear implements AuthgearHttpClientDelegate {
   Future<UserInfo> authenticateBiometric({
     required BiometricOptionsIOS ios,
     required BiometricOptionsAndroid android,
+
+    /// Resource indicator (RFC 8707). See [authenticate]. Defaults to the `resource` given to [configure].
+    String? resource,
+
+    /// Scopes to request. See [authenticate]. Defaults to the `scopes` given to [configure].
+    List<String>? scopes,
   }) async {
     final kid = await _storage.getBiometricKeyID(name);
     if (kid == null) {
@@ -998,7 +1040,9 @@ class Authgear implements AuthgearHttpClientDelegate {
           jwt: jwt,
           scope: _getAuthenticationScopes(
             preAuthenticatedURLEnabled: preAuthenticatedURLEnabled,
+            additionalScopes: scopes ?? _defaultScopes,
           ),
+          resource: resource ?? _defaultResource,
         ),
       );
       await _persistTokenResponse(
@@ -1024,6 +1068,12 @@ class Authgear implements AuthgearHttpClientDelegate {
     String? wechatRedirectURI,
     List<String>? uiLocales,
     ColorScheme? colorScheme,
+
+    /// Resource indicator (RFC 8707). See [authenticate]. Defaults to the `resource` given to [configure].
+    String? resource,
+
+    /// Scopes to request. See [authenticate]. Defaults to the `scopes` given to [configure].
+    List<String>? scopes,
   }) async {
     final kid = await _storage.getAnonymousKeyID(name);
     if (kid == null) {
@@ -1054,11 +1104,10 @@ class Authgear implements AuthgearHttpClientDelegate {
       responseType: ResponseType.code,
       // device_sso and pre-authentictated-url is also not needed,
       // because anonymous users are not allowed to perform SSO.
-      scope: [
-        "openid",
-        "offline_access",
-        "https://authgear.com/scopes/full-access",
-      ],
+      scope: _getAuthenticationScopes(
+        preAuthenticatedURLEnabled: false,
+        additionalScopes: scopes ?? _defaultScopes,
+      ),
       isSsoEnabled: isSsoEnabled,
       codeChallenge: codeVerifier.codeChallenge,
       prompt: [PromptOption.login],
@@ -1066,6 +1115,7 @@ class Authgear implements AuthgearHttpClientDelegate {
       uiLocales: uiLocales,
       colorScheme: colorScheme,
       wechatRedirectURI: wechatRedirectURI,
+      resource: resource ?? _defaultResource,
     );
     final config = await _apiClient.fetchOIDCConfiguration();
     final authenticationURL = Uri.parse(
@@ -1087,18 +1137,37 @@ class Authgear implements AuthgearHttpClientDelegate {
     return userInfo;
   }
 
-  Future<UserInfo> authenticateAnonymously() async {
+  Future<UserInfo> authenticateAnonymously({
+    /// Resource indicator (RFC 8707). See [authenticate]. Defaults to the `resource` given to [configure].
+    String? resource,
+
+    /// Scopes to request. See [authenticate]. Defaults to the `scopes` given to [configure].
+    List<String>? scopes,
+  }) async {
     final kid = await _storage.getAnonymousKeyID(name);
-    if (kid == null) {
-      return _authenticateAnonymouslyCreate();
+    AnonymousRequest makeRequest(String jwt) {
+      return AnonymousRequest(
+        clientID: clientID,
+        jwt: jwt,
+        scope: getAnonymousScopes(scopes ?? _defaultScopes),
+        resource: resource ?? _defaultResource,
+      );
     }
-    return _authenticateAnonymouslyExisting(kid);
+
+    if (kid == null) {
+      return _authenticateAnonymouslyCreate(makeRequest);
+    }
+    return _authenticateAnonymouslyExisting(kid, makeRequest);
   }
 
   Future<Uri> makePreAuthenticatedURL({
     required String webApplicationClientID,
     required String webApplicationURI,
     String? state,
+
+    /// Resource indicator (RFC 8707) of the session of the web application.
+    /// Defaults to the `resource` given to [configure].
+    String? resource,
   }) async {
     if (!preAuthenticatedURLEnabled) {
       throw AuthgearException(
@@ -1129,6 +1198,7 @@ class Authgear implements AuthgearHttpClientDelegate {
       subjectToken: idToken,
       actorTokenType: ActorTokenType.deviceSecret,
       actorToken: deviceSecret,
+      resource: resource ?? _defaultResource,
     );
     final tokenExchangeResult = await _apiClient.sendTokenRequest(tokenRequest);
 
@@ -1173,7 +1243,9 @@ class Authgear implements AuthgearHttpClientDelegate {
     await _apiClient.sendWechatAuthCallback(state: state, code: code);
   }
 
-  Future<UserInfo> _authenticateAnonymouslyCreate() async {
+  Future<UserInfo> _authenticateAnonymouslyCreate(
+    AnonymousRequest Function(String jwt) makeRequest,
+  ) async {
     final challengeResponse = await _apiClient.getChallenge(
       "anonymous_request",
     );
@@ -1190,7 +1262,7 @@ class Authgear implements AuthgearHttpClientDelegate {
       payload: payload,
     );
     final tokenResponse = await _apiClient.sendAuthenticateAnonymousRequest(
-      AnonymousRequest(clientID: clientID, jwt: jwt),
+      makeRequest(jwt),
     );
     await _persistTokenResponse(
       tokenResponse,
@@ -1202,7 +1274,10 @@ class Authgear implements AuthgearHttpClientDelegate {
     return userInfo;
   }
 
-  Future<UserInfo> _authenticateAnonymouslyExisting(String kid) async {
+  Future<UserInfo> _authenticateAnonymouslyExisting(
+    String kid,
+    AnonymousRequest Function(String jwt) makeRequest,
+  ) async {
     final challengeResponse = await _apiClient.getChallenge(
       "anonymous_request",
     );
@@ -1218,7 +1293,7 @@ class Authgear implements AuthgearHttpClientDelegate {
       payload: payload,
     );
     final tokenResponse = await _apiClient.sendAuthenticateAnonymousRequest(
-      AnonymousRequest(clientID: clientID, jwt: jwt),
+      makeRequest(jwt),
     );
     await _persistTokenResponse(
       tokenResponse,

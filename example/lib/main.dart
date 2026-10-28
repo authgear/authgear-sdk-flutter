@@ -357,7 +357,7 @@ class _MyAppState extends State<MyApp> {
                       const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                   child: TextFieldWithLabel(
                     label: "Endpoint",
-                    hintText: "Enter Authegar endpoint",
+                    hintText: "Enter Authgear endpoint",
                     controller: _endpointController,
                   ),
                 ),

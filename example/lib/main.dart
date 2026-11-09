@@ -38,7 +38,7 @@ class MyHTTPClient extends http.BaseClient {
 void main() {
   if (Platform.isIOS) {
     wechatRedirectURI =
-        "https://authgear-demo-flutter.pandawork.com/authgear/open_wechat_app";
+        "https://authgear-demo-flutter.oursky.codes/authgear/open_wechat_app";
   }
   if (Platform.isAndroid) {
     wechatRedirectURI =

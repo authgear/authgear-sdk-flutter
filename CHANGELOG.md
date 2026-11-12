@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- On iOS 16+, `WebKitWebViewUIImplementation` provides `authgearBridge` to the pages of the endpoint. When the login page loads, AuthUI uses it to ask the app for a passkey that is already on this device, so the passkey sheet appears without a tap. No change is needed in the app beyond the existing `webcredentials:` associated domain.
+
 ## 5.2.0
 
 ### Added

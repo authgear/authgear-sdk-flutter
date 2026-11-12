@@ -4,6 +4,7 @@ import android.annotation.TargetApi
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
@@ -404,6 +405,19 @@ class WebKitWebViewActivity: AppCompatActivity() {
                 this.mWebView.loadUrl(options.url.toString())
             }
         }
+    }
+
+    // The activity handles rotation and resizing itself (see AndroidManifest.xml), so that the
+    // page and a pending bridge request survive them. The toolbar height depends on the
+    // configuration, so it is updated here.
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        val actionBarSizeInDp = this.getActionBarSizeInDp()
+        val displayMetrics = this.resources.displayMetrics
+        this.mToolbar.layoutParams = this.mToolbar.layoutParams.apply {
+            height = TypedValueCompat.dpToPx(actionBarSizeInDp, displayMetrics).toInt()
+        }
+        this.applyInsetsToWebView(this.mLastSeenInsets ?: Insets.NONE)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

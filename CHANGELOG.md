@@ -18,6 +18,7 @@
 - Upgraded Flutter tooling to 3.50.1 (from 3.44.5). Consuming apps should be on a compatible Flutter version.
 - Android: The plugin sets the Kotlin JVM target with `kotlin.compilerOptions` instead of `kotlinOptions`, so that it builds with Kotlin 2.4, which Flutter 3.50 requires. Consuming apps must use Kotlin Gradle Plugin 2.0 or later.
 - iOS: The Swift package declares iOS 13.0 as the minimum.
+- On Android, the activity of `WebKitWebViewUIImplementation` handles rotation and window resizing itself instead of being recreated, so the page is no longer reloaded and a pending passkey sheet stays usable.
 
 ## 5.2.0
 

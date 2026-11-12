@@ -8,6 +8,10 @@
 - The minimum Flutter version is raised to 3.50.0 (from 3.0.0). Earlier versions fail to resolve the Swift package of the plugin when it is a git dependency or a path dependency ([flutter/flutter#186881](https://github.com/flutter/flutter/issues/186881)).
 - iOS: The Objective-C `AuthgearPlugin` class is removed. Flutter now registers the plugin with `SwiftAuthgearPlugin` directly. This only affects apps that referenced `AuthgearPlugin` in their own iOS code.
 
+### Added
+
+- On iOS 16+, `WebKitWebViewUIImplementation` provides `authgearBridge` to the pages of the endpoint. When the login page loads, AuthUI uses it to ask the app for a passkey that is already on this device, so the passkey sheet appears without a tap. No change is needed in the app beyond the existing `webcredentials:` associated domain.
+
 ### Changed
 
 - Upgraded Flutter tooling to 3.50.1 (from 3.44.5). Consuming apps should be on a compatible Flutter version.

@@ -23,6 +23,8 @@ class AGWKWebViewController: UIViewController, WKNavigationDelegate {
     private let webView: WKWebView
     private var result: URL?
     private let isInspectable: Bool
+    /// AGWKWebViewBridge on iOS 16+. AnyObject so that this class still builds for older iOS versions.
+    private var bridge: AnyObject?
 
     private let disableUserSelectSource: String = """
         document.documentElement.style.webkitUserSelect = 'none';
@@ -45,6 +47,18 @@ class AGWKWebViewController: UIViewController, WKNavigationDelegate {
         )
         configuration.userContentController.addUserScript(disableUserSelectScript)
 
+        // Provide the AuthUI bridge to pages of the endpoint's origin.
+        // .page is required because AuthUI's scripts run in the page world.
+        if #available(iOS 16.0, *) {
+            let webViewBridge = AGWKWebViewBridge(allowedOrigins: [url])
+            configuration.userContentController.addScriptMessageHandler(
+                webViewBridge,
+                contentWorld: .page,
+                name: AGWKWebViewBridge.name
+            )
+            self.bridge = webViewBridge
+        }
+
         self.webView = WKWebView(frame: .zero, configuration: configuration)
         self.webView.translatesAutoresizingMaskIntoConstraints = false
         self.webView.allowsBackForwardNavigationGestures = true
@@ -58,6 +72,12 @@ class AGWKWebViewController: UIViewController, WKNavigationDelegate {
         super.init(nibName: nil, bundle: nil)
 
         self.webView.navigationDelegate = self
+        if #available(iOS 16.0, *), let bridge = self.bridge as? AGWKWebViewBridge {
+            // Weak, so that the bridge, which the user content controller holds, does not hold this view controller.
+            bridge.presentationAnchorProvider = { [weak self] in
+                self?.view.window
+            }
+        }
     }
 
     required init?(coder: NSCoder) {
@@ -131,6 +151,9 @@ class AGWKWebViewController: UIViewController, WKNavigationDelegate {
     }
 
     override func viewDidDisappear(_ animated: Bool) {
+        // A passkey request must not stay pending after the web view is gone.
+        self.invalidateBridge()
+
         // We only call completion handler here because
         // The view controller could be swiped to dismiss.
         // viewDidDisappear is the most rebust way to detect whether the view controller is dismissed.
@@ -170,6 +193,18 @@ class AGWKWebViewController: UIViewController, WKNavigationDelegate {
 
     private func dismissSelf() {
         self.navigationController?.presentingViewController?.dismiss(animated: true)
+    }
+
+    private func invalidateBridge() {
+        if #available(iOS 16.0, *), let bridge = self.bridge as? AGWKWebViewBridge {
+            bridge.invalidate()
+        }
+    }
+
+    func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+        // The top-level page starts loading another page.
+        // Pending bridge requests are cancelled, and their replies never reach the new page.
+        self.invalidateBridge()
     }
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {

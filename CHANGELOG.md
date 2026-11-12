@@ -5,6 +5,7 @@
 ### Added
 
 - On iOS 16+, `WebKitWebViewUIImplementation` provides `authgearBridge` to the pages of the endpoint. When the login page loads, AuthUI uses it to ask the app for a passkey that is already on this device, so the passkey sheet appears without a tap. No change is needed in the app beyond the existing `webcredentials:` associated domain.
+- On Android, `WebKitWebViewUIImplementation` lets AuthUI check this device for a passkey when the login page loads, where the device's WebView supports web message listeners. If the device has a passkey for the site, the passkey sheet of Credential Manager appears with no tap; otherwise nothing appears. Adds the dependencies `androidx.credentials:credentials` and `androidx.credentials:credentials-play-services-auth` 1.5.0, and `org.jetbrains.kotlinx:kotlinx-serialization-json` 1.6.0.
 
 ## 5.2.0
 

@@ -7,7 +7,8 @@ documentation: https://authgear.github.io/authgear-sdk-flutter/
 
 environment:
   sdk: ^3.0.0
-  flutter: ^3.0.0
+  # The iOS plugin is a Swift package only. 3.44.0 is the first version that enables Swift Package Manager by default.
+  flutter: ">=3.44.0"
 
 dependencies:
   flutter:
@@ -31,4 +32,4 @@ flutter:
         package: com.authgear.flutter
         pluginClass: AuthgearPlugin
       ios:
-        pluginClass: AuthgearPlugin
+        pluginClass: SwiftAuthgearPlugin

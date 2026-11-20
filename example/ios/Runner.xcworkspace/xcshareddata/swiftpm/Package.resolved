@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "wechatopensdk",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/yanyin1986/WechatOpenSDK.git",
+      "state" : {
+        "revision" : "07d37db666076d9ec6b85ca935e5bcdb68af43bd",
+        "version" : "2.0.4"
+      }
+    }
+  ],
+  "version" : 2
+}

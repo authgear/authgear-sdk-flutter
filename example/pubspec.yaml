@@ -27,3 +27,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # Build the iOS app with Swift Package Manager instead of CocoaPods.
+  config:
+    enable-swift-package-manager: true

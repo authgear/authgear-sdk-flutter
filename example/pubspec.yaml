@@ -3,6 +3,10 @@ description: Demonstrates how to use flutter_authgear
 
 publish_to: 'none'
 
+# Flutter >= 3.50 requires a build name and number to build the iOS app.
+# Release builds override them with FLUTTER_BUILD_NAME and FLUTTER_BUILD_NUMBER (iOS) or VERSION_CODE (Android).
+version: 1.0.0+1
+
 environment:
   sdk: ^3.0.0
   flutter: ^3.0.0
@@ -23,3 +27,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # Build the iOS app with Swift Package Manager instead of CocoaPods.
+  config:
+    enable-swift-package-manager: true

@@ -31,4 +31,4 @@ flutter:
         package: com.authgear.flutter
         pluginClass: AuthgearPlugin
       ios:
-        pluginClass: AuthgearPlugin
+        pluginClass: SwiftAuthgearPlugin

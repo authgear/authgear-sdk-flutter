@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Upgraded Flutter tooling to 3.50.1 (from 3.44.5). Consuming apps should be on a compatible Flutter version.
+- Android: The plugin sets the Kotlin JVM target with `kotlin.compilerOptions` instead of `kotlinOptions`, so that it builds with Kotlin 2.4, which Flutter 3.50 requires. Consuming apps must use Kotlin Gradle Plugin 2.0 or later.
+
 ## 5.2.0
 
 ### Added

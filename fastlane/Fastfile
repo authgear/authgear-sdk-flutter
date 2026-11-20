@@ -1,5 +1,12 @@
 platform :ios do
   lane :runner_build_ios_app do |options|
+    # Only override the build name and number when they are given.
+    # An empty value would override the ones from example/pubspec.yaml,
+    # and Flutter >= 3.50 fails the build when they are missing.
+    xcargs = [:FLUTTER_BUILD_NAME, :FLUTTER_BUILD_NUMBER]
+      .select { |key| options[key] && !options[key].to_s.empty? }
+      .map { |key| "#{key}=#{options[key]}" }
+      .join(" ")
     build_app(
       skip_codesigning: options[:skip_codesigning] == "1",
       # when skip_codesigning is false, there is no Team ID.
@@ -14,7 +21,7 @@ platform :ios do
       clean: true,
       output_directory: "./build/Release/iOS/Runner",
       output_name: "Runner.ipa",
-      xcargs: "FLUTTER_BUILD_NAME=#{options[:FLUTTER_BUILD_NAME]} FLUTTER_BUILD_NUMBER=#{options[:FLUTTER_BUILD_NUMBER]}",
+      xcargs: xcargs.empty? ? nil : xcargs,
     )
   end
 

@@ -14,9 +14,11 @@ example-flutter-analyze:
 example-dart-format:
 	cd ./example; dart format --set-exit-if-changed lib
 
-.PHONY: example-pod-install
-example-pod-install:
-	cd ./example/ios; bundle exec pod install
+# Generate the Xcode configuration, including the Swift package of the Flutter plugins,
+# so that the app can be built with xcodebuild (fastlane) directly.
+.PHONY: example-ios-config-only
+example-ios-config-only:
+	cd ./example; flutter build ios --config-only --release
 
 .PHONY: example-build-unsigned-ios-app
 example-build-unsigned-ios-app:

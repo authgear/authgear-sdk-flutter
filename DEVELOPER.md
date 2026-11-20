@@ -24,3 +24,12 @@ The solution is to use a newer dartdoc.
 flutter pub global activate dartdoc
 flutter pub global run dartdoc
 ```
+
+## iOS dependencies
+
+The iOS plugin is distributed as a Swift package (`ios/flutter_authgear/Package.swift`) only, the same as the Authgear iOS SDK.
+There is no podspec, so the plugin does not support apps that build with CocoaPods.
+`environment.flutter` in `pubspec.yaml` is at least 3.44.0, the first Flutter version that enables Swift Package Manager by default.
+
+The example app does not use CocoaPods. Its only non-Flutter iOS dependency is WechatOpenSDK,
+which is added as the Swift package https://github.com/yanyin1986/WechatOpenSDK, pinned to an exact version in the Xcode project.

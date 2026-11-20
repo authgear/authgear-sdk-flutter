@@ -111,6 +111,6 @@ Ask the user: "Would you like help upgrading any of the breaking-change packages
 ## Notes
 
 - This repo vendors gems at `vendor/bundle/`. Run all `bundle` commands from the repo root.
-- The Gemfile only directly specifies `cocoapods` and `fastlane`; most lockfile entries are transitive. For a vulnerable transitive gem, check whether upgrading its parent (`cocoapods` or `fastlane`) pulls in the patched transitive version before editing any version constraints directly.
+- The Gemfile only directly specifies `fastlane`; most lockfile entries are transitive. For a vulnerable transitive gem, check whether upgrading `fastlane` pulls in the patched transitive version before editing any version constraints directly.
 - Dart: `flutter_lints` is dev-only. Treat it as lower urgency than runtime dependencies (`crypto`, `http`).
 - Always verify changelogs from the web before deciding non-breaking — do not guess.

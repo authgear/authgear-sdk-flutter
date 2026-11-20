@@ -33,7 +33,7 @@ jobs:
     # Otherwise, the result is unpredictable.
     # https://github.com/dart-lang/sdk/issues/60163#issuecomment-2680372038
     - run: make example-dart-format
-    - run: make example-pod-install
+    - run: make example-ios-config-only
     - run: make example-build-unsigned-ios-app
 
   test-android:
@@ -113,7 +113,7 @@ jobs:
     # Otherwise, the result is unpredictable.
     # https://github.com/dart-lang/sdk/issues/60163#issuecomment-2680372038
     - run: make example-dart-format
-    - run: make example-pod-install
+    - run: make example-ios-config-only
     - uses: authgear/gh-actions-install-apple-certificate-and-provisioning-profile@v1
       if: ${{ github.ref == 'refs/heads/main' }}
       with:

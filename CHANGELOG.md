@@ -11,13 +11,14 @@
 ### Added
 
 - On iOS 16+, `WebKitWebViewUIImplementation` provides `authgearBridge` to the pages of the endpoint. When the login page loads, AuthUI uses it to ask the app for a passkey that is already on this device, so the passkey sheet appears without a tap. No change is needed in the app beyond the existing `webcredentials:` associated domain. As in a browser, `credentials.get` accepts only an `rpId` that is the page's host or a parent domain of it, compared without case.
-- On Android, `WebKitWebViewUIImplementation` lets AuthUI check this device for a passkey when the login page loads, where the device's WebView supports web message listeners. If the device has a passkey for the site, the passkey sheet of Credential Manager appears with no tap; otherwise nothing appears. Adds the dependencies `androidx.credentials:credentials` and `androidx.credentials:credentials-play-services-auth` 1.5.0, and `org.jetbrains.kotlinx:kotlinx-serialization-json` 1.6.0.
+- On Android, `WebKitWebViewUIImplementation` lets AuthUI check this device for a passkey when the login page loads, where the device's WebView supports web message listeners. If the device has a passkey for the site, the passkey sheet of Credential Manager appears with no tap; otherwise nothing appears. As in a browser, the request is refused unless its `rpId` is the page's host or a parent domain of it, compared without case. Adds the dependencies `androidx.credentials:credentials` and `androidx.credentials:credentials-play-services-auth` 1.5.0, and `org.jetbrains.kotlinx:kotlinx-serialization-json` 1.6.0.
 
 ### Changed
 
 - Upgraded Flutter tooling to 3.50.1 (from 3.44.5). Consuming apps should be on a compatible Flutter version.
 - Android: The plugin sets the Kotlin JVM target with `kotlin.compilerOptions` instead of `kotlinOptions`, so that it builds with Kotlin 2.4, which Flutter 3.50 requires. Consuming apps must use Kotlin Gradle Plugin 2.0 or later.
 - iOS: The Swift package declares iOS 13.0 as the minimum.
+- On Android, apps must compile with `compileSdk` 35 or higher, because `androidx.credentials:credentials` and `androidx.credentials:credentials-play-services-auth` 1.5.0 require it.
 - On Android, the activity of `WebKitWebViewUIImplementation` handles rotation and window resizing itself instead of being recreated, so the page is no longer reloaded and a pending passkey sheet stays usable.
 
 ## 5.2.0

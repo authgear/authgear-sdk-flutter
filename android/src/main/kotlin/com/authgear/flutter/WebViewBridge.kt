@@ -30,6 +30,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.net.URI
 import java.net.URISyntaxException
+import java.util.Locale
 
 // The bridge between AuthUI and the app, as window.authgearBridge in the WebView.
 // See docs/specs/webview-bridge.md in authgear-server for the messages.
@@ -115,6 +116,13 @@ internal class WebViewBridge(private val activity: Activity) {
         }
         if (publicKey !is JsonObject) {
             replyProxy.postMessage(reply(id, BridgeStatus.ERROR, "publicKey must be an object"))
+            return
+        }
+        // As in a browser, rpId must be the page's host or a parent domain of it.
+        val rpId = (publicKey["rpId"] as? JsonPrimitive)?.takeIf { it.isString }?.content
+        val host = sourceOrigin.host
+        if (rpId == null || host == null || !isRpIdAllowed(rpId, host)) {
+            replyProxy.postMessage(reply(id, BridgeStatus.ERROR, "rpId is not allowed for this page"))
             return
         }
 
@@ -264,6 +272,17 @@ private fun portOf(url: URI, scheme: String): Int {
         "https" -> 443
         else -> -1
     }
+}
+
+// True when rpId is host or a parent domain of host, compared without case,
+// as a browser checks the rpId of a WebAuthn request against the page's origin.
+internal fun isRpIdAllowed(rpId: String, host: String): Boolean {
+    if (rpId.isEmpty()) {
+        return false
+    }
+    val r = rpId.lowercase(Locale.ROOT)
+    val h = host.lowercase(Locale.ROOT)
+    return h == r || h.endsWith(".$r")
 }
 
 // Returns null when text is not a JSON object with a string id.

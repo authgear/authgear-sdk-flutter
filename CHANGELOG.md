@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+### Breaking changes
+
+- iOS: The plugin is distributed as a Swift package only. The podspec is removed, so apps that build with CocoaPods can no longer use the plugin. Apps must build with Swift Package Manager, which Flutter enables by default since 3.44.0.
+- The minimum Flutter version is raised to 3.50.0 (from 3.0.0). Earlier versions fail to resolve the Swift package of the plugin when it is a git dependency or a path dependency ([flutter/flutter#186881](https://github.com/flutter/flutter/issues/186881)).
+- iOS: The Objective-C `AuthgearPlugin` class is removed. Flutter now registers the plugin with `SwiftAuthgearPlugin` directly. This only affects apps that referenced `AuthgearPlugin` in their own iOS code.
+
+### Changed
+
+- Upgraded Flutter tooling to 3.50.1 (from 3.44.5). Consuming apps should be on a compatible Flutter version.
+- Android: The plugin sets the Kotlin JVM target with `kotlin.compilerOptions` instead of `kotlinOptions`, so that it builds with Kotlin 2.4, which Flutter 3.50 requires. Consuming apps must use Kotlin Gradle Plugin 2.0 or later.
+- iOS: The Swift package declares iOS 13.0 as the minimum.
+
 ## 5.2.0
 
 ### Added

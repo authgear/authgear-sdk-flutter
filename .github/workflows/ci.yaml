@@ -22,7 +22,7 @@ jobs:
     - uses: subosito/flutter-action@v2
       with:
         # This has to be kept in sync with .tool-versions
-        flutter-version: '3.44.5'
+        flutter-version: '3.50.1'
         channel: 'stable'
         # This action takes 1m30s to finish. Enable cache to make it shorter.
         cache: true
@@ -33,7 +33,7 @@ jobs:
     # Otherwise, the result is unpredictable.
     # https://github.com/dart-lang/sdk/issues/60163#issuecomment-2680372038
     - run: make example-dart-format
-    - run: make example-pod-install
+    - run: make example-ios-config-only
     - run: make example-build-unsigned-ios-app
 
   test-android:
@@ -46,7 +46,7 @@ jobs:
     - uses: subosito/flutter-action@v2
       with:
         # This has to be kept in sync with .tool-versions
-        flutter-version: '3.44.5'
+        flutter-version: '3.50.1'
         channel: 'stable'
         # This action takes 1m30s to finish. Enable cache to make it shorter.
         cache: true
@@ -67,7 +67,7 @@ jobs:
     - uses: subosito/flutter-action@v2
       with:
         # This has to be kept in sync with .tool-versions
-        flutter-version: '3.44.5'
+        flutter-version: '3.50.1'
         channel: 'stable'
         # This action takes 1m30s to finish. Enable cache to make it shorter.
         cache: true
@@ -102,7 +102,7 @@ jobs:
     - uses: subosito/flutter-action@v2
       with:
         # This has to be kept in sync with .tool-versions
-        flutter-version: '3.44.5'
+        flutter-version: '3.50.1'
         channel: 'stable'
         # This action takes 1m30s to finish. Enable cache to make it shorter.
         cache: true
@@ -113,7 +113,7 @@ jobs:
     # Otherwise, the result is unpredictable.
     # https://github.com/dart-lang/sdk/issues/60163#issuecomment-2680372038
     - run: make example-dart-format
-    - run: make example-pod-install
+    - run: make example-ios-config-only
     - uses: authgear/gh-actions-install-apple-certificate-and-provisioning-profile@v1
       if: ${{ github.ref == 'refs/heads/main' }}
       with:
@@ -145,7 +145,7 @@ jobs:
     - uses: subosito/flutter-action@v2
       with:
         # This has to be kept in sync with .tool-versions
-        flutter-version: '3.44.5'
+        flutter-version: '3.50.1'
         channel: 'stable'
         # This action takes 1m30s to finish. Enable cache to make it shorter.
         cache: true

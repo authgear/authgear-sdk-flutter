@@ -7,7 +7,10 @@ documentation: https://authgear.github.io/authgear-sdk-flutter/
 
 environment:
   sdk: ^3.0.0
-  flutter: ^3.0.0
+  # The iOS plugin is a Swift package only. Swift Package Manager is enabled by default since 3.44.0,
+  # but before 3.50.0 it fails to resolve the plugin when it is a git dependency, or a path dependency
+  # whose directory is not named flutter_authgear (https://github.com/flutter/flutter/issues/186881).
+  flutter: ">=3.50.0"
 
 dependencies:
   flutter:
@@ -31,4 +34,4 @@ flutter:
         package: com.authgear.flutter
         pluginClass: AuthgearPlugin
       ios:
-        pluginClass: AuthgearPlugin
+        pluginClass: SwiftAuthgearPlugin

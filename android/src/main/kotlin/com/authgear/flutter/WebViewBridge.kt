@@ -20,6 +20,7 @@ import androidx.credentials.exceptions.NoCredentialException
 import androidx.webkit.JavaScriptReplyProxy
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -90,9 +91,9 @@ internal class WebViewBridge(private val activity: Activity) {
         replyProxy: JavaScriptReplyProxy
     ) {
         when (request.type) {
-            BridgeMessageType.CAPABILITIES -> replyProxy.postMessage(capabilitiesReply(request.id))
+            BridgeMessageType.CAPABILITIES -> replyProxy.postMessage(capabilitiesReply(request.id).encode())
             BridgeMessageType.CREDENTIALS_GET -> credentialsGet(webView, request, sourceOrigin, replyProxy)
-            else -> replyProxy.postMessage(reply(request.id, BridgeStatus.UNSUPPORTED))
+            else -> replyProxy.postMessage(BridgeReply(request.id, BridgeStatus.UNSUPPORTED).encode())
         }
     }
 
@@ -107,28 +108,28 @@ internal class WebViewBridge(private val activity: Activity) {
         val publicKey = request.json["publicKey"]
         // publicKey is the only member supported. Other members, such as password, are ignored.
         if (mediation != JsonPrimitive("immediate") || publicKey == null || publicKey is JsonNull) {
-            replyProxy.postMessage(reply(id, BridgeStatus.UNSUPPORTED))
+            replyProxy.postMessage(BridgeReply(id, BridgeStatus.UNSUPPORTED).encode())
             return
         }
         if (pendingGet != null) {
-            replyProxy.postMessage(reply(id, BridgeStatus.ERROR, "a passkey request is in progress"))
+            replyProxy.postMessage(BridgeReply(id, BridgeStatus.ERROR, "a passkey request is in progress").encode())
             return
         }
         if (publicKey !is JsonObject) {
-            replyProxy.postMessage(reply(id, BridgeStatus.ERROR, "publicKey must be an object"))
+            replyProxy.postMessage(BridgeReply(id, BridgeStatus.ERROR, "publicKey must be an object").encode())
             return
         }
         // As in a browser, rpId must be the page's host or a parent domain of it.
         val rpId = (publicKey["rpId"] as? JsonPrimitive)?.takeIf { it.isString }?.content
         val host = sourceOrigin.host
         if (rpId == null || host == null || !isRpIdAllowed(rpId, host)) {
-            replyProxy.postMessage(reply(id, BridgeStatus.ERROR, "rpId is not allowed for this page"))
+            replyProxy.postMessage(BridgeReply(id, BridgeStatus.ERROR, "rpId is not allowed for this page").encode())
             return
         }
 
         val signal = CancellationSignal()
         pendingGet = signal
-        getPublicKeyCredential(id, publicKey, signal) { text ->
+        getPublicKeyCredential(id, publicKey, signal) { reply ->
             // A cancelled request may still call back. Its page is gone, so the reply is dropped.
             if (pendingGet !== signal) {
                 return@getPublicKeyCredential
@@ -139,7 +140,7 @@ internal class WebViewBridge(private val activity: Activity) {
             if (!isSameOrigin(webView.url, sourceOrigin.toString())) {
                 return@getPublicKeyCredential
             }
-            replyProxy.postMessage(text)
+            replyProxy.postMessage(reply.encode())
         }
     }
 
@@ -148,7 +149,7 @@ internal class WebViewBridge(private val activity: Activity) {
         id: String,
         publicKey: JsonObject,
         signal: CancellationSignal,
-        onReply: (String) -> Unit
+        onReply: (BridgeReply) -> Unit
     ) {
         try {
             val options = credentialManagerRequestJson(publicKey)
@@ -173,34 +174,31 @@ internal class WebViewBridge(private val activity: Activity) {
                 }
             )
         } catch (e: Exception) {
-            onReply(reply(id, BridgeStatus.ERROR, e.toString()))
+            onReply(BridgeReply(id, BridgeStatus.ERROR, e.toString()))
         }
     }
 
-    private fun credentialReply(id: String, result: GetCredentialResponse): String {
-        return try {
-            when (val credential = result.credential) {
-                is PublicKeyCredential -> reply(
-                    id,
-                    BridgeStatus.OK,
-                    fields = mapOf(
-                        "credential" to Json.parseToJsonElement(credential.authenticationResponseJson)
-                    )
-                )
-                else -> reply(id, BridgeStatus.ERROR, "unexpected credential type: ${credential.type}")
+    private fun credentialReply(id: String, result: GetCredentialResponse): BridgeReply {
+        return when (val credential = result.credential) {
+            is PublicKeyCredential -> {
+                val parsed = BridgePublicKeyCredential.parse(credential.authenticationResponseJson)
+                if (parsed != null) {
+                    BridgeReply(id, BridgeStatus.OK, credential = parsed)
+                } else {
+                    BridgeReply(id, BridgeStatus.ERROR, "invalid authenticationResponseJson")
+                }
             }
-        } catch (e: Exception) {
-            reply(id, BridgeStatus.ERROR, e.toString())
+            else -> BridgeReply(id, BridgeStatus.ERROR, "unexpected credential type: ${credential.type}")
         }
     }
 
-    private fun credentialErrorReply(id: String, e: GetCredentialException): String {
+    private fun credentialErrorReply(id: String, e: GetCredentialException): BridgeReply {
         return when (e) {
-            is NoCredentialException -> reply(id, BridgeStatus.NO_CREDENTIAL)
-            is GetCredentialCancellationException -> reply(id, BridgeStatus.CANCELLED)
-            is GetCredentialProviderConfigurationException -> reply(id, BridgeStatus.UNSUPPORTED)
-            is GetCredentialUnsupportedException -> reply(id, BridgeStatus.UNSUPPORTED)
-            else -> reply(id, BridgeStatus.ERROR, "${e.type}: ${e.message}")
+            is NoCredentialException -> BridgeReply(id, BridgeStatus.NO_CREDENTIAL)
+            is GetCredentialCancellationException -> BridgeReply(id, BridgeStatus.CANCELLED)
+            is GetCredentialProviderConfigurationException -> BridgeReply(id, BridgeStatus.UNSUPPORTED)
+            is GetCredentialUnsupportedException -> BridgeReply(id, BridgeStatus.UNSUPPORTED)
+            else -> BridgeReply(id, BridgeStatus.ERROR, "${e.type}: ${e.message}")
         }
     }
 }
@@ -210,12 +208,104 @@ internal object BridgeMessageType {
     const val CREDENTIALS_GET = "credentials.get"
 }
 
-internal object BridgeStatus {
-    const val OK = "ok"
-    const val UNSUPPORTED = "unsupported"
-    const val ERROR = "error"
-    const val NO_CREDENTIAL = "no_credential"
-    const val CANCELLED = "cancelled"
+// The status of a reply. A new status is a new entry.
+internal enum class BridgeStatus(val value: String) {
+    OK("ok"),
+    UNSUPPORTED("unsupported"),
+    ERROR("error"),
+    NO_CREDENTIAL("no_credential"),
+    CANCELLED("cancelled"),
+}
+
+// A reply, encoded as a JSON object. Fields that are null are omitted.
+// A new field is a new property, encoded in toJson.
+internal data class BridgeReply(
+    val id: String,
+    val status: BridgeStatus,
+    val message: String? = null,
+    // The ok reply to bridge.capabilities.
+    val capabilities: List<String>? = null,
+    // The ok reply to credentials.get.
+    val credential: BridgeCredential? = null,
+) {
+    fun toJson(): JsonObject = buildJsonObject {
+        put("id", id)
+        put("status", status.value)
+        message?.let { put("message", it) }
+        capabilities?.let { list -> put("capabilities", JsonArray(list.map { JsonPrimitive(it) })) }
+        credential?.let { put("credential", it.toJson()) }
+    }
+
+    fun encode(): String = toJson().toString()
+}
+
+// The credential of an ok reply to credentials.get. Each kind of credential, told apart by
+// its type, is a class that implements this interface.
+internal sealed interface BridgeCredential {
+    fun toJson(): JsonObject
+}
+
+// The AuthenticationResponseJSON of a passkey assertion, with binary values as base64url.
+internal data class BridgePublicKeyCredential(
+    val id: String,
+    val rawId: String,
+    val authenticatorAttachment: String?,
+    val response: Response,
+    val clientExtensionResults: JsonObject,
+) : BridgeCredential {
+    data class Response(
+        val clientDataJSON: String,
+        val authenticatorData: String,
+        val signature: String,
+        // Optional in AuthenticationResponseJSON.
+        val userHandle: String?,
+    )
+
+    override fun toJson(): JsonObject = buildJsonObject {
+        put("id", id)
+        put("rawId", rawId)
+        put("type", TYPE)
+        authenticatorAttachment?.let { put("authenticatorAttachment", it) }
+        put(
+            "response",
+            buildJsonObject {
+                put("clientDataJSON", response.clientDataJSON)
+                put("authenticatorData", response.authenticatorData)
+                put("signature", response.signature)
+                response.userHandle?.let { put("userHandle", it) }
+            }
+        )
+        put("clientExtensionResults", clientExtensionResults)
+    }
+
+    companion object {
+        const val TYPE = "public-key"
+
+        // Parses the authenticationResponseJson of Credential Manager, or returns null when it lacks a required field.
+        fun parse(text: String): BridgePublicKeyCredential? {
+            val json = try {
+                Json.parseToJsonElement(text)
+            } catch (e: SerializationException) {
+                return null
+            } as? JsonObject ?: return null
+            val response = json["response"] as? JsonObject ?: return null
+            return BridgePublicKeyCredential(
+                id = json.string("id") ?: return null,
+                rawId = json.string("rawId") ?: return null,
+                authenticatorAttachment = json.string("authenticatorAttachment"),
+                response = Response(
+                    clientDataJSON = response.string("clientDataJSON") ?: return null,
+                    authenticatorData = response.string("authenticatorData") ?: return null,
+                    signature = response.string("signature") ?: return null,
+                    userHandle = response.string("userHandle"),
+                ),
+                clientExtensionResults = json["clientExtensionResults"] as? JsonObject ?: JsonObject(emptyMap()),
+            )
+        }
+
+        private fun JsonObject.string(key: String): String? =
+            (this[key] as? JsonPrimitive)?.takeIf { it.isString }?.content
+    }
 }
 
 // The capabilities listed in the reply to bridge.capabilities.
@@ -317,27 +407,6 @@ internal fun credentialManagerRequestJson(publicKey: JsonObject): JsonObject {
     return JsonObject(fields)
 }
 
-internal fun reply(
-    id: String,
-    status: String,
-    message: String? = null,
-    fields: Map<String, JsonElement> = mapOf()
-): String {
-    val obj = buildJsonObject {
-        put("id", id)
-        put("status", status)
-        if (message != null) {
-            put("message", message)
-        }
-        fields.forEach { (key, value) -> put(key, value) }
-    }
-    return obj.toString()
-}
-
-internal fun capabilitiesReply(id: String): String {
-    return reply(
-        id,
-        BridgeStatus.OK,
-        fields = mapOf("capabilities" to JsonArray(BRIDGE_CAPABILITIES.map { JsonPrimitive(it) }))
-    )
+internal fun capabilitiesReply(id: String): BridgeReply {
+    return BridgeReply(id, BridgeStatus.OK, capabilities = BRIDGE_CAPABILITIES)
 }
